@@ -1,0 +1,8 @@
+# Dependencies & build
+node_modules
+dist
+
+# Secrets (use PowerShell session: $env:FIGMA_ACCESS_TOKEN = "your-token")
+.env
+.env.local
+.env.*.local

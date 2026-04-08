@@ -1,0 +1,9 @@
+/* Share Tech — titles (see index.html). Icebox — body (local file). */
+
+@font-face {
+  font-family: "Icebox";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../../assets/Icebox-Regular-Trial.otf") format("opentype");
+}
