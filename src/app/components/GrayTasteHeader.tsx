@@ -6,7 +6,7 @@ export default function GrayTasteHeader() {
     <header className="tb-header">
       <img
         src={imgTasteBuddyLogo}
-        alt="taste buddy"
+        alt="Taste Buddy — share and explore public taste profiles"
         className="tb-header-logo"
         draggable={false}
       />

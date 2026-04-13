@@ -17,23 +17,24 @@ interface NavIconProps {
   icon: string;
   tiltClass: string;
   onClick?: () => void;
+  ariaLabel: string;
 }
 
-function NavIcon({ icon, tiltClass, onClick }: NavIconProps) {
+function NavIcon({ icon, tiltClass, onClick, ariaLabel }: NavIconProps) {
   return (
-    <button type="button" onClick={onClick} className={tiltClass}>
+    <button type="button" onClick={onClick} className={tiltClass} aria-label={ariaLabel}>
       <img alt="" src={icon} draggable={false} className="tb-nav-icon-img" />
     </button>
   );
 }
 
 const navItems = [
-  { id: "chef", icon: iconChef, path: "/my-recipes" as const },
-  { id: "party", icon: iconParty, path: "/party" as const },
-  { id: "home", icon: iconHome, path: "/home" as const },
-  { id: "welcome", icon: iconRefresh, path: "/friend-recipe" as const },
-  { id: "profile", icon: iconProfile, path: "/buddies" as const },
-];
+  { id: "chef", icon: iconChef, path: "/my-recipes" as const, ariaLabel: "My recipes" },
+  { id: "party", icon: iconParty, path: "/party" as const, ariaLabel: "Parties and gatherings" },
+  { id: "home", icon: iconHome, path: "/home" as const, ariaLabel: "Home" },
+  { id: "welcome", icon: iconRefresh, path: "/friend-recipe" as const, ariaLabel: "Community recipes" },
+  { id: "profile", icon: iconProfile, path: "/buddies" as const, ariaLabel: "Community — taste profiles" },
+] as const;
 
 export default function Navigation() {
   const navigate = useNavigate();
@@ -64,12 +65,13 @@ export default function Navigation() {
             style={{ filter: "url(#tb-nav-chalk-edge)" }}
           />
           <div className="tb-nav-inner">
-            {navItems.map(({ id, icon, path }, index) => (
+            {navItems.map(({ id, icon, path, ariaLabel }, index) => (
               <div key={id} className="tb-nav-slot">
                 <NavIcon
                   icon={icon}
                   tiltClass={ICON_TILT_CLASS[index % ICON_TILT_CLASS.length]!}
                   onClick={() => navigate(path)}
+                  ariaLabel={ariaLabel}
                 />
               </div>
             ))}

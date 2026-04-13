@@ -38,7 +38,7 @@ function BuddyCard({
       <div className="tb-buddy-scale-wrap">
         <motion.button
           type="button"
-          aria-label={`${name} — open buddy profile`}
+          aria-label={`${name} — open public taste profile`}
           onClick={handleClick}
           className="tb-buddy-circle-btn"
           whileHover={{ scale: 1.015 }}
@@ -97,7 +97,7 @@ export default function BuddiesPage() {
   const { buddies } = useBuddies();
 
   return (
-    <div className={PAGE_SHELL_SCROLL} data-name="Buddies">
+    <div className={PAGE_SHELL_SCROLL} data-name="Community">
       <GrayTasteHeader />
 
       <motion.div
@@ -112,7 +112,7 @@ export default function BuddiesPage() {
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.45, delay: 0.05 }}
         >
-          Buddies
+          Community
         </motion.h1>
         <motion.p
           className="tb-buddies-blurb share-tech-regular"
@@ -121,7 +121,7 @@ export default function BuddiesPage() {
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.45, delay: 0.1 }}
         >
-          Tap a buddy for their profile — use + to add another Taste Buddy.
+          Browse public taste profiles — tap someone to see how they cook and eat. Use + to add another profile to your list.
         </motion.p>
 
         <div className="tb-buddies-grid-wrap">
@@ -155,7 +155,7 @@ export default function BuddiesPage() {
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
         >
-          <img alt="Add buddy" className="tb-img-contain-full" src={imgAddBuddy} />
+          <img alt="Add a taste profile" className="tb-img-contain-full" src={imgAddBuddy} />
         </motion.button>
       </motion.div>
 

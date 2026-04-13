@@ -185,7 +185,7 @@ export default function FriendRecipePage() {
   };
 
   const handleRemove = (entry: FriendRecipeEntry) => {
-    if (!confirm(`Remove "${entry.recipeName}" from your buddy recipes?`)) return;
+    if (!confirm(`Remove "${entry.recipeName}" from your saved community recipes?`)) return;
     persistRecipes(loadRecipes().filter((r) => r.id !== entry.id));
     refresh();
     setExpandedRecipeId((cur) => (cur === entry.id ? null : cur));
@@ -208,7 +208,7 @@ export default function FriendRecipePage() {
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.45, delay: 0.05 }}
           >
-            {isEditView ? "Edit buddy recipe" : "Add a buddy recipe"}
+            {isEditView ? "Edit community recipe" : "Add a community recipe"}
           </motion.h1>
           <motion.p
             className="tb-intro-blurb share-tech-regular"
@@ -219,7 +219,7 @@ export default function FriendRecipePage() {
           >
             {isEditView
               ? "Update who shared it, tags, or steps — then save."
-              : "Log what a buddy shared — pick them below, then ingredients, steps, and tags."}
+              : "Credit whose profile it came from — pick them below, then ingredients, steps, and tags."}
           </motion.p>
 
           <motion.form
@@ -231,7 +231,7 @@ export default function FriendRecipePage() {
           >
             <InfoBoxFrame variant={0}>
               <label htmlFor="recipe-buddy" className="tb-field-label-bold share-tech-bold">
-                Buddy who shared
+                From this profile
               </label>
               <select
                 id="recipe-buddy"
@@ -372,7 +372,7 @@ export default function FriendRecipePage() {
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.45, delay: 0.05 }}
         >
-          Buddy recipe swap
+          Community recipe swap
         </motion.h1>
         <motion.p
           className="tb-intro-blurb share-tech-regular"
@@ -381,7 +381,7 @@ export default function FriendRecipePage() {
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.45, delay: 0.12 }}
         >
-          Tap a recipe to open it, or + once you have someone to tag.
+          Recipes people have shared — tap to open, or + to save one and tag a public profile.
         </motion.p>
 
         {buddies.length === 0 ? (
@@ -393,7 +393,7 @@ export default function FriendRecipePage() {
           >
             <InfoBoxFrame variant={0}>
               <p className="share-tech-regular" style={{ fontSize: 18, lineHeight: 1.375 }}>
-                Add a buddy first so you can save recipes from them.
+                Add someone to Community first so you can tag their profile on shared recipes.
               </p>
             </InfoBoxFrame>
             <motion.button
@@ -403,7 +403,7 @@ export default function FriendRecipePage() {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
-              Add a buddy
+              Add a taste profile
             </motion.button>
           </motion.div>
         ) : null}
@@ -416,14 +416,14 @@ export default function FriendRecipePage() {
           transition={{ delay: 0.15 }}
         >
           <h2 id="saved-recipes-heading" className="tb-section-heading share-tech-bold tb-text-coral">
-            Your buddy recipes
+            Saved from the community
           </h2>
           {saved.length === 0 ? (
             <InfoBoxFrame variant={1}>
               <p className="share-tech-regular" style={{ fontSize: 18, lineHeight: 1.375 }}>
                 {buddies.length === 0
-                  ? "Nothing saved yet — add a buddy, then tap + to add your first buddy recipe."
-                  : "Nothing here yet — tap + below to add your first buddy recipe."}
+                  ? "Nothing saved yet — add a profile in Community, then tap + for your first recipe."
+                  : "Nothing here yet — tap + below to save a recipe and link it to someone’s profile."}
               </p>
             </InfoBoxFrame>
           ) : (
@@ -570,7 +570,7 @@ export default function FriendRecipePage() {
             type="button"
             onClick={() => navigate("/friend-recipe/add")}
             className="tb-fab-add"
-            aria-label="Add a buddy recipe"
+            aria-label="Add a community recipe"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.45, delay: 0.18 }}

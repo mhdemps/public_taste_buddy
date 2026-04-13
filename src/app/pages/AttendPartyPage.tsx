@@ -278,7 +278,7 @@ export default function AttendPartyPage() {
           >
             {isEditView
               ? "Update themes, date, or what you’re bringing — then save."
-              : "Fill in the details, then save — you’ll see it on your Buddy party list."}
+              : "Fill in the details, then save — it appears on your party list with the host’s public profile."}
           </motion.p>
 
           <motion.section
@@ -356,7 +356,7 @@ export default function AttendPartyPage() {
 
               <InfoBoxFrame variant={0}>
                 <label htmlFor="party-buddy" className="tb-field-label-bold share-tech-bold">
-                  Buddy host
+                  Host (community profile)
                 </label>
                 <select
                   id="party-buddy"
@@ -440,7 +440,7 @@ export default function AttendPartyPage() {
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.45, delay: 0.05 }}
         >
-          Buddy party
+          Gatherings
         </motion.h1>
         <motion.p
           className="tb-intro-blurb share-tech-regular"
@@ -449,7 +449,7 @@ export default function AttendPartyPage() {
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.45, delay: 0.12 }}
         >
-          Tap a party to open it, or + to plan a new one.
+          Plan get-togethers and see who’s hosting — tied to profiles in Community.
         </motion.p>
 
         <motion.section
@@ -601,7 +601,7 @@ export default function AttendPartyPage() {
           >
             <InfoBoxFrame variant={0}>
               <p className="share-tech-regular" style={{ fontSize: 18, lineHeight: 1.375 }}>
-                Add a buddy first so you can link a party to them.
+                Add someone in Community first so you can link a gathering to their profile.
               </p>
             </InfoBoxFrame>
             <motion.button
@@ -611,7 +611,7 @@ export default function AttendPartyPage() {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
-              Add a buddy
+              Add a taste profile
             </motion.button>
           </motion.div>
         ) : (

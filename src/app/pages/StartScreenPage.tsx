@@ -28,8 +28,8 @@ export default function StartScreenPage() {
 
       <div className={`${HOME_HERO_STACK_CLASS} tb-hero-stack--pb40`}>
         <div className={`${HOME_HERO_HEADLINE_CLASS} tb-hero-headline--hidden tb-text-coral`} aria-hidden>
-          <p style={{ marginBottom: 0 }}>Your buddy for </p>
-          <p>culinary exploration!</p>
+          <p style={{ marginBottom: 0 }}>Share your taste — </p>
+          <p>explore others&apos; profiles!</p>
         </div>
 
         <div className="tb-row-center">

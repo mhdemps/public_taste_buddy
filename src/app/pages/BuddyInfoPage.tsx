@@ -11,7 +11,7 @@ import Navigation from "../components/Navigation";
 import { InfoBoxFrame } from "../components/InfoBoxFrame";
 import { ChalkPillFrame } from "../components/ChalkPillFrame";
 import GrayTasteHeader from "../components/GrayTasteHeader";
-import { PAGE_SHELL, PAGE_SHELL_SCROLL } from "../brand";
+import { PAGE_INTRO_BLURB_TEXT, PAGE_SHELL, PAGE_SHELL_SCROLL } from "../brand";
 import { BUDDY_IN_CIRCLE_H_PCT, BUDDY_IN_CIRCLE_W_PCT, BUDDY_PROFILE_CIRCLE_MAX } from "../buddyLayout";
 
 function buddyToForm(b: {
@@ -67,7 +67,7 @@ export default function BuddyInfoPage() {
       <div className={PAGE_SHELL}>
         <GrayTasteHeader />
         <div className="tb-not-found-stack">
-          <p className="share-tech-bold tb-text-coral">Buddy not found</p>
+          <p className="share-tech-bold tb-text-coral">Profile not found</p>
           <motion.button
             type="button"
             onClick={() => navigate("/buddies")}
@@ -80,7 +80,7 @@ export default function BuddyInfoPage() {
               innerClassName="tb-pill-inner tb-pill-inner--md"
             >
               <span className="share-tech-bold tb-text-coral" style={{ fontSize: 17 }}>
-                All buddies
+                Community
               </span>
             </ChalkPillFrame>
           </motion.button>
@@ -93,7 +93,7 @@ export default function BuddyInfoPage() {
   const detailCircle = circleForBuddyColor(getBuddyColorIndex(buddy.buddyImage));
 
   const handleRemove = () => {
-    if (confirm(`Are you sure you want to remove ${buddy.name}?`)) {
+    if (confirm(`Remove ${buddy.name} from your list? Their public profile info will no longer appear here.`)) {
       removeBuddy(buddyId!);
       navigate("/buddies");
     }
@@ -120,7 +120,7 @@ export default function BuddyInfoPage() {
             type="button"
             onClick={() => navigate("/buddies")}
             className="tb-submit-wrap"
-            aria-label="Back to all buddies"
+            aria-label="Back to community"
             initial={{ y: -8, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.45, delay: 0.08 }}
@@ -135,7 +135,7 @@ export default function BuddyInfoPage() {
                 ‹
               </span>
               <span className="share-tech-bold tb-text-coral" style={{ fontSize: 18 }}>
-                All buddies
+                Community
               </span>
             </ChalkPillFrame>
           </motion.button>
@@ -172,14 +172,25 @@ export default function BuddyInfoPage() {
         </motion.div>
 
         {!editing && (
-          <motion.h1
-            className="tb-buddy-profile-name share-tech-bold"
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-          >
-            {buddy.name}
-          </motion.h1>
+          <>
+            <motion.h1
+              className="tb-buddy-profile-name share-tech-bold"
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+            >
+              {buddy.name}
+            </motion.h1>
+            <motion.p
+              className="tb-buddy-profile-kicker share-tech-regular"
+              style={{ color: PAGE_INTRO_BLURB_TEXT }}
+              initial={{ y: 12, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.45, delay: 0.28 }}
+            >
+              Public taste profile — what hosts and friends see at a glance
+            </motion.p>
+          </>
         )}
 
         {editing ? (
@@ -249,7 +260,7 @@ export default function BuddyInfoPage() {
 
             <InfoBoxFrame variant={0}>
               <label htmlFor="edit-parties" className="tb-field-label--tight share-tech-regular">
-                Parties Attended
+                Gatherings joined
               </label>
               <input
                 id="edit-parties"
@@ -264,7 +275,7 @@ export default function BuddyInfoPage() {
 
             <InfoBoxFrame variant={1}>
               <label htmlFor="edit-recipes" className="tb-field-label--tight share-tech-regular">
-                Recipes Given
+                Recipes shared
               </label>
               <input
                 id="edit-recipes"
@@ -320,14 +331,14 @@ export default function BuddyInfoPage() {
 
             {buddy.partiesAttended !== undefined && buddy.partiesAttended !== null && (
               <InfoBoxFrame variant={3}>
-                <h3 className="tb-detail-h3 share-tech-bold">Parties Attended</h3>
+                <h3 className="tb-detail-h3 share-tech-bold">Gatherings joined</h3>
                 <p className="tb-detail-p share-tech-regular">{buddy.partiesAttended}</p>
               </InfoBoxFrame>
             )}
 
             {buddy.recipesGiven && (
               <InfoBoxFrame variant={0}>
-                <h3 className="tb-detail-h3 share-tech-bold">Recipes Given</h3>
+                <h3 className="tb-detail-h3 share-tech-bold">Recipes shared</h3>
                 <p className="tb-detail-p share-tech-regular">{buddy.recipesGiven}</p>
               </InfoBoxFrame>
             )}
@@ -386,7 +397,7 @@ export default function BuddyInfoPage() {
           ) : (
             <motion.button type="button" onClick={openEdit} className="tb-submit-wrap" whileTap={{ scale: 0.97 }}>
               <ChalkPillFrame variant={0} fillClassName="tb-pill-fill-coral" innerClassName="tb-pill-inner tb-pill-inner--lg">
-                <span className="tb-pill-text-white share-tech-regular">Edit buddy</span>
+                <span className="tb-pill-text-white share-tech-regular">Edit profile</span>
               </ChalkPillFrame>
             </motion.button>
           )}
@@ -398,7 +409,7 @@ export default function BuddyInfoPage() {
             whileHover={{ opacity: 0.7 }}
             whileTap={{ scale: 0.95 }}
           >
-            Remove Buddy
+            Remove from my list
           </motion.button>
         </motion.div>
       </div>

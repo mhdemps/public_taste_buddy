@@ -822,6 +822,17 @@
   color: #ff3a00;
 }
 
+.tb-buddy-profile-kicker {
+  margin-top: 0.65rem;
+  margin-bottom: 0;
+  max-width: 22rem;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  text-align: center;
+  font-size: 0.95rem;
+  line-height: 1.35;
+}
+
 .tb-form-edit-stack {
   margin-top: 2rem;
   display: flex;

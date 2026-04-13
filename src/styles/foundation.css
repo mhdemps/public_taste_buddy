@@ -117,3 +117,23 @@ select {
   font-weight: 700;
   font-style: normal;
 }
+
+/* Headings & prominent names — Icebox Magnet (trial). Other .share-tech-bold stays Share Tech. */
+h1.share-tech-bold,
+h2.share-tech-bold,
+h3.share-tech-bold,
+.tb-page-title,
+.tb-section-heading,
+.tb-buddies-title,
+.tb-buddy-profile-name,
+.tb-buddy-name,
+.tb-recipe-h3,
+.tb-detail-h3,
+.tb-panel-heading--spaced,
+.tb-recipe-block-label,
+.tb-theme-label,
+.tb-hero-headline.share-tech-regular {
+  font-family: "Icebox Magnet", "Icebox", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+}

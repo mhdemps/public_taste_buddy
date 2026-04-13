@@ -61,7 +61,7 @@ export default function AddBuddyPage() {
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.45, delay: 0.05 }}
         >
-          Add a buddy
+          Add a taste profile
         </motion.h1>
         <motion.p
           className="tb-intro-blurb share-tech-regular"
@@ -70,7 +70,7 @@ export default function AddBuddyPage() {
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.45, delay: 0.1 }}
         >
-          Their favorite flavors, how you know them, and any allergies to keep in mind.
+          This info can show up on their public profile — favorite flavors, what they bring to the table, and dietary notes others should know.
         </motion.p>
 
         <motion.form
@@ -139,7 +139,7 @@ export default function AddBuddyPage() {
 
           <InfoBoxFrame variant={0}>
             <label htmlFor="add-buddy-parties" className="tb-field-label share-tech-regular">
-              Parties attended
+              Gatherings joined
             </label>
             <input
               id="add-buddy-parties"
@@ -154,7 +154,7 @@ export default function AddBuddyPage() {
 
           <InfoBoxFrame variant={1}>
             <label htmlFor="add-buddy-recipes" className="tb-field-label share-tech-regular">
-              Recipes given
+              Recipes shared
             </label>
             <input
               id="add-buddy-recipes"
@@ -182,7 +182,7 @@ export default function AddBuddyPage() {
 
           <motion.button type="submit" className="tb-submit-wrap" whileTap={{ scale: 0.97 }}>
             <ChalkPillFrame variant={2} fillClassName="tb-pill-fill-coral" innerClassName="tb-pill-inner tb-pill-inner--lg">
-              <span className="tb-pill-text-white share-tech-regular">Save buddy</span>
+              <span className="tb-pill-text-white share-tech-regular">Save profile</span>
             </ChalkPillFrame>
           </motion.button>
 

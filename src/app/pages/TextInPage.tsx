@@ -60,8 +60,8 @@ export default function TextInPage() {
             delay: TEXT_DELAY_S,
           }}
         >
-          <p style={{ marginBottom: 0 }}>Hello buddy,</p>
-          <p>welcome back!</p>
+          <p style={{ marginBottom: 0 }}>Welcome in —</p>
+          <p>your taste community awaits!</p>
         </motion.div>
 
         <div className="tb-row-center">

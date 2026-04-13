@@ -63,8 +63,8 @@ export default function HomePage() {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.58, ease: HUB_TAGLINE_EASE, delay: 0.12 }}
         >
-          <p style={{ marginBottom: 0 }}>Your buddy for </p>
-          <p>culinary exploration!</p>
+          <p style={{ marginBottom: 0 }}>Share your taste — </p>
+          <p>explore others&apos; profiles!</p>
         </motion.div>
 
         <div className="tb-row-center">
