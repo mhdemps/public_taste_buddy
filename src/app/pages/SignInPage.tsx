@@ -7,6 +7,19 @@ import { InfoBoxFrame } from "../components/InfoBoxFrame";
 import { ChalkPillFrame } from "../components/ChalkPillFrame";
 import { PAGE_SHELL_SCROLL } from "../brand";
 
+function formatAuthErrorMessage(message: string): string {
+  const m = message.toLowerCase();
+  if (
+    m.includes("failed to fetch") ||
+    m.includes("load failed") ||
+    m.includes("networkerror") ||
+    m === "network request failed"
+  ) {
+    return "Could not reach Supabase. Check that the project is not paused in the Supabase dashboard, that Vercel's VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY have no extra spaces (re-paste and redeploy), and try turning off ad blockers for this site. In the browser: DevTools → Network, look for a failed request to your-project.supabase.co.";
+  }
+  return message;
+}
+
 export default function SignInPage() {
   const { session, loading, configured, signInWithPassword, signUpWithPassword } = useAuth();
   const location = useLocation();
@@ -41,13 +54,13 @@ export default function SignInPage() {
       if (mode === "sign-in") {
         const { error } = await signInWithPassword(email, password);
         if (error) {
-          setMessage(error.message);
+          setMessage(formatAuthErrorMessage(error.message));
           return;
         }
       } else {
         const { error } = await signUpWithPassword(email, password);
         if (error) {
-          setMessage(error.message);
+          setMessage(formatAuthErrorMessage(error.message));
           return;
         }
         setMessage("Check your email to confirm your account, then sign in.");
