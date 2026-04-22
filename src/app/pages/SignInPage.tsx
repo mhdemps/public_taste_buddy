@@ -89,8 +89,17 @@ export default function SignInPage() {
           <InfoBoxFrame variant={0}>
             <p className="share-tech-regular" style={{ fontSize: "20pt", lineHeight: 1.4, color: "#2d2d2d" }}>
               Add <code className="share-tech-regular">VITE_SUPABASE_URL</code> and{" "}
-              <code className="share-tech-regular">VITE_SUPABASE_ANON_KEY</code> to a{" "}
-              <code className="share-tech-regular">.env</code> file in the project root, then restart the dev server.
+              <code className="share-tech-regular">VITE_SUPABASE_ANON_KEY</code> from Supabase (Project
+              settings → API). For local dev, put them in a <code className="share-tech-regular">.env</code> file
+              in the project root and restart the dev server.
+            </p>
+            <p
+              className="share-tech-regular"
+              style={{ fontSize: "18pt", lineHeight: 1.45, color: "#2d2d2d", marginTop: "0.75rem" }}
+            >
+              On Vercel (or similar hosts), add the same two names under Project → Environment variables, then run a{" "}
+              <strong>new deployment</strong>. Saving variables does not update an old build; the site must be built
+              again so Vite can embed them.
             </p>
           </InfoBoxFrame>
         ) : null}
