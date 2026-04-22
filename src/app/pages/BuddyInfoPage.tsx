@@ -11,7 +11,7 @@ import Navigation from "../components/Navigation";
 import { InfoBoxFrame } from "../components/InfoBoxFrame";
 import { ChalkPillFrame } from "../components/ChalkPillFrame";
 import GrayTasteHeader from "../components/GrayTasteHeader";
-import { PAGE_INTRO_BLURB_TEXT, PAGE_SHELL, PAGE_SHELL_SCROLL } from "../brand";
+import { PAGE_SHELL, PAGE_SHELL_SCROLL } from "../brand";
 import { BUDDY_IN_CIRCLE_H_PCT, BUDDY_IN_CIRCLE_W_PCT, BUDDY_PROFILE_CIRCLE_MAX } from "../buddyLayout";
 
 function buddyToForm(b: {
@@ -66,11 +66,12 @@ export default function BuddyInfoPage() {
     return (
       <div className={PAGE_SHELL}>
         <GrayTasteHeader />
+        <Navigation />
         <div className="tb-not-found-stack">
           <p className="share-tech-bold tb-text-coral">Profile not found</p>
           <motion.button
             type="button"
-            onClick={() => navigate("/buddies")}
+            onClick={() => navigate("/")}
             className="tb-submit-wrap"
             whileTap={{ scale: 0.98 }}
           >
@@ -79,13 +80,12 @@ export default function BuddyInfoPage() {
               fillClassName="tb-pill-fill-light"
               innerClassName="tb-pill-inner tb-pill-inner--md"
             >
-              <span className="share-tech-bold tb-text-coral" style={{ fontSize: 17 }}>
-                Community
+              <span className="share-tech-bold tb-text-coral" style={{ fontSize: "20pt" }}>
+                Wall
               </span>
             </ChalkPillFrame>
           </motion.button>
         </div>
-        <Navigation />
       </div>
     );
   }
@@ -113,6 +113,7 @@ export default function BuddyInfoPage() {
   return (
     <div className={PAGE_SHELL_SCROLL}>
       <GrayTasteHeader />
+      <Navigation />
 
       <div className="tb-main-column">
         <div className="tb-buddy-profile-back-row">
@@ -120,7 +121,7 @@ export default function BuddyInfoPage() {
             type="button"
             onClick={() => navigate("/buddies")}
             className="tb-submit-wrap"
-            aria-label="Back to community"
+            aria-label="Back to saved buddies"
             initial={{ y: -8, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.45, delay: 0.08 }}
@@ -134,8 +135,8 @@ export default function BuddyInfoPage() {
               <span className="tb-back-chevron share-tech-bold" aria-hidden>
                 ‹
               </span>
-              <span className="share-tech-bold tb-text-coral" style={{ fontSize: 18 }}>
-                Community
+              <span className="share-tech-bold tb-text-coral" style={{ fontSize: "20pt" }}>
+                Saved buddies
               </span>
             </ChalkPillFrame>
           </motion.button>
@@ -183,7 +184,6 @@ export default function BuddyInfoPage() {
             </motion.h1>
             <motion.p
               className="tb-buddy-profile-kicker share-tech-regular"
-              style={{ color: PAGE_INTRO_BLURB_TEXT }}
               initial={{ y: 12, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ duration: 0.45, delay: 0.28 }}
@@ -374,7 +374,7 @@ export default function BuddyInfoPage() {
                   fillClassName="tb-pill-fill-light--soft"
                   innerClassName="tb-pill-inner tb-pill-inner--sm"
                 >
-                  <span className="share-tech-regular tb-text-coral" style={{ fontSize: 18 }}>
+                  <span className="share-tech-regular tb-text-coral" style={{ fontSize: "20pt" }}>
                     Cancel
                   </span>
                 </ChalkPillFrame>
@@ -413,8 +413,6 @@ export default function BuddyInfoPage() {
           </motion.button>
         </motion.div>
       </div>
-
-      <Navigation />
     </div>
   );
 }

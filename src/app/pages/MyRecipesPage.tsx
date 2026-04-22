@@ -1,7 +1,9 @@
 import { useState, useCallback, useEffect } from "react";
 import { useLocation, useNavigate, useParams } from "react-router";
 import { motion } from "motion/react";
+import { useAuth } from "../context/AuthContext";
 import Navigation from "../components/Navigation";
+import { MY_RECIPES_STORAGE_BASE, scopedStorageKey } from "../userStorage";
 import GrayTasteHeader from "../components/GrayTasteHeader";
 import { InfoBoxFrame } from "../components/InfoBoxFrame";
 import { ChalkPillFrame } from "../components/ChalkPillFrame";
@@ -14,7 +16,7 @@ import imgRemoveRecipe from "@project-assets/party-remove-x.png";
 import imgAddRecipe from "@project-assets/madison-is-pretty.png";
 import imgYourRecipesHat from "@project-assets/thick hat.png";
 
-const STORAGE_KEY = "tasteBuddyMyRecipes";
+const LEGACY_MY_RECIPES_KEY = "tasteBuddyMyRecipes";
 
 export type MyRecipeEntry = {
   id: string;
@@ -34,9 +36,16 @@ function parseAllergyTags(raw: string | undefined): string[] {
     .filter(Boolean);
 }
 
-function loadRecipes(): MyRecipeEntry[] {
+function loadRecipes(storageKey: string): MyRecipeEntry[] {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    let raw = localStorage.getItem(storageKey);
+    if (!raw) {
+      const legacy = localStorage.getItem(LEGACY_MY_RECIPES_KEY);
+      if (legacy) {
+        localStorage.setItem(storageKey, legacy);
+        raw = legacy;
+      }
+    }
     if (!raw) return [];
     const parsed = JSON.parse(raw) as unknown;
     if (!Array.isArray(parsed)) return [];
@@ -60,8 +69,8 @@ function sortNewestFirst(list: MyRecipeEntry[]) {
   return [...list].sort((a, b) => new Date(b.savedAt).getTime() - new Date(a.savedAt).getTime());
 }
 
-function persistRecipes(list: MyRecipeEntry[]) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+function persistRecipes(storageKey: string, list: MyRecipeEntry[]) {
+  localStorage.setItem(storageKey, JSON.stringify(list));
 }
 
 export default function MyRecipesPage() {
@@ -72,7 +81,14 @@ export default function MyRecipesPage() {
   const isEditView = Boolean(editRecipeId);
   const isFormView = isAddView || isEditView;
 
-  const [saved, setSaved] = useState<MyRecipeEntry[]>(() => sortNewestFirst(loadRecipes()));
+  const { session } = useAuth();
+  const myRecipesStorageKey = scopedStorageKey(session!.user.id, MY_RECIPES_STORAGE_BASE);
+
+  const [saved, setSaved] = useState<MyRecipeEntry[]>(() => sortNewestFirst(loadRecipes(myRecipesStorageKey)));
+
+  useEffect(() => {
+    setSaved(sortNewestFirst(loadRecipes(myRecipesStorageKey)));
+  }, [myRecipesStorageKey]);
 
   const [expandedRecipeId, setExpandedRecipeId] = useState<string | null>(null);
 
@@ -83,8 +99,8 @@ export default function MyRecipesPage() {
   const [notes, setNotes] = useState("");
 
   const refresh = useCallback(() => {
-    setSaved(sortNewestFirst(loadRecipes()));
-  }, []);
+    setSaved(sortNewestFirst(loadRecipes(myRecipesStorageKey)));
+  }, [myRecipesStorageKey]);
 
   useEffect(() => {
     if (isAddView) {
@@ -96,7 +112,7 @@ export default function MyRecipesPage() {
       return;
     }
     if (!editRecipeId) return;
-    const found = loadRecipes().find((r) => r.id === editRecipeId);
+    const found = loadRecipes(myRecipesStorageKey).find((r) => r.id === editRecipeId);
     if (!found) {
       navigate("/my-recipes", { replace: true });
       return;
@@ -106,12 +122,12 @@ export default function MyRecipesPage() {
     setIngredients(found.ingredients);
     setDirections(found.directions);
     setNotes(found.notes);
-  }, [isAddView, editRecipeId, navigate]);
+  }, [isAddView, editRecipeId, navigate, myRecipesStorageKey]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (editRecipeId) {
-      const list = loadRecipes();
+      const list = loadRecipes(myRecipesStorageKey);
       const existing = list.find((r) => r.id === editRecipeId);
       if (!existing) {
         navigate("/my-recipes");
@@ -126,7 +142,7 @@ export default function MyRecipesPage() {
         notes: notes.trim(),
         savedAt: new Date().toISOString(),
       };
-      persistRecipes(list.map((r) => (r.id === editRecipeId ? updated : r)));
+      persistRecipes(myRecipesStorageKey, list.map((r) => (r.id === editRecipeId ? updated : r)));
       refresh();
       setRecipeName("");
       setAllergies("");
@@ -136,7 +152,7 @@ export default function MyRecipesPage() {
       navigate("/my-recipes");
       return;
     }
-    const list = loadRecipes();
+    const list = loadRecipes(myRecipesStorageKey);
     const row: MyRecipeEntry = {
       id: `my-recipe-${Date.now()}`,
       recipeName: recipeName.trim(),
@@ -147,7 +163,7 @@ export default function MyRecipesPage() {
       savedAt: new Date().toISOString(),
     };
     list.push(row);
-    persistRecipes(list);
+    persistRecipes(myRecipesStorageKey, list);
     refresh();
     setRecipeName("");
     setAllergies("");
@@ -159,7 +175,7 @@ export default function MyRecipesPage() {
 
   const handleRemove = (entry: MyRecipeEntry) => {
     if (!confirm(`Remove "${entry.recipeName}" from your recipes?`)) return;
-    persistRecipes(loadRecipes().filter((r) => r.id !== entry.id));
+    persistRecipes(myRecipesStorageKey, loadRecipes(myRecipesStorageKey).filter((r) => r.id !== entry.id));
     refresh();
     setExpandedRecipeId((cur) => (cur === entry.id ? null : cur));
   };
@@ -168,6 +184,7 @@ export default function MyRecipesPage() {
     return (
       <div className={PAGE_SHELL_SCROLL}>
         <GrayTasteHeader />
+        <Navigation />
 
         <motion.div
           className="tb-main-column"
@@ -197,7 +214,6 @@ export default function MyRecipesPage() {
           </motion.h1>
           <motion.p
             className="tb-intro-blurb share-tech-regular"
-            style={{ color: PAGE_INTRO_BLURB_TEXT }}
             initial={{ y: 12, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.45, delay: 0.1 }}
@@ -306,8 +322,6 @@ export default function MyRecipesPage() {
             </motion.button>
           </motion.form>
         </motion.div>
-
-        <Navigation />
       </div>
     );
   }
@@ -315,6 +329,7 @@ export default function MyRecipesPage() {
   return (
     <div className={PAGE_SHELL_SCROLL}>
       <GrayTasteHeader />
+      <Navigation />
 
       <motion.div
         className="tb-main-column"
@@ -344,7 +359,6 @@ export default function MyRecipesPage() {
         </motion.h1>
         <motion.p
           className="tb-intro-blurb share-tech-regular"
-          style={{ color: PAGE_INTRO_BLURB_TEXT }}
           initial={{ y: 12, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.45, delay: 0.1 }}
@@ -364,7 +378,7 @@ export default function MyRecipesPage() {
           </h2>
           {saved.length === 0 ? (
             <InfoBoxFrame variant={1}>
-              <p className="share-tech-regular" style={{ fontSize: 18, lineHeight: 1.375 }}>
+              <p className="share-tech-regular" style={{ fontSize: "20pt", lineHeight: 1.375 }}>
                 Nothing here yet — tap + below to add your first recipe.
               </p>
             </InfoBoxFrame>
@@ -456,7 +470,7 @@ export default function MyRecipesPage() {
                             ) : null}
                             <p
                               className="share-tech-regular"
-                              style={{ fontSize: 16, lineHeight: 1.375, color: PAGE_INTRO_BLURB_TEXT, opacity: 0.75 }}
+                              style={{ fontSize: "20pt", lineHeight: 1.375, color: PAGE_INTRO_BLURB_TEXT, opacity: 0.75 }}
                             >
                               Tap to open recipe
                             </p>
@@ -513,8 +527,6 @@ export default function MyRecipesPage() {
           <img alt="" className="tb-img-contain-full" src={imgAddRecipe} draggable={false} />
         </motion.button>
       </motion.div>
-
-      <Navigation />
     </div>
   );
 }

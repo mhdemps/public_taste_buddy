@@ -4,7 +4,7 @@ import { motion } from "motion/react";
 import { useBuddies } from "../context/BuddiesContext";
 import Navigation from "../components/Navigation";
 import GrayTasteHeader from "../components/GrayTasteHeader";
-import { PAGE_INTRO_BLURB_TEXT, PAGE_SHELL_SCROLL } from "../brand";
+import { PAGE_SHELL_SCROLL } from "../brand";
 import { InfoBoxFrame } from "../components/InfoBoxFrame";
 import { ChalkPillFrame } from "../components/ChalkPillFrame";
 
@@ -48,6 +48,7 @@ export default function AddBuddyPage() {
   return (
     <div className={PAGE_SHELL_SCROLL}>
       <GrayTasteHeader />
+      <Navigation />
 
       <motion.div
         className="tb-main-column"
@@ -65,7 +66,6 @@ export default function AddBuddyPage() {
         </motion.h1>
         <motion.p
           className="tb-intro-blurb share-tech-regular"
-          style={{ color: PAGE_INTRO_BLURB_TEXT }}
           initial={{ y: 12, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.45, delay: 0.1 }}
@@ -197,8 +197,6 @@ export default function AddBuddyPage() {
           </motion.button>
         </motion.form>
       </motion.div>
-
-      <Navigation />
     </div>
   );
 }

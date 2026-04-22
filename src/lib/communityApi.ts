@@ -1,0 +1,149 @@
+export type TasteProfileRow = {
+  id: string;
+  display_name: string | null;
+  buddy_color_index: number;
+  buddy_body_key: string | null;
+  buddy_hat_key: string | null;
+  buddy_smile_key: string | null;
+  favorite_food: string | null;
+  personality: string | null;
+  specialty: string | null;
+  allergies: string | null;
+  parties_attended: number | null;
+  recipes_given: string | null;
+  updated_at: string;
+};
+
+export type PublicRecipeRow = {
+  id: string;
+  user_id: string;
+  source_local_id: string | null;
+  recipe_name: string;
+  allergies: string;
+  ingredients: string;
+  directions: string;
+  notes: string;
+  created_at: string;
+};
+
+export type TasteProfileUpsert = {
+  id: string;
+  display_name: string;
+  buddy_color_index: number;
+  buddy_body_key?: string | null;
+  buddy_hat_key?: string | null;
+  buddy_smile_key?: string | null;
+  favorite_food?: string | null;
+  personality?: string | null;
+  specialty?: string | null;
+  allergies?: string | null;
+  parties_attended?: number | null;
+  recipes_given?: string | null;
+};
+
+const API_BASE = "/api";
+
+async function parseJsonResponse<T>(response: Response): Promise<T> {
+  if (response.status === 204) {
+    return undefined as T;
+  }
+  return (await response.json()) as T;
+}
+
+async function requestJson<T>(path: string, init?: RequestInit): Promise<{ data: T; error: Error | null }> {
+  try {
+    const response = await fetch(`${API_BASE}${path}`, {
+      headers: {
+        "Content-Type": "application/json",
+        ...(init?.headers ?? {}),
+      },
+      ...init,
+    });
+    const payload = await parseJsonResponse<T | { error?: string }>(response);
+    if (!response.ok) {
+      const message =
+        typeof payload === "object" && payload && "error" in payload && typeof payload.error === "string"
+          ? payload.error
+          : response.statusText || "Request failed.";
+      return { data: null as T, error: new Error(message) };
+    }
+    return { data: payload as T, error: null };
+  } catch (error) {
+    return {
+      data: null as T,
+      error: error instanceof Error ? error : new Error("Could not reach the local JSON API."),
+    };
+  }
+}
+
+export async function fetchCommunityProfiles(): Promise<{ data: TasteProfileRow[]; error: Error | null }> {
+  const { data, error } = await requestJson<TasteProfileRow[]>("/profiles");
+  return { data: data ?? [], error };
+}
+
+export async function fetchProfileByUserId(
+  userId: string
+): Promise<{ data: TasteProfileRow | null; error: Error | null }> {
+  return requestJson<TasteProfileRow | null>(`/profiles/${encodeURIComponent(userId)}`);
+}
+
+export async function upsertMyProfile(payload: TasteProfileUpsert): Promise<{ error: Error | null }> {
+  const { error } = await requestJson<TasteProfileRow>(`/profiles/${encodeURIComponent(payload.id)}`, {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
+  return { error };
+}
+
+export async function fetchPublicRecipesForUser(
+  userId: string
+): Promise<{ data: PublicRecipeRow[]; error: Error | null }> {
+  const { data, error } = await requestJson<PublicRecipeRow[]>(`/public-recipes/user/${encodeURIComponent(userId)}`);
+  return { data: data ?? [], error };
+}
+
+export async function fetchWallRecipes(limit = 48): Promise<{ data: PublicRecipeRow[]; error: Error | null }> {
+  const { data, error } = await requestJson<PublicRecipeRow[]>(`/public-recipes?limit=${encodeURIComponent(String(limit))}`);
+  return { data: data ?? [], error };
+}
+
+export async function insertPublicRecipe(row: {
+  user_id: string;
+  source_local_id: string;
+  recipe_name: string;
+  allergies: string;
+  ingredients: string;
+  directions: string;
+  notes: string;
+}): Promise<{ error: Error | null }> {
+  const { error } = await requestJson<PublicRecipeRow>("/public-recipes", {
+    method: "POST",
+    body: JSON.stringify({
+      user_id: row.user_id,
+      source_local_id: row.source_local_id,
+      recipe_name: row.recipe_name,
+      allergies: row.allergies,
+      ingredients: row.ingredients,
+      directions: row.directions,
+      notes: row.notes,
+    }),
+  });
+  return { error };
+}
+
+export async function deletePublicRecipe(recipeId: string, userId: string): Promise<{ error: Error | null }> {
+  const { error } = await requestJson<{ ok: boolean }>(
+    `/public-recipes/${encodeURIComponent(recipeId)}?userId=${encodeURIComponent(userId)}`,
+    { method: "DELETE" }
+  );
+  return { error };
+}
+
+export async function findPublicRecipeBySourceId(
+  userId: string,
+  sourceLocalId: string
+): Promise<{ data: PublicRecipeRow | null; error: Error | null }> {
+  return requestJson<PublicRecipeRow | null>(
+    `/public-recipes/user/${encodeURIComponent(userId)}/source/${encodeURIComponent(sourceLocalId)}`
+  );
+}

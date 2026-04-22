@@ -31,9 +31,9 @@ function NavIcon({ icon, tiltClass, onClick, ariaLabel }: NavIconProps) {
 const navItems = [
   { id: "chef", icon: iconChef, path: "/my-recipes" as const, ariaLabel: "My recipes" },
   { id: "party", icon: iconParty, path: "/party" as const, ariaLabel: "Parties and gatherings" },
-  { id: "home", icon: iconHome, path: "/home" as const, ariaLabel: "Home" },
+  { id: "home", icon: iconHome, path: "/" as const, ariaLabel: "Taste wall" },
   { id: "welcome", icon: iconRefresh, path: "/friend-recipe" as const, ariaLabel: "Community recipes" },
-  { id: "profile", icon: iconProfile, path: "/buddies" as const, ariaLabel: "Community — taste profiles" },
+  { id: "profile", icon: iconProfile, path: "/profile" as const, ariaLabel: "My profile and wall posts" },
 ] as const;
 
 export default function Navigation() {

@@ -1,11 +1,11 @@
-import { RouterProvider } from 'react-router';
-import { router } from './routes';
-import { BuddiesProvider } from './context/BuddiesContext';
+import { RouterProvider } from "react-router";
+import { router } from "./routes";
+import { AuthProvider } from "./context/AuthContext";
 
 export default function App() {
   return (
-    <BuddiesProvider>
+    <AuthProvider>
       <RouterProvider router={router} />
-    </BuddiesProvider>
+    </AuthProvider>
   );
 }

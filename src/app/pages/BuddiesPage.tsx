@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { useBuddies, circleForBuddyColor, getBuddyColorIndex } from "../context/BuddiesContext";
 import Navigation from "../components/Navigation";
 import GrayTasteHeader from "../components/GrayTasteHeader";
-import { PAGE_INTRO_BLURB_TEXT, PAGE_SHELL_SCROLL } from "../brand";
+import { PAGE_SHELL_SCROLL } from "../brand";
 import { BUDDY_IN_CIRCLE_H_PCT, BUDDY_IN_CIRCLE_W_PCT } from "../buddyLayout";
 import imgAddBuddy from "@project-assets/madison-is-pretty.png";
 
@@ -97,8 +97,9 @@ export default function BuddiesPage() {
   const { buddies } = useBuddies();
 
   return (
-    <div className={PAGE_SHELL_SCROLL} data-name="Community">
+    <div className={PAGE_SHELL_SCROLL} data-name="Saved buddies">
       <GrayTasteHeader />
+      <Navigation />
 
       <motion.div
         className="tb-main-column"
@@ -112,16 +113,16 @@ export default function BuddiesPage() {
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.45, delay: 0.05 }}
         >
-          Community
+          Saved buddies
         </motion.h1>
         <motion.p
           className="tb-buddies-blurb share-tech-regular"
-          style={{ color: PAGE_INTRO_BLURB_TEXT }}
           initial={{ y: 12, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.45, delay: 0.1 }}
         >
-          Browse public taste profiles — tap someone to see how they cook and eat. Use + to add another profile to your list.
+          Profiles you keep for parties and community recipes on this device. The live taste wall with everyone who has an
+          account is on the home tab. Use + to add another buddy to this list.
         </motion.p>
 
         <div className="tb-buddies-grid-wrap">
@@ -158,8 +159,6 @@ export default function BuddiesPage() {
           <img alt="Add a taste profile" className="tb-img-contain-full" src={imgAddBuddy} />
         </motion.button>
       </motion.div>
-
-      <Navigation />
     </div>
   );
 }

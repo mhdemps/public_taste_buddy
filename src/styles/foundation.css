@@ -1,5 +1,6 @@
 :root {
-  --font-size: 18px;
+  /*20pt minimum body scale — all rem values derive from this */
+  --font-size: 20pt;
   --font-sans: "Icebox", sans-serif;
   --text-2xl: 1.5rem;
   --text-xl: 1.25rem;
@@ -58,6 +59,7 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
+  font-size: var(--font-size);
 }
 
 h1 {
@@ -136,4 +138,8 @@ h3.share-tech-bold,
   font-family: "Icebox Magnet", "Icebox", sans-serif;
   font-weight: 400;
   font-style: normal;
+}
+
+small {
+  font-size: 20pt;
 }

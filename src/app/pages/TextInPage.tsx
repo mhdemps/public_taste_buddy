@@ -23,12 +23,12 @@ const MASCOT_SPRING = { type: "spring" as const, stiffness: 420, damping: 38, ma
 export default function TextInPage() {
   const navigate = useNavigate();
 
-  const goHome = () => navigate("/home", { state: { fromWelcome: true } });
+  const goHome = () => navigate("/", { state: { fromWelcome: true } });
 
   useEffect(() => {
     const textDoneMs = (TEXT_DELAY_S + TEXT_DURATION_S) * 1000;
     const t = window.setTimeout(() => {
-      navigate("/home", { state: { fromWelcome: true } });
+      navigate("/", { state: { fromWelcome: true } });
     }, textDoneMs + HOLD_MS_AFTER_TEXT);
     return () => window.clearTimeout(t);
   }, [navigate]);

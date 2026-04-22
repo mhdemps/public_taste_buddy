@@ -16,17 +16,19 @@ const CHALK_VARIANTS = [
 export function InfoBoxFrame({
   children,
   variant = 0,
+  className = "",
 }: {
   children: ReactNode;
   /** Cycles 0–3 for different noise seeds, corner asymmetry, tilt & hover direction. */
   variant?: number;
+  className?: string;
 }) {
   const uid = useId().replace(/:/g, "");
   const v = CHALK_VARIANTS[((variant % 4) + 4) % 4]!;
   const filterId = `tb-infobox-chalk-${uid}`;
 
   return (
-    <div className="tb-chalk-group">
+    <div className={`tb-chalk-group ${className}`.trim()}>
       <svg width={0} height={0} className="pointer-events-none absolute" aria-hidden>
         <defs>
           <filter id={filterId} x="-28%" y="-28%" width="156%" height="156%">

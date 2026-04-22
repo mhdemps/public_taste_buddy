@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
+import { BUDDIES_STORAGE_BASE, scopedStorageKey } from "../userStorage";
 import buddyPurple from "@project-assets/purple buddy.png";
 import buddyCyan from "@project-assets/blue buddy.png";
 import buddyYellow from "@project-assets/yellow buddy.png";
@@ -85,6 +86,17 @@ export function circleForBuddyColor(buddyColorIndex: number): string {
     return lightCircles[fallback];
   }
   return lightCircles[idx];
+}
+
+/** Buddy hue 0–5 for community profiles stored as a palette index (not a URL). */
+export function getBuddyAppearanceByPaletteIndex(paletteIndex: number) {
+  const i = Math.max(0, Math.min(5, Math.floor(paletteIndex)));
+  return {
+    buddyImage: buddyImages[i]!,
+    smilingImage: buddySmilingImages[i]!,
+    circleImage: circleForBuddyColor(i),
+    backgroundColor: backgroundColors[i]!,
+  };
 }
 
 /**
@@ -222,17 +234,36 @@ const initialBuddies: Buddy[] = initialBuddySeeds.map((b) => ({
   circleImage: circleForBuddyColor(getBuddyColorIndex(b.buddyImage)),
 }));
 
-export function BuddiesProvider({ children }: { children: ReactNode }) {
-  const [buddies, setBuddies] = useState<Buddy[]>(() => {
-    const saved = localStorage.getItem("tasteBuddyBuddies");
-    if (!saved) return initialBuddies;
+const LEGACY_BUDDIES_KEY = "tasteBuddyBuddies";
+
+function loadBuddiesFromStorage(storageKey: string): Buddy[] {
+  const saved = localStorage.getItem(storageKey);
+  if (saved) {
     const parsed = JSON.parse(saved) as Buddy[];
     return migrateBuddyCircles(migrateBannedBuddyPageAssets(parsed));
-  });
+  }
+  const legacy = localStorage.getItem(LEGACY_BUDDIES_KEY);
+  if (legacy) {
+    const parsed = JSON.parse(legacy) as Buddy[];
+    const migrated = migrateBuddyCircles(migrateBannedBuddyPageAssets(parsed));
+    localStorage.setItem(storageKey, JSON.stringify(migrated));
+    return migrated;
+  }
+  return initialBuddies;
+}
+
+export function BuddiesProvider({ children, userId }: { children: ReactNode; userId: string }) {
+  const storageKey = scopedStorageKey(userId, BUDDIES_STORAGE_BASE);
+
+  const [buddies, setBuddies] = useState<Buddy[]>(() => loadBuddiesFromStorage(storageKey));
 
   useEffect(() => {
-    localStorage.setItem('tasteBuddyBuddies', JSON.stringify(buddies));
-  }, [buddies]);
+    setBuddies(loadBuddiesFromStorage(storageKey));
+  }, [storageKey]);
+
+  useEffect(() => {
+    localStorage.setItem(storageKey, JSON.stringify(buddies));
+  }, [buddies, storageKey]);
 
   const addBuddy = (newBuddy: Omit<Buddy, "id" | "buddyImage" | "smilingImage" | "circleImage" | "backgroundColor">) => {
     const randomIndex = Math.floor(Math.random() * buddyImages.length);

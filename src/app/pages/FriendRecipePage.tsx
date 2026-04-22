@@ -1,7 +1,9 @@
 import { useNavigate, useLocation, useParams } from "react-router";
 import { useState, useCallback, useMemo, useEffect } from "react";
 import { motion } from "motion/react";
+import { useAuth } from "../context/AuthContext";
 import { useBuddies } from "../context/BuddiesContext";
+import { FRIEND_RECIPES_STORAGE_BASE, scopedStorageKey } from "../userStorage";
 import Navigation from "../components/Navigation";
 import GrayTasteHeader from "../components/GrayTasteHeader";
 import { InfoBoxFrame } from "../components/InfoBoxFrame";
@@ -15,7 +17,7 @@ import imgRemoveRecipe from "@project-assets/party-remove-x.png";
 import imgAddRecipe from "@project-assets/madison-is-pretty.png";
 import imgBuddyRecipeHero from "@project-assets/sunny.png";
 
-const STORAGE_KEY = "tasteBuddyFriendRecipes";
+const LEGACY_FRIEND_RECIPES_KEY = "tasteBuddyFriendRecipes";
 
 export type FriendRecipeEntry = {
   id: string;
@@ -37,9 +39,16 @@ function parseAllergyTags(raw: string | undefined): string[] {
     .filter(Boolean);
 }
 
-function loadRecipes(): FriendRecipeEntry[] {
+function loadRecipes(storageKey: string): FriendRecipeEntry[] {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    let raw = localStorage.getItem(storageKey);
+    if (!raw) {
+      const legacy = localStorage.getItem(LEGACY_FRIEND_RECIPES_KEY);
+      if (legacy) {
+        localStorage.setItem(storageKey, legacy);
+        raw = legacy;
+      }
+    }
     if (!raw) return [];
     const parsed = JSON.parse(raw) as unknown;
     if (!Array.isArray(parsed)) return [];
@@ -63,8 +72,8 @@ function sortNewestFirst(list: FriendRecipeEntry[]) {
   return [...list].sort((a, b) => new Date(b.savedAt).getTime() - new Date(a.savedAt).getTime());
 }
 
-function persistRecipes(list: FriendRecipeEntry[]) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+function persistRecipes(storageKey: string, list: FriendRecipeEntry[]) {
+  localStorage.setItem(storageKey, JSON.stringify(list));
 }
 
 export default function FriendRecipePage() {
@@ -74,8 +83,14 @@ export default function FriendRecipePage() {
   const isAddView = location.pathname.endsWith("/add");
   const isEditView = Boolean(editRecipeId);
   const isFormView = isAddView || isEditView;
+  const { session } = useAuth();
+  const recipesStorageKey = scopedStorageKey(session!.user.id, FRIEND_RECIPES_STORAGE_BASE);
   const { buddies } = useBuddies();
-  const [saved, setSaved] = useState<FriendRecipeEntry[]>(() => sortNewestFirst(loadRecipes()));
+  const [saved, setSaved] = useState<FriendRecipeEntry[]>(() => sortNewestFirst(loadRecipes(recipesStorageKey)));
+
+  useEffect(() => {
+    setSaved(sortNewestFirst(loadRecipes(recipesStorageKey)));
+  }, [recipesStorageKey]);
 
   const [expandedRecipeId, setExpandedRecipeId] = useState<string | null>(null);
 
@@ -109,7 +124,7 @@ export default function FriendRecipePage() {
       return;
     }
     if (!editRecipeId) return;
-    const found = loadRecipes().find((r) => r.id === editRecipeId);
+    const found = loadRecipes(recipesStorageKey).find((r) => r.id === editRecipeId);
     if (!found) {
       navigate("/friend-recipe", { replace: true });
       return;
@@ -120,20 +135,20 @@ export default function FriendRecipePage() {
     setIngredients(found.ingredients);
     setDirections(found.directions);
     setNotes(found.notes);
-  }, [isAddView, editRecipeId, navigate, buddies]);
+  }, [isAddView, editRecipeId, navigate, buddies, recipesStorageKey]);
 
   const selectedBuddy = useMemo(() => buddies.find((b) => b.id === buddyId), [buddies, buddyId]);
 
   const refresh = useCallback(() => {
-    setSaved(sortNewestFirst(loadRecipes()));
-  }, []);
+    setSaved(sortNewestFirst(loadRecipes(recipesStorageKey)));
+  }, [recipesStorageKey]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedBuddy) return;
 
     if (editRecipeId) {
-      const list = loadRecipes();
+      const list = loadRecipes(recipesStorageKey);
       const existing = list.find((r) => r.id === editRecipeId);
       if (!existing) {
         navigate("/friend-recipe");
@@ -150,7 +165,7 @@ export default function FriendRecipePage() {
         notes: notes.trim(),
         savedAt: new Date().toISOString(),
       };
-      persistRecipes(list.map((r) => (r.id === editRecipeId ? updated : r)));
+      persistRecipes(recipesStorageKey, list.map((r) => (r.id === editRecipeId ? updated : r)));
       refresh();
       setRecipeName("");
       setAllergies("");
@@ -161,7 +176,7 @@ export default function FriendRecipePage() {
       return;
     }
 
-    const list = loadRecipes();
+    const list = loadRecipes(recipesStorageKey);
     const row: FriendRecipeEntry = {
       id: `recipe-${Date.now()}`,
       buddyId: selectedBuddy.id,
@@ -174,7 +189,7 @@ export default function FriendRecipePage() {
       savedAt: new Date().toISOString(),
     };
     list.push(row);
-    persistRecipes(list);
+    persistRecipes(recipesStorageKey, list);
     refresh();
     setRecipeName("");
     setAllergies("");
@@ -186,7 +201,7 @@ export default function FriendRecipePage() {
 
   const handleRemove = (entry: FriendRecipeEntry) => {
     if (!confirm(`Remove "${entry.recipeName}" from your saved community recipes?`)) return;
-    persistRecipes(loadRecipes().filter((r) => r.id !== entry.id));
+    persistRecipes(recipesStorageKey, loadRecipes(recipesStorageKey).filter((r) => r.id !== entry.id));
     refresh();
     setExpandedRecipeId((cur) => (cur === entry.id ? null : cur));
   };
@@ -195,6 +210,7 @@ export default function FriendRecipePage() {
     return (
       <div className={PAGE_SHELL_SCROLL}>
         <GrayTasteHeader />
+        <Navigation />
 
         <motion.div
           className="tb-main-column"
@@ -212,7 +228,6 @@ export default function FriendRecipePage() {
           </motion.h1>
           <motion.p
             className="tb-intro-blurb share-tech-regular"
-            style={{ color: PAGE_INTRO_BLURB_TEXT }}
             initial={{ y: 12, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.45, delay: 0.1 }}
@@ -340,8 +355,6 @@ export default function FriendRecipePage() {
             </motion.button>
           </motion.form>
         </motion.div>
-
-        <Navigation />
       </div>
     );
   }
@@ -349,6 +362,7 @@ export default function FriendRecipePage() {
   return (
     <div className={PAGE_SHELL_SCROLL}>
       <GrayTasteHeader />
+      <Navigation />
 
       <motion.div
         className="tb-main-column"
@@ -376,7 +390,6 @@ export default function FriendRecipePage() {
         </motion.h1>
         <motion.p
           className="tb-intro-blurb share-tech-regular"
-          style={{ color: PAGE_INTRO_BLURB_TEXT }}
           initial={{ y: 12, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.45, delay: 0.12 }}
@@ -392,8 +405,8 @@ export default function FriendRecipePage() {
             transition={{ duration: 0.5, delay: 0.12 }}
           >
             <InfoBoxFrame variant={0}>
-              <p className="share-tech-regular" style={{ fontSize: 18, lineHeight: 1.375 }}>
-                Add someone to Community first so you can tag their profile on shared recipes.
+              <p className="share-tech-regular" style={{ fontSize: "20pt", lineHeight: 1.375 }}>
+                Add someone under Saved buddies first so you can tag their profile on shared recipes.
               </p>
             </InfoBoxFrame>
             <motion.button
@@ -420,9 +433,9 @@ export default function FriendRecipePage() {
           </h2>
           {saved.length === 0 ? (
             <InfoBoxFrame variant={1}>
-              <p className="share-tech-regular" style={{ fontSize: 18, lineHeight: 1.375 }}>
+              <p className="share-tech-regular" style={{ fontSize: "20pt", lineHeight: 1.375 }}>
                 {buddies.length === 0
-                  ? "Nothing saved yet — add a profile in Community, then tap + for your first recipe."
+                  ? "Nothing saved yet — add a profile in Saved buddies, then tap + for your first recipe."
                   : "Nothing here yet — tap + below to save a recipe and link it to someone’s profile."}
               </p>
             </InfoBoxFrame>
@@ -522,7 +535,7 @@ export default function FriendRecipePage() {
                             </p>
                             <p
                               className="share-tech-regular"
-                              style={{ fontSize: 16, lineHeight: 1.375, color: PAGE_INTRO_BLURB_TEXT, opacity: 0.75 }}
+                              style={{ fontSize: "20pt", lineHeight: 1.375, color: PAGE_INTRO_BLURB_TEXT, opacity: 0.75 }}
                             >
                               Tap to open recipe
                             </p>
@@ -581,8 +594,6 @@ export default function FriendRecipePage() {
           </motion.button>
         ) : null}
       </motion.div>
-
-      <Navigation />
     </div>
   );
 }

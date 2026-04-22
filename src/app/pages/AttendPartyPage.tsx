@@ -1,7 +1,9 @@
 import { useNavigate, useLocation, useParams } from "react-router";
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { motion } from "motion/react";
+import { useAuth } from "../context/AuthContext";
 import { useBuddies } from "../context/BuddiesContext";
+import { PARTY_PLANS_STORAGE_BASE, scopedStorageKey } from "../userStorage";
 import Navigation from "../components/Navigation";
 import GrayTasteHeader from "../components/GrayTasteHeader";
 import { InfoBoxFrame } from "../components/InfoBoxFrame";
@@ -15,7 +17,7 @@ import imgPartyPlus from "@project-assets/madison-is-pretty.png";
 import imgRemoveParty from "@project-assets/party-remove-x.png";
 import imgPartyTopBuddy from "@project-assets/vibe-code-bad.png";
 
-const STORAGE_KEY = "tasteBuddyPartyPlans";
+const LEGACY_PARTY_PLANS_KEY = "tasteBuddyPartyPlans";
 
 export type PartyPlanEntry = {
   id: string;
@@ -57,9 +59,16 @@ function normalizePartyEntry(raw: unknown): PartyPlanEntry | null {
   };
 }
 
-function loadPartyPlans(): PartyPlanEntry[] {
+function loadPartyPlans(storageKey: string): PartyPlanEntry[] {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    let raw = localStorage.getItem(storageKey);
+    if (!raw) {
+      const legacy = localStorage.getItem(LEGACY_PARTY_PLANS_KEY);
+      if (legacy) {
+        localStorage.setItem(storageKey, legacy);
+        raw = legacy;
+      }
+    }
     if (!raw) return [];
     const parsed = JSON.parse(raw) as unknown[];
     if (!Array.isArray(parsed)) return [];
@@ -73,8 +82,8 @@ function sortPlansNewestFirst(list: PartyPlanEntry[]) {
   return [...list].sort((a, b) => new Date(b.savedAt).getTime() - new Date(a.savedAt).getTime());
 }
 
-function persistPlans(list: PartyPlanEntry[]) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+function persistPlans(storageKey: string, list: PartyPlanEntry[]) {
+  localStorage.setItem(storageKey, JSON.stringify(list));
 }
 
 function formatDisplayDate(isoDate: string): string {
@@ -113,8 +122,16 @@ export default function AttendPartyPage() {
   const isAddView = location.pathname.endsWith("/add");
   const isEditView = Boolean(editPartyId);
   const isFormView = isAddView || isEditView;
+  const { session } = useAuth();
+  const partyStorageKey = scopedStorageKey(session!.user.id, PARTY_PLANS_STORAGE_BASE);
   const { buddies } = useBuddies();
-  const [savedPlans, setSavedPlans] = useState<PartyPlanEntry[]>(() => sortPlansNewestFirst(loadPartyPlans()));
+  const [savedPlans, setSavedPlans] = useState<PartyPlanEntry[]>(() =>
+    sortPlansNewestFirst(loadPartyPlans(partyStorageKey))
+  );
+
+  useEffect(() => {
+    setSavedPlans(sortPlansNewestFirst(loadPartyPlans(partyStorageKey)));
+  }, [partyStorageKey]);
 
   const [expandedPlanId, setExpandedPlanId] = useState<string | null>(null);
 
@@ -126,8 +143,8 @@ export default function AttendPartyPage() {
   const [bringing, setBringing] = useState("");
 
   const refreshSavedPlans = useCallback(() => {
-    setSavedPlans(sortPlansNewestFirst(loadPartyPlans()));
-  }, []);
+    setSavedPlans(sortPlansNewestFirst(loadPartyPlans(partyStorageKey)));
+  }, [partyStorageKey]);
 
   useEffect(() => {
     if (buddies.length === 0) return;
@@ -152,7 +169,7 @@ export default function AttendPartyPage() {
       return;
     }
     if (!editPartyId) return;
-    const found = loadPartyPlans().find((p) => p.id === editPartyId);
+    const found = loadPartyPlans(partyStorageKey).find((p) => p.id === editPartyId);
     if (!found) {
       navigate("/party", { replace: true });
       return;
@@ -163,7 +180,7 @@ export default function AttendPartyPage() {
     setAddress(found.address);
     setBuddyId(found.buddyId || (buddies[0]?.id ?? ""));
     setBringing(found.bringing);
-  }, [isAddView, editPartyId, navigate, buddies]);
+  }, [isAddView, editPartyId, navigate, buddies, partyStorageKey]);
 
   const selectedBuddy = useMemo(() => buddies.find((b) => b.id === buddyId), [buddies, buddyId]);
 
@@ -179,7 +196,7 @@ export default function AttendPartyPage() {
     if (!confirm(`Remove "${plan.partyName}" from your saved parties?`)) {
       return;
     }
-    persistPlans(loadPartyPlans().filter((p) => p.id !== plan.id));
+    persistPlans(partyStorageKey, loadPartyPlans(partyStorageKey).filter((p) => p.id !== plan.id));
     refreshSavedPlans();
     setExpandedPlanId((cur) => (cur === plan.id ? null : cur));
   };
@@ -189,7 +206,7 @@ export default function AttendPartyPage() {
     if (!selectedBuddy) return;
 
     if (editPartyId) {
-      const list = loadPartyPlans();
+      const list = loadPartyPlans(partyStorageKey);
       const existing = list.find((p) => p.id === editPartyId);
       if (!existing) {
         navigate("/party");
@@ -206,7 +223,7 @@ export default function AttendPartyPage() {
         bringing: bringing.trim(),
         savedAt: new Date().toISOString(),
       };
-      persistPlans(list.map((p) => (p.id === editPartyId ? updated : p)));
+      persistPlans(partyStorageKey, list.map((p) => (p.id === editPartyId ? updated : p)));
       refreshSavedPlans();
       setPartyName("");
       setPartyThemes("");
@@ -217,7 +234,7 @@ export default function AttendPartyPage() {
       return;
     }
 
-    const list = loadPartyPlans();
+    const list = loadPartyPlans(partyStorageKey);
     const row: PartyPlanEntry = {
       id: `party-${Date.now()}`,
       partyName: partyName.trim(),
@@ -230,7 +247,7 @@ export default function AttendPartyPage() {
       savedAt: new Date().toISOString(),
     };
     list.push(row);
-    persistPlans(list);
+    persistPlans(partyStorageKey, list);
     refreshSavedPlans();
     setPartyName("");
     setPartyThemes("");
@@ -244,6 +261,7 @@ export default function AttendPartyPage() {
     return (
       <div className={PAGE_SHELL_SCROLL}>
         <GrayTasteHeader />
+        <Navigation />
 
         <motion.div
           className="tb-main-column"
@@ -271,7 +289,6 @@ export default function AttendPartyPage() {
           </motion.h1>
           <motion.p
             className="tb-intro-blurb share-tech-regular"
-            style={{ color: PAGE_INTRO_BLURB_TEXT }}
             initial={{ y: 12, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.45, delay: 0.12 }}
@@ -408,8 +425,6 @@ export default function AttendPartyPage() {
             </motion.form>
           </motion.section>
         </motion.div>
-
-        <Navigation />
       </div>
     );
   }
@@ -417,6 +432,7 @@ export default function AttendPartyPage() {
   return (
     <div className={PAGE_SHELL_SCROLL}>
       <GrayTasteHeader />
+      <Navigation />
 
       <motion.div
         className="tb-main-column"
@@ -444,12 +460,11 @@ export default function AttendPartyPage() {
         </motion.h1>
         <motion.p
           className="tb-intro-blurb share-tech-regular"
-          style={{ color: PAGE_INTRO_BLURB_TEXT }}
           initial={{ y: 12, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.45, delay: 0.12 }}
         >
-          Plan get-togethers and see who’s hosting — tied to profiles in Community.
+          Plan get-togethers and see who’s hosting — tied to profiles in Saved buddies.
         </motion.p>
 
         <motion.section
@@ -465,7 +480,7 @@ export default function AttendPartyPage() {
 
           {savedPlans.length === 0 ? (
             <InfoBoxFrame variant={1}>
-              <p className="share-tech-regular" style={{ fontSize: 18, lineHeight: 1.375 }}>
+              <p className="share-tech-regular" style={{ fontSize: "20pt", lineHeight: 1.375 }}>
                 Nothing here yet — tap + below to add party details.
               </p>
             </InfoBoxFrame>
@@ -600,8 +615,8 @@ export default function AttendPartyPage() {
             transition={{ duration: 0.5, delay: 0.2 }}
           >
             <InfoBoxFrame variant={0}>
-              <p className="share-tech-regular" style={{ fontSize: 18, lineHeight: 1.375 }}>
-                Add someone in Community first so you can link a gathering to their profile.
+              <p className="share-tech-regular" style={{ fontSize: "20pt", lineHeight: 1.375 }}>
+                Add someone in Saved buddies first so you can link a gathering to their profile.
               </p>
             </InfoBoxFrame>
             <motion.button
@@ -630,8 +645,6 @@ export default function AttendPartyPage() {
           </motion.button>
         )}
       </motion.div>
-
-      <Navigation />
     </div>
   );
 }
