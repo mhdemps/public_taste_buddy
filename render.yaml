@@ -1,0 +1,13 @@
+# Optional: deploy the JSON API to Render (free tier).
+# New Web Service → connect this repo → Runtime Node, Build: (none), Start: npm start
+# Copy the service URL (https://….onrender.com) into Vercel as VITE_API_ORIGIN, then redeploy the frontend.
+services:
+  - type: web
+    name: taste-buddy-api
+    runtime: node
+    plan: free
+    buildCommand: ""
+    startCommand: npm start
+    envVars:
+      - key: NODE_VERSION
+        value: "20"

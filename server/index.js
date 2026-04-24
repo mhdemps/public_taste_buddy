@@ -10,7 +10,7 @@ const rootDir = path.resolve(__dirname, "..");
 const dataDir = path.join(rootDir, "data");
 const profilesPath = path.join(dataDir, "profiles.json");
 const publicRecipesPath = path.join(dataDir, "public_recipes.json");
-const port = Number.parseInt(process.env.LOCAL_API_PORT ?? "3001", 10);
+const port = Number.parseInt(process.env.PORT ?? process.env.LOCAL_API_PORT ?? "3001", 10);
 
 function sendJson(res, statusCode, payload) {
   res.writeHead(statusCode, {
@@ -254,5 +254,5 @@ await ensureDataFile(profilesPath);
 await ensureDataFile(publicRecipesPath);
 
 server.listen(port, () => {
-  console.log(`Local JSON API listening on http://localhost:${port}`);
+  console.log(`JSON API listening on port ${port}`);
 });

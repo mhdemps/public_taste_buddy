@@ -43,7 +43,13 @@ export type TasteProfileUpsert = {
   recipes_given?: string | null;
 };
 
-const API_BASE = "/api";
+/**
+ * Local dev: Vite proxies `/api` → `server/index.js`.
+ * Production (e.g. Vercel): set `VITE_API_ORIGIN` to your hosted API (no trailing slash), e.g.
+ * `https://your-app.onrender.com`, then rebuild the frontend.
+ */
+const API_ORIGIN = (import.meta.env.VITE_API_ORIGIN as string | undefined)?.replace(/\/$/, "") ?? "";
+const API_BASE = API_ORIGIN ? `${API_ORIGIN}/api` : "/api";
 
 async function parseJsonResponse<T>(response: Response): Promise<T> {
   if (response.status === 204) {
