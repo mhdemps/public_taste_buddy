@@ -5,7 +5,8 @@ import { fileURLToPath } from "node:url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const rootDir = path.resolve(__dirname, "..");
+/** In Vercel functions, bundled `__dirname` is not the repo root; `cwd` is the function bundle root with includeFiles. */
+const rootDir = process.env.VERCEL ? process.cwd() : path.resolve(__dirname, "..");
 
 /** Vercel serverless has a read-only project FS; keep JSON in /tmp (seeded from repo `data/`). */
 const DATA_DIR = process.env.VERCEL ? path.join("/tmp", "taste-buddy-data") : path.join(rootDir, "data");

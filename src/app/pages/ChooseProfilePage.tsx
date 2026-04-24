@@ -112,7 +112,7 @@ export default function ChooseProfilePage() {
             </p>
             <p className="share-tech-regular" style={{ fontSize: "14pt", lineHeight: 1.4, color: "#2d2d2d", marginTop: "0.5rem" }}>
               This app needs the JSON API. On your computer run <code className="share-tech-regular">npm run dev</code> (Vite + API). On
-              Vercel, deploy the latest code from this repo so <code className="share-tech-regular">api/[...slug].js</code> is included,
+              Vercel, deploy the latest code from this repo (including <code className="share-tech-regular">api/_entry/[...slug].js</code> and <code className="share-tech-regular">vercel.json</code> rewrites),
               then trigger a new deployment.
             </p>
           </InfoBoxFrame>

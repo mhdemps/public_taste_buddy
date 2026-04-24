@@ -4,8 +4,8 @@
   "outputDirectory": "dist",
   "rewrites": [
     {
-      "source": "/api/(.*)",
-      "destination": "/api/$1"
+      "source": "/api/(?!_entry(?:/|$))(.*)",
+      "destination": "/api/_entry/$1"
     },
     {
       "source": "/(.*)",
@@ -13,7 +13,7 @@
     }
   ],
   "functions": {
-    "api/[...slug].js": {
+    "api/_entry/[...slug].js": {
       "includeFiles": "data/**"
     }
   }
