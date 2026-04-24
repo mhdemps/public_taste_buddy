@@ -55,7 +55,16 @@ async function parseJsonResponse<T>(response: Response): Promise<T> {
   if (response.status === 204) {
     return undefined as T;
   }
-  return (await response.json()) as T;
+  const text = await response.text();
+  if (!text.trim()) {
+    throw new Error(`Empty API response (HTTP ${response.status}).`);
+  }
+  try {
+    return JSON.parse(text) as T;
+  } catch {
+    const preview = text.slice(0, 120).replace(/\s+/g, " ");
+    throw new Error(`Not JSON (HTTP ${response.status}): ${preview}`);
+  }
 }
 
 async function requestJson<T>(path: string, init?: RequestInit): Promise<{ data: T; error: Error | null }> {

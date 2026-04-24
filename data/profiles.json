@@ -12,12 +12,13 @@
     "allergies": null,
     "parties_attended": null,
     "recipes_given": null,
-    "updated_at": "2026-04-24T03:09:08.435Z"
+    "updated_at": "2026-04-24T03:09:08.435Z",
+    "backdrop_migrated_v2": true
   },
   {
     "id": "150f191b-968f-4774-9156-7ac8418691bb",
     "display_name": "Riley",
-    "buddy_color_index": 11,
+    "buddy_color_index": 5,
     "buddy_body_key": "blue",
     "buddy_hat_key": "jd",
     "buddy_smile_key": "smile",
@@ -27,6 +28,7 @@
     "allergies": "peanut, nuts, sesame",
     "parties_attended": null,
     "recipes_given": null,
-    "updated_at": "2026-04-24T06:00:10.998Z"
+    "updated_at": "2026-04-24T06:00:10.998Z",
+    "backdrop_migrated_v2": true
   }
 ]

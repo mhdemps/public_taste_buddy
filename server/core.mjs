@@ -13,14 +13,36 @@ const DATA_DIR = process.env.VERCEL ? path.join("/tmp", "taste-buddy-data") : pa
 const profilesPath = path.join(DATA_DIR, "profiles.json");
 const publicRecipesPath = path.join(DATA_DIR, "public_recipes.json");
 
+const CORS_HEADERS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type",
+};
+
 function sendJson(res, statusCode, payload) {
+  if (typeof res.status === "function" && typeof res.json === "function") {
+    for (const [k, v] of Object.entries(CORS_HEADERS)) {
+      res.setHeader(k, v);
+    }
+    res.status(statusCode).json(payload);
+    return;
+  }
   res.writeHead(statusCode, {
     "Content-Type": "application/json; charset=utf-8",
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type",
+    ...CORS_HEADERS,
   });
   res.end(JSON.stringify(payload));
+}
+
+/** Vercel Node runtime expects Web `fetch(request)`; use this instead of raw `http` res. */
+function toFetchResponse(statusCode, payload) {
+  return new Response(JSON.stringify(payload), {
+    status: statusCode,
+    headers: {
+      "Content-Type": "application/json; charset=utf-8",
+      ...CORS_HEADERS,
+    },
+  });
 }
 
 async function ensureDataFile(filePath, seedFileName) {
@@ -89,6 +111,16 @@ async function readBody(req) {
   return raw ? JSON.parse(raw) : {};
 }
 
+async function readJsonBodyFromFetch(request) {
+  const text = await request.text();
+  if (!text) return {};
+  try {
+    return JSON.parse(text);
+  } catch {
+    return {};
+  }
+}
+
 function sortByDateDesc(rows, key) {
   return [...rows].sort((a, b) => {
     const aTime = new Date(a[key] ?? 0).getTime();
@@ -97,13 +129,17 @@ function sortByDateDesc(rows, key) {
   });
 }
 
-async function handleProfiles(req, res, pathname) {
-  if (req.method === "GET" && pathname === "/api/profiles") {
+/**
+ * @param {() => Promise<Record<string, unknown>>} getBody lazy; only called for routes that need JSON body
+ * @returns {Promise<{ status: number, payload: unknown } | null>}
+ */
+async function routeProfiles(method, pathname, getBody) {
+  if (method === "GET" && pathname === "/api/profiles") {
     const profiles = sortByDateDesc(await readProfilesWithBackdropMigration(), "updated_at");
-    return sendJson(res, 200, profiles);
+    return { status: 200, payload: profiles };
   }
 
-  if (req.method === "POST" && pathname === "/api/profiles") {
+  if (method === "POST" && pathname === "/api/profiles") {
     const profiles = await readProfilesWithBackdropMigration();
     const id = randomUUID();
     const now = new Date().toISOString();
@@ -125,21 +161,21 @@ async function handleProfiles(req, res, pathname) {
     };
     profiles.push(nextProfile);
     await writeJsonArray(profilesPath, profiles);
-    return sendJson(res, 201, nextProfile);
+    return { status: 201, payload: nextProfile };
   }
 
   const profileByIdMatch = pathname.match(/^\/api\/profiles\/([^/]+)$/);
-  if (!profileByIdMatch) return false;
+  if (!profileByIdMatch) return null;
 
   const profileId = decodeURIComponent(profileByIdMatch[1]);
-  if (req.method === "GET") {
+  if (method === "GET") {
     const profiles = await readProfilesWithBackdropMigration();
     const profile = profiles.find((row) => row.id === profileId) ?? null;
-    return sendJson(res, 200, profile);
+    return { status: 200, payload: profile };
   }
 
-  if (req.method === "PUT") {
-    const body = await readBody(req);
+  if (method === "PUT") {
+    const body = await getBody();
     const profiles = await readProfilesWithBackdropMigration();
     const nextProfile = {
       id: profileId,
@@ -160,45 +196,49 @@ async function handleProfiles(req, res, pathname) {
     const nextProfiles = profiles.filter((row) => row.id !== profileId);
     nextProfiles.push(nextProfile);
     await writeJsonArray(profilesPath, nextProfiles);
-    return sendJson(res, 200, nextProfile);
+    return { status: 200, payload: nextProfile };
   }
 
-  return false;
+  return null;
 }
 
-async function handlePublicRecipes(req, res, pathname, searchParams) {
-  if (req.method === "GET" && pathname === "/api/public-recipes") {
+/**
+ * @param {() => Promise<Record<string, unknown>>} getBody
+ * @returns {Promise<{ status: number, payload: unknown } | null>}
+ */
+async function routePublicRecipes(method, pathname, searchParams, getBody) {
+  if (method === "GET" && pathname === "/api/public-recipes") {
     const limit = Number.parseInt(searchParams.get("limit") ?? "48", 10);
     const recipes = sortByDateDesc(await readJsonArray(publicRecipesPath, "public_recipes.json"), "created_at");
-    return sendJson(res, 200, recipes.slice(0, Number.isNaN(limit) ? 48 : limit));
+    return { status: 200, payload: recipes.slice(0, Number.isNaN(limit) ? 48 : limit) };
   }
 
   const userRecipesMatch = pathname.match(/^\/api\/public-recipes\/user\/([^/]+)$/);
-  if (req.method === "GET" && userRecipesMatch) {
+  if (method === "GET" && userRecipesMatch) {
     const userId = decodeURIComponent(userRecipesMatch[1]);
     const recipes = sortByDateDesc(await readJsonArray(publicRecipesPath, "public_recipes.json"), "created_at").filter(
       (row) => row.user_id === userId
     );
-    return sendJson(res, 200, recipes);
+    return { status: 200, payload: recipes };
   }
 
   const sourceMatch = pathname.match(/^\/api\/public-recipes\/user\/([^/]+)\/source\/([^/]+)$/);
-  if (req.method === "GET" && sourceMatch) {
+  if (method === "GET" && sourceMatch) {
     const userId = decodeURIComponent(sourceMatch[1]);
     const sourceLocalId = decodeURIComponent(sourceMatch[2]);
     const recipes = await readJsonArray(publicRecipesPath, "public_recipes.json");
     const recipe = recipes.find((row) => row.user_id === userId && row.source_local_id === sourceLocalId) ?? null;
-    return sendJson(res, 200, recipe);
+    return { status: 200, payload: recipe };
   }
 
-  if (req.method === "POST" && pathname === "/api/public-recipes") {
-    const body = await readBody(req);
+  if (method === "POST" && pathname === "/api/public-recipes") {
+    const body = await getBody();
     const recipes = await readJsonArray(publicRecipesPath, "public_recipes.json");
     const duplicate = recipes.find(
       (row) => row.user_id === body.user_id && body.source_local_id && row.source_local_id === body.source_local_id
     );
     if (duplicate) {
-      return sendJson(res, 409, { error: "That recipe is already on the wall." });
+      return { status: 409, payload: { error: "That recipe is already on the wall." } };
     }
     const nextRecipe = {
       id: randomUUID(),
@@ -214,24 +254,84 @@ async function handlePublicRecipes(req, res, pathname, searchParams) {
     };
     recipes.push(nextRecipe);
     await writeJsonArray(publicRecipesPath, recipes);
-    return sendJson(res, 201, nextRecipe);
+    return { status: 201, payload: nextRecipe };
   }
 
   const deleteMatch = pathname.match(/^\/api\/public-recipes\/([^/]+)$/);
-  if (req.method === "DELETE" && deleteMatch) {
+  if (method === "DELETE" && deleteMatch) {
     const recipeId = decodeURIComponent(deleteMatch[1]);
     const userId = searchParams.get("userId");
     const recipes = await readJsonArray(publicRecipesPath, "public_recipes.json");
     const exists = recipes.some((row) => row.id === recipeId && row.user_id === userId);
     if (!exists) {
-      return sendJson(res, 404, { error: "Recipe not found." });
+      return { status: 404, payload: { error: "Recipe not found." } };
     }
     const nextRecipes = recipes.filter((row) => !(row.id === recipeId && row.user_id === userId));
     await writeJsonArray(publicRecipesPath, nextRecipes);
-    return sendJson(res, 200, { ok: true });
+    return { status: 200, payload: { ok: true } };
   }
 
-  return false;
+  return null;
+}
+
+/**
+ * @param {() => Promise<Record<string, unknown>>} getBody
+ */
+async function dispatchApi(method, pathname, searchParams, getBody) {
+  const profilesResult = await routeProfiles(method, pathname, getBody);
+  if (profilesResult) return profilesResult;
+  const recipesResult = await routePublicRecipes(method, pathname, searchParams, getBody);
+  if (recipesResult) return recipesResult;
+  return null;
+}
+
+function normalizePublicPathname(pathname) {
+  if (pathname.startsWith("/api/_entry/")) {
+    return "/api/" + pathname.slice("/api/_entry/".length);
+  }
+  if (pathname === "/api/_entry") {
+    return "/api";
+  }
+  return pathname;
+}
+
+/**
+ * Vercel Node runtime: export `default: { fetch }` so the handler is actually invoked.
+ * @param {Request} request
+ * @returns {Promise<Response>}
+ */
+export async function handleApiFetch(request) {
+  const u = new URL(request.url);
+  let pathname = normalizePublicPathname(u.pathname);
+  if (pathname.length > 1 && pathname.endsWith("/")) {
+    pathname = pathname.replace(/\/+$/, "") || "/";
+  }
+  const searchParams = u.searchParams;
+  const method = request.method;
+
+  if (method === "OPTIONS") {
+    return toFetchResponse(200, { ok: true });
+  }
+
+  let bodyCache;
+  const lazyBody = async () => {
+    bodyCache ??= await readJsonBodyFromFetch(request);
+    return bodyCache;
+  };
+
+  try {
+    if (pathname === "/api/health") {
+      return toFetchResponse(200, { ok: true });
+    }
+    const result = await dispatchApi(method, pathname, searchParams, lazyBody);
+    if (result) {
+      return toFetchResponse(result.status, result.payload);
+    }
+    return toFetchResponse(404, { error: "Not found." });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown server error.";
+    return toFetchResponse(500, { error: message });
+  }
 }
 
 /**
@@ -253,15 +353,26 @@ export async function handleApiRequest(req, res, requestUrl) {
 
   try {
     const url = new URL(urlString, "http://localhost");
-    if (url.pathname.length > 1 && url.pathname.endsWith("/")) {
-      url.pathname = url.pathname.replace(/\/+$/, "") || "/";
+    let pathname = normalizePublicPathname(url.pathname);
+    if (pathname.length > 1 && pathname.endsWith("/")) {
+      pathname = pathname.replace(/\/+$/, "") || "/";
     }
-    if (url.pathname === "/api/health") {
+    if (pathname === "/api/health") {
       sendJson(res, 200, { ok: true });
       return;
     }
-    if ((await handleProfiles(req, res, url.pathname)) !== false) return;
-    if ((await handlePublicRecipes(req, res, url.pathname, url.searchParams)) !== false) return;
+
+    let bodyCache;
+    const lazyBody = async () => {
+      bodyCache ??= await readBody(req);
+      return bodyCache;
+    };
+
+    const result = await dispatchApi(req.method, pathname, url.searchParams, lazyBody);
+    if (result) {
+      sendJson(res, result.status, result.payload);
+      return;
+    }
     sendJson(res, 404, { error: "Not found." });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown server error.";
