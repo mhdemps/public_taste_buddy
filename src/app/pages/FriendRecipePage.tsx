@@ -83,8 +83,8 @@ export default function FriendRecipePage() {
   const isAddView = location.pathname.endsWith("/add");
   const isEditView = Boolean(editRecipeId);
   const isFormView = isAddView || isEditView;
-  const { session } = useAuth();
-  const recipesStorageKey = scopedStorageKey(session!.user.id, FRIEND_RECIPES_STORAGE_BASE);
+  const { user } = useAuth();
+  const recipesStorageKey = scopedStorageKey(user!.id, FRIEND_RECIPES_STORAGE_BASE);
   const { buddies } = useBuddies();
   const [saved, setSaved] = useState<FriendRecipeEntry[]>(() => sortNewestFirst(loadRecipes(recipesStorageKey)));
 

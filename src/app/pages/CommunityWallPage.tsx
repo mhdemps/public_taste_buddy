@@ -72,7 +72,7 @@ export default function CommunityWallPage() {
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.4, delay: 0.08 }}
         >
-          Everyone who signs in shows up here. Tap a buddy to see their public profile and recipes on the wall. Edit your
+          Everyone on the wall shows up here. Tap a buddy to see their public profile and recipes. Edit your
           look and post dishes from{" "}
           <Link to="/profile" className="tb-link-wide">
             your profile

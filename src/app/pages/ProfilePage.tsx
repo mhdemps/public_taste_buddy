@@ -55,10 +55,8 @@ function loadMyRecipesFromDisk(storageKey: string): MyRecipeEntry[] {
   }
 }
 
-function defaultDisplayName(email: string | undefined): string {
-  if (!email) return "Me";
-  const local = email.split("@")[0] ?? "Me";
-  return local.trim() || "Me";
+function defaultDisplayName(): string {
+  return "Taste buddy";
 }
 
 export default function ProfilePage() {
@@ -70,7 +68,7 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
 
-  const [displayName, setDisplayName] = useState(defaultDisplayName(user?.email));
+  const [displayName, setDisplayName] = useState(defaultDisplayName);
   const [buddyBodyKey, setBuddyBodyKey] = useState<BuddyBodyKey>("purple");
   const [buddyCircleIndex, setBuddyCircleIndex] = useState(2);
   const [buddyHatKey, setBuddyHatKey] = useState<BuddyHatKey>("none");
@@ -120,7 +118,7 @@ export default function ProfilePage() {
         return;
       }
       if (data) {
-        setDisplayName(data.display_name?.trim() || defaultDisplayName(user?.email));
+        setDisplayName(data.display_name?.trim() || defaultDisplayName());
         const circleIdx = Math.max(0, Math.min(BUDDY_CIRCLE_COUNT - 1, Math.floor(data.buddy_color_index ?? 0)));
         setBuddyBodyKey(
           coerceBuddyBodyKey(data.buddy_body_key, data.buddy_body_key ? 0 : circleIdx)
@@ -135,7 +133,7 @@ export default function ProfilePage() {
         setPartiesAttended(data.parties_attended != null ? String(data.parties_attended) : "");
         setRecipesGiven(data.recipes_given ?? "");
       } else {
-        setDisplayName(defaultDisplayName(user?.email));
+        setDisplayName(defaultDisplayName());
       }
       await refreshWallRecipes();
       if (!cancelled) setLoading(false);
@@ -143,7 +141,7 @@ export default function ProfilePage() {
     return () => {
       cancelled = true;
     };
-  }, [userId, user?.email, refreshWallRecipes]);
+  }, [userId, refreshWallRecipes]);
 
   useEffect(() => {
     const msg = (location.state as { saveMessage?: string } | null)?.saveMessage;
@@ -167,7 +165,7 @@ export default function ProfilePage() {
     }
     return {
       id: userId,
-      display_name: displayName.trim() || defaultDisplayName(user?.email),
+      display_name: displayName.trim() || defaultDisplayName(),
       buddy_color_index: buddyCircleIndex,
       buddy_body_key: buddyBodyKey,
       buddy_hat_key: buddyHatKey,
@@ -182,7 +180,6 @@ export default function ProfilePage() {
   }, [
     userId,
     displayName,
-    user?.email,
     buddyCircleIndex,
     buddyBodyKey,
     buddyHatKey,
@@ -423,7 +420,7 @@ export default function ProfilePage() {
           <Link to="/my-recipes" className="tb-link-wide">
             My recipes
           </Link>{" "}
-          first. Tap below to copy one to the wall so other accounts can read it.
+          first. Tap below to copy one to the wall so other taste profiles can read it.
         </p>
 
         {recipeAction ? (

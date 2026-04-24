@@ -28,10 +28,8 @@ import {
 } from "../buddyAppearance";
 import { fetchProfileByUserId, upsertMyProfile, type TasteProfileUpsert } from "../../lib/communityApi";
 
-function defaultDisplayName(email: string | undefined): string {
-  if (!email) return "Me";
-  const local = email.split("@")[0] ?? "Me";
-  return local.trim() || "Me";
+function defaultDisplayName(): string {
+  return "Taste buddy";
 }
 
 function cycleInDirection<T extends string>(setValue: (value: T) => void, options: readonly { key: T }[], current: T, direction: -1 | 1) {
@@ -47,7 +45,7 @@ export default function CustomizeBuddyPage() {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  const [displayName, setDisplayName] = useState(defaultDisplayName(user?.email));
+  const [displayName, setDisplayName] = useState(defaultDisplayName);
   const [buddyBodyKey, setBuddyBodyKey] = useState<BuddyBodyKey>("purple");
   const [buddyCircleIndex, setBuddyCircleIndex] = useState(2);
   const [buddyHatKey, setBuddyHatKey] = useState<BuddyHatKey>("none");
@@ -70,7 +68,7 @@ export default function CustomizeBuddyPage() {
         return;
       }
       if (data) {
-        setDisplayName(data.display_name?.trim() || defaultDisplayName(user?.email));
+        setDisplayName(data.display_name?.trim() || defaultDisplayName());
         const circleIdx = Math.max(0, Math.min(BUDDY_CIRCLE_COUNT - 1, Math.floor(data.buddy_color_index ?? 0)));
         setBuddyBodyKey(coerceBuddyBodyKey(data.buddy_body_key, data.buddy_body_key ? 0 : circleIdx));
         setBuddyCircleIndex(circleIdx);
@@ -83,14 +81,14 @@ export default function CustomizeBuddyPage() {
         setPartiesAttended(data.parties_attended != null ? String(data.parties_attended) : "");
         setRecipesGiven(data.recipes_given ?? "");
       } else {
-        setDisplayName(defaultDisplayName(user?.email));
+        setDisplayName(defaultDisplayName());
       }
       setLoading(false);
     })();
     return () => {
       cancelled = true;
     };
-  }, [userId, user?.email]);
+  }, [userId]);
 
   const selection = {
     bodyKey: buddyBodyKey,
@@ -107,7 +105,7 @@ export default function CustomizeBuddyPage() {
     }
     return {
       id: userId,
-      display_name: displayName.trim() || defaultDisplayName(user?.email),
+      display_name: displayName.trim() || defaultDisplayName(),
       buddy_color_index: buddyCircleIndex,
       buddy_body_key: buddyBodyKey,
       buddy_hat_key: buddyHatKey,
@@ -122,7 +120,6 @@ export default function CustomizeBuddyPage() {
   }, [
     userId,
     displayName,
-    user?.email,
     buddyCircleIndex,
     buddyBodyKey,
     buddyHatKey,

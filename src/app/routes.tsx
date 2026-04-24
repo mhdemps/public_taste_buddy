@@ -1,7 +1,7 @@
 import { createBrowserRouter } from "react-router";
 import AppRootLayout from "./AppRootLayout";
 import ProtectedLayout from "./ProtectedLayout";
-import SignInPage from "./pages/SignInPage";
+import ChooseProfilePage from "./pages/ChooseProfilePage";
 import TextInPage from "./pages/TextInPage";
 import HomePage from "./pages/HomePage";
 import CommunityWallPage from "./pages/CommunityWallPage";
@@ -16,7 +16,7 @@ import FriendRecipePage from "./pages/FriendRecipePage";
 import MyRecipesPage from "./pages/MyRecipesPage";
 
 export const router = createBrowserRouter([
-  { path: "/sign-in", Component: SignInPage },
+  { path: "/sign-in", Component: ChooseProfilePage },
   {
     Component: ProtectedLayout,
     children: [

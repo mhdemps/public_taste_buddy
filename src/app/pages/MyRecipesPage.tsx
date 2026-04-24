@@ -81,8 +81,8 @@ export default function MyRecipesPage() {
   const isEditView = Boolean(editRecipeId);
   const isFormView = isAddView || isEditView;
 
-  const { session } = useAuth();
-  const myRecipesStorageKey = scopedStorageKey(session!.user.id, MY_RECIPES_STORAGE_BASE);
+  const { user } = useAuth();
+  const myRecipesStorageKey = scopedStorageKey(user!.id, MY_RECIPES_STORAGE_BASE);
 
   const [saved, setSaved] = useState<MyRecipeEntry[]>(() => sortNewestFirst(loadRecipes(myRecipesStorageKey)));
 

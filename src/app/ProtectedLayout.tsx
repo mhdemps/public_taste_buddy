@@ -6,7 +6,7 @@ import GrayTasteHeader from "./components/GrayTasteHeader";
 import { PAGE_SHELL } from "./brand";
 
 export default function ProtectedLayout() {
-  const { session, loading } = useAuth();
+  const { user, loading } = useAuth();
   const location = useLocation();
 
   if (loading) {
@@ -25,12 +25,12 @@ export default function ProtectedLayout() {
     );
   }
 
-  if (!session?.user?.id) {
+  if (!user?.id) {
     return <Navigate to="/sign-in" replace state={{ from: location.pathname }} />;
   }
 
   return (
-    <BuddiesProvider userId={session.user.id}>
+    <BuddiesProvider userId={user.id}>
       <Outlet />
     </BuddiesProvider>
   );

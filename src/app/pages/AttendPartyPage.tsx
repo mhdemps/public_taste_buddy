@@ -122,8 +122,8 @@ export default function AttendPartyPage() {
   const isAddView = location.pathname.endsWith("/add");
   const isEditView = Boolean(editPartyId);
   const isFormView = isAddView || isEditView;
-  const { session } = useAuth();
-  const partyStorageKey = scopedStorageKey(session!.user.id, PARTY_PLANS_STORAGE_BASE);
+  const { user } = useAuth();
+  const partyStorageKey = scopedStorageKey(user!.id, PARTY_PLANS_STORAGE_BASE);
   const { buddies } = useBuddies();
   const [savedPlans, setSavedPlans] = useState<PartyPlanEntry[]>(() =>
     sortPlansNewestFirst(loadPartyPlans(partyStorageKey))

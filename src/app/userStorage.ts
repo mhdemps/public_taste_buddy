@@ -1,4 +1,7 @@
-/** Base keys — always scope with {@link scopedStorageKey} and the signed-in user id. */
+/** Current profile (JSON API row id) — not secret; device-local. */
+export const ACTIVE_PROFILE_ID_STORAGE_KEY = "tasteBuddyActiveProfileId";
+
+/** Base keys — always scope with {@link scopedStorageKey} and the active profile id. */
 export const BUDDIES_STORAGE_BASE = "tasteBuddyBuddies";
 export const FRIEND_RECIPES_STORAGE_BASE = "tasteBuddyFriendRecipes";
 export const PARTY_PLANS_STORAGE_BASE = "tasteBuddyPartyPlans";

@@ -69,6 +69,30 @@ async function handleProfiles(req, res, pathname) {
     return sendJson(res, 200, profiles);
   }
 
+  if (req.method === "POST" && pathname === "/api/profiles") {
+    const profiles = await readJsonArray(profilesPath);
+    const id = randomUUID();
+    const now = new Date().toISOString();
+    const nextProfile = {
+      id,
+      display_name: "New profile",
+      buddy_color_index: 0,
+      buddy_body_key: "purple",
+      buddy_hat_key: "none",
+      buddy_smile_key: "smile",
+      favorite_food: null,
+      personality: null,
+      specialty: null,
+      allergies: null,
+      parties_attended: null,
+      recipes_given: null,
+      updated_at: now,
+    };
+    profiles.push(nextProfile);
+    await writeJsonArray(profilesPath, profiles);
+    return sendJson(res, 201, nextProfile);
+  }
+
   const profileByIdMatch = pathname.match(/^\/api\/profiles\/([^/]+)$/);
   if (!profileByIdMatch) return false;
 

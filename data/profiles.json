@@ -17,16 +17,16 @@
   {
     "id": "3dfef757-8b03-4039-a3ae-eb57db9f4ccd",
     "display_name": "mhdemps1",
-    "buddy_color_index": 2,
-    "buddy_body_key": "purple",
-    "buddy_hat_key": "party",
-    "buddy_smile_key": "happy",
-    "favorite_food": null,
+    "buddy_color_index": 4,
+    "buddy_body_key": "blue",
+    "buddy_hat_key": "sous-chef",
+    "buddy_smile_key": "buck-teef",
+    "favorite_food": "noodles",
     "personality": null,
     "specialty": null,
     "allergies": null,
     "parties_attended": null,
     "recipes_given": null,
-    "updated_at": "2026-04-21T15:06:45.765Z"
+    "updated_at": "2026-04-22T14:40:58.159Z"
   }
 ]

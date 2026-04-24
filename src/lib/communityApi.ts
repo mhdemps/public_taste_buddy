@@ -81,6 +81,11 @@ export async function fetchCommunityProfiles(): Promise<{ data: TasteProfileRow[
   return { data: data ?? [], error };
 }
 
+/** Creates a new profile row (device-local JSON API). */
+export async function createProfile(): Promise<{ data: TasteProfileRow | null; error: Error | null }> {
+  return requestJson<TasteProfileRow>("/profiles", { method: "POST", body: "{}" });
+}
+
 export async function fetchProfileByUserId(
   userId: string
 ): Promise<{ data: TasteProfileRow | null; error: Error | null }> {
