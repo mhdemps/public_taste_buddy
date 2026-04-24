@@ -20,6 +20,8 @@ export type PublicRecipeRow = {
   source_local_id: string | null;
   recipe_name: string;
   allergies: string;
+  /** Comma-separated allergen tag ids this recipe avoids (e.g. gluten, dairy). */
+  accommodates?: string;
   ingredients: string;
   directions: string;
   notes: string;
@@ -117,6 +119,7 @@ export async function insertPublicRecipe(row: {
   source_local_id: string;
   recipe_name: string;
   allergies: string;
+  accommodates?: string;
   ingredients: string;
   directions: string;
   notes: string;
@@ -128,6 +131,7 @@ export async function insertPublicRecipe(row: {
       source_local_id: row.source_local_id,
       recipe_name: row.recipe_name,
       allergies: row.allergies,
+      accommodates: row.accommodates ?? "",
       ingredients: row.ingredients,
       directions: row.directions,
       notes: row.notes,

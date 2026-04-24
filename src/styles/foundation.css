@@ -115,12 +115,12 @@ select {
 }
 
 .share-tech-bold {
-  font-family: "Share Tech", sans-serif;
-  font-weight: 700;
+  font-family: "Icebox Magnet", "Icebox", sans-serif;
+  font-weight: 400;
   font-style: normal;
 }
 
-/* Headings & prominent names — Icebox Magnet (trial). Other .share-tech-bold stays Share Tech. */
+/* Headings & prominent names — Icebox Magnet (trial). */
 h1.share-tech-bold,
 h2.share-tech-bold,
 h3.share-tech-bold,

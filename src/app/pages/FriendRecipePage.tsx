@@ -4,32 +4,29 @@ import { motion } from "motion/react";
 import { useAuth } from "../context/AuthContext";
 import { useBuddies } from "../context/BuddiesContext";
 import { FRIEND_RECIPES_STORAGE_BASE, scopedStorageKey } from "../userStorage";
+import {
+  loadSavedCommunityRecipes,
+  persistSavedCommunityRecipes,
+  sortSavedCommunityRecipesNewestFirst,
+  type SavedCommunityRecipeEntry,
+} from "../savedCommunityRecipes";
 import Navigation from "../components/Navigation";
 import GrayTasteHeader from "../components/GrayTasteHeader";
 import { InfoBoxFrame } from "../components/InfoBoxFrame";
 import { ChalkPillFrame } from "../components/ChalkPillFrame";
+import { PAGE_INTRO_BLURB_TEXT, PAGE_SHELL_SCROLL } from "../brand";
 import {
-  INFO_PANEL_TEXT,
-  PAGE_INTRO_BLURB_TEXT,
-  PAGE_SHELL_SCROLL,
-} from "../brand";
-import imgRemoveRecipe from "@project-assets/party-remove-x.png";
+  formatAllergenCsv,
+  parseAllergenCsv,
+  type AllergenTagId,
+} from "../allergyTagConfig";
+import { AllergenIconPicker } from "../components/AllergenIconPicker";
+import { AllergenBadgeRow } from "../components/AllergenBadgeRow";
+import imgRecipeX from "@project-assets/X.svg";
 import imgAddRecipe from "@project-assets/madison-is-pretty.png";
 import imgBuddyRecipeHero from "@project-assets/sunny.png";
 
-const LEGACY_FRIEND_RECIPES_KEY = "tasteBuddyFriendRecipes";
-
-export type FriendRecipeEntry = {
-  id: string;
-  buddyId?: string;
-  friendName: string;
-  recipeName: string;
-  allergies: string;
-  ingredients: string;
-  directions: string;
-  notes: string;
-  savedAt: string;
-};
+export type FriendRecipeEntry = SavedCommunityRecipeEntry;
 
 function parseAllergyTags(raw: string | undefined): string[] {
   if (!raw?.trim()) return [];
@@ -37,43 +34,6 @@ function parseAllergyTags(raw: string | undefined): string[] {
     .split(/[,;]/)
     .map((t) => t.trim())
     .filter(Boolean);
-}
-
-function loadRecipes(storageKey: string): FriendRecipeEntry[] {
-  try {
-    let raw = localStorage.getItem(storageKey);
-    if (!raw) {
-      const legacy = localStorage.getItem(LEGACY_FRIEND_RECIPES_KEY);
-      if (legacy) {
-        localStorage.setItem(storageKey, legacy);
-        raw = legacy;
-      }
-    }
-    if (!raw) return [];
-    const parsed = JSON.parse(raw) as unknown;
-    if (!Array.isArray(parsed)) return [];
-    return parsed
-      .filter(
-        (row): row is FriendRecipeEntry =>
-          !!row &&
-          typeof row === "object" &&
-          typeof (row as FriendRecipeEntry).id === "string"
-      )
-      .map((row) => ({
-        ...row,
-        allergies: typeof row.allergies === "string" ? row.allergies : "",
-      }));
-  } catch {
-    return [];
-  }
-}
-
-function sortNewestFirst(list: FriendRecipeEntry[]) {
-  return [...list].sort((a, b) => new Date(b.savedAt).getTime() - new Date(a.savedAt).getTime());
-}
-
-function persistRecipes(storageKey: string, list: FriendRecipeEntry[]) {
-  localStorage.setItem(storageKey, JSON.stringify(list));
 }
 
 export default function FriendRecipePage() {
@@ -86,10 +46,12 @@ export default function FriendRecipePage() {
   const { user } = useAuth();
   const recipesStorageKey = scopedStorageKey(user!.id, FRIEND_RECIPES_STORAGE_BASE);
   const { buddies } = useBuddies();
-  const [saved, setSaved] = useState<FriendRecipeEntry[]>(() => sortNewestFirst(loadRecipes(recipesStorageKey)));
+  const [saved, setSaved] = useState<FriendRecipeEntry[]>(() =>
+    sortSavedCommunityRecipesNewestFirst(loadSavedCommunityRecipes(recipesStorageKey))
+  );
 
   useEffect(() => {
-    setSaved(sortNewestFirst(loadRecipes(recipesStorageKey)));
+    setSaved(sortSavedCommunityRecipesNewestFirst(loadSavedCommunityRecipes(recipesStorageKey)));
   }, [recipesStorageKey]);
 
   const [expandedRecipeId, setExpandedRecipeId] = useState<string | null>(null);
@@ -97,41 +59,51 @@ export default function FriendRecipePage() {
   const [buddyId, setBuddyId] = useState("");
   const [recipeName, setRecipeName] = useState("");
   const [allergies, setAllergies] = useState("");
+  const [accommodateIds, setAccommodateIds] = useState<AllergenTagId[]>([]);
   const [ingredients, setIngredients] = useState("");
   const [directions, setDirections] = useState("");
   const [notes, setNotes] = useState("");
+  const [wallAuthorLabel, setWallAuthorLabel] = useState("");
 
   useEffect(() => {
+    if (isEditView && editRecipeId) {
+      const found = loadSavedCommunityRecipes(recipesStorageKey).find((r) => r.id === editRecipeId);
+      if (found?.wallRecipeId && !found.buddyId) return;
+    }
     if (buddies.length === 0) return;
     if (!buddyId || !buddies.some((b) => b.id === buddyId)) {
       setBuddyId(buddies[0]!.id);
     }
-  }, [buddies, buddyId]);
+  }, [buddies, buddyId, isEditView, editRecipeId, recipesStorageKey]);
 
   useEffect(() => {
-    if (isFormView && buddies.length === 0) {
+    if (isAddView && buddies.length === 0) {
       navigate("/friend-recipe", { replace: true });
     }
-  }, [isFormView, buddies.length, navigate]);
+  }, [isAddView, buddies.length, navigate]);
 
   useEffect(() => {
     if (isAddView) {
       setRecipeName("");
       setAllergies("");
+      setAccommodateIds([]);
       setIngredients("");
       setDirections("");
       setNotes("");
+      setWallAuthorLabel("");
       return;
     }
     if (!editRecipeId) return;
-    const found = loadRecipes(recipesStorageKey).find((r) => r.id === editRecipeId);
+    const found = loadSavedCommunityRecipes(recipesStorageKey).find((r) => r.id === editRecipeId);
     if (!found) {
       navigate("/friend-recipe", { replace: true });
       return;
     }
-    setBuddyId(found.buddyId ?? (buddies[0]?.id ?? ""));
+    setBuddyId(found.wallRecipeId && !found.buddyId ? "" : (found.buddyId ?? (buddies[0]?.id ?? "")));
+    setWallAuthorLabel(found.wallRecipeId ? found.friendName : "");
     setRecipeName(found.recipeName);
     setAllergies(found.allergies);
+    setAccommodateIds(parseAllergenCsv(found.accommodates ?? ""));
     setIngredients(found.ingredients);
     setDirections(found.directions);
     setNotes(found.notes);
@@ -140,35 +112,71 @@ export default function FriendRecipePage() {
   const selectedBuddy = useMemo(() => buddies.find((b) => b.id === buddyId), [buddies, buddyId]);
 
   const refresh = useCallback(() => {
-    setSaved(sortNewestFirst(loadRecipes(recipesStorageKey)));
+    setSaved(sortSavedCommunityRecipesNewestFirst(loadSavedCommunityRecipes(recipesStorageKey)));
   }, [recipesStorageKey]);
+
+  const editingWallRecipe = useMemo(() => {
+    if (!isEditView || !editRecipeId) return false;
+    const found = loadSavedCommunityRecipes(recipesStorageKey).find((r) => r.id === editRecipeId);
+    return Boolean(found?.wallRecipeId);
+  }, [isEditView, editRecipeId, recipesStorageKey]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedBuddy) return;
 
     if (editRecipeId) {
-      const list = loadRecipes(recipesStorageKey);
+      const list = loadSavedCommunityRecipes(recipesStorageKey);
       const existing = list.find((r) => r.id === editRecipeId);
       if (!existing) {
         navigate("/friend-recipe");
         return;
       }
+      if (existing.wallRecipeId) {
+        const updated: FriendRecipeEntry = {
+          ...existing,
+          recipeName: recipeName.trim(),
+          allergies: allergies.trim(),
+          accommodates: formatAllergenCsv(accommodateIds),
+          ingredients: ingredients.trim(),
+          directions: directions.trim(),
+          notes: notes.trim(),
+          savedAt: new Date().toISOString(),
+        };
+        persistSavedCommunityRecipes(
+          recipesStorageKey,
+          list.map((r) => (r.id === editRecipeId ? updated : r))
+        );
+        refresh();
+        setRecipeName("");
+        setAllergies("");
+        setAccommodateIds([]);
+        setIngredients("");
+        setDirections("");
+        setNotes("");
+        navigate("/friend-recipe");
+        return;
+      }
+      if (!selectedBuddy) return;
       const updated: FriendRecipeEntry = {
         ...existing,
         buddyId: selectedBuddy.id,
         friendName: selectedBuddy.name,
         recipeName: recipeName.trim(),
         allergies: allergies.trim(),
+        accommodates: formatAllergenCsv(accommodateIds),
         ingredients: ingredients.trim(),
         directions: directions.trim(),
         notes: notes.trim(),
         savedAt: new Date().toISOString(),
       };
-      persistRecipes(recipesStorageKey, list.map((r) => (r.id === editRecipeId ? updated : r)));
+      persistSavedCommunityRecipes(
+        recipesStorageKey,
+        list.map((r) => (r.id === editRecipeId ? updated : r))
+      );
       refresh();
       setRecipeName("");
       setAllergies("");
+      setAccommodateIds([]);
       setIngredients("");
       setDirections("");
       setNotes("");
@@ -176,23 +184,27 @@ export default function FriendRecipePage() {
       return;
     }
 
-    const list = loadRecipes(recipesStorageKey);
+    if (!selectedBuddy) return;
+
+    const list = loadSavedCommunityRecipes(recipesStorageKey);
     const row: FriendRecipeEntry = {
       id: `recipe-${Date.now()}`,
       buddyId: selectedBuddy.id,
       friendName: selectedBuddy.name,
       recipeName: recipeName.trim(),
       allergies: allergies.trim(),
+      accommodates: formatAllergenCsv(accommodateIds),
       ingredients: ingredients.trim(),
       directions: directions.trim(),
       notes: notes.trim(),
       savedAt: new Date().toISOString(),
     };
     list.push(row);
-    persistRecipes(recipesStorageKey, list);
+    persistSavedCommunityRecipes(recipesStorageKey, list);
     refresh();
     setRecipeName("");
     setAllergies("");
+    setAccommodateIds([]);
     setIngredients("");
     setDirections("");
     setNotes("");
@@ -200,13 +212,18 @@ export default function FriendRecipePage() {
   };
 
   const handleRemove = (entry: FriendRecipeEntry) => {
-    if (!confirm(`Remove "${entry.recipeName}" from your saved community recipes?`)) return;
-    persistRecipes(recipesStorageKey, loadRecipes(recipesStorageKey).filter((r) => r.id !== entry.id));
+    if (!confirm(`Remove "${entry.recipeName}" from your saved recipes?`)) return;
+    persistSavedCommunityRecipes(
+      recipesStorageKey,
+      loadSavedCommunityRecipes(recipesStorageKey).filter((r) => r.id !== entry.id)
+    );
     refresh();
     setExpandedRecipeId((cur) => (cur === entry.id ? null : cur));
   };
 
-  if (isFormView && buddies.length > 0) {
+  if (isFormView) {
+    if (isAddView && buddies.length === 0) return null;
+
     return (
       <div className={PAGE_SHELL_SCROLL}>
         <GrayTasteHeader />
@@ -224,7 +241,11 @@ export default function FriendRecipePage() {
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.45, delay: 0.05 }}
           >
-            {isEditView ? "Edit community recipe" : "Add a community recipe"}
+            {isEditView
+              ? editingWallRecipe
+                ? "Edit saved wall recipe"
+                : "Edit saved recipe"
+              : "Add a recipe by hand"}
           </motion.h1>
           <motion.p
             className="tb-intro-blurb share-tech-regular"
@@ -233,8 +254,10 @@ export default function FriendRecipePage() {
             transition={{ duration: 0.45, delay: 0.1 }}
           >
             {isEditView
-              ? "Update who shared it, tags, or steps — then save."
-              : "Credit whose profile it came from — pick them below, then ingredients, steps, and tags."}
+              ? editingWallRecipe
+                ? "The cook’s name stays as on the taste wall. You can update ingredients, steps, and notes."
+                : "Update who shared it, tags, or steps — then save."
+              : "Credit a saved taste profile — pick them below, then add ingredients, steps, and tags. To copy from the wall, use Save on the taste wall instead."}
           </motion.p>
 
           <motion.form
@@ -244,24 +267,33 @@ export default function FriendRecipePage() {
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.5, delay: 0.12 }}
           >
-            <InfoBoxFrame variant={0}>
-              <label htmlFor="recipe-buddy" className="tb-field-label-bold share-tech-bold">
-                From this profile
-              </label>
-              <select
-                id="recipe-buddy"
-                value={buddyId}
-                onChange={(e) => setBuddyId(e.target.value)}
-                className="tb-select-plain share-tech-regular"
-                required
-              >
-                {buddies.map((b) => (
-                  <option key={b.id} value={b.id} className="tb-option-dark">
-                    {b.name}
-                  </option>
-                ))}
-              </select>
-            </InfoBoxFrame>
+            {editingWallRecipe ? (
+              <InfoBoxFrame variant={0}>
+                <p className="tb-field-label-bold share-tech-bold">From the taste wall</p>
+                <p className="share-tech-regular" style={{ fontSize: "20pt", lineHeight: 1.375 }}>
+                  {wallAuthorLabel}
+                </p>
+              </InfoBoxFrame>
+            ) : (
+              <InfoBoxFrame variant={0}>
+                <label htmlFor="recipe-buddy" className="tb-field-label-bold share-tech-bold">
+                  From this profile
+                </label>
+                <select
+                  id="recipe-buddy"
+                  value={buddyId}
+                  onChange={(e) => setBuddyId(e.target.value)}
+                  className="tb-select-plain share-tech-regular"
+                  required
+                >
+                  {buddies.map((b) => (
+                    <option key={b.id} value={b.id} className="tb-option-dark">
+                      {b.name}
+                    </option>
+                  ))}
+                </select>
+              </InfoBoxFrame>
+            )}
 
             <InfoBoxFrame variant={1}>
               <label htmlFor="recipe-title" className="tb-field-label-bold share-tech-bold">
@@ -279,8 +311,14 @@ export default function FriendRecipePage() {
             </InfoBoxFrame>
 
             <InfoBoxFrame variant={2}>
+              <AllergenIconPicker
+                mode="accommodates"
+                selected={accommodateIds}
+                onChange={setAccommodateIds}
+                groupLabel="Free from (recipe accommodates)"
+              />
               <label htmlFor="recipe-allergies" className="tb-field-label-bold share-tech-bold">
-                Allergy tags (optional)
+                Contains / may contain (optional notes)
               </label>
               <input
                 id="recipe-allergies"
@@ -288,7 +326,7 @@ export default function FriendRecipePage() {
                 value={allergies}
                 onChange={(e) => setAllergies(e.target.value)}
                 className="tb-input-plain share-tech-regular"
-                placeholder="e.g. nuts, gluten — comma-separated"
+                placeholder="e.g. traces of nuts"
               />
             </InfoBoxFrame>
 
@@ -303,7 +341,7 @@ export default function FriendRecipePage() {
                 className="tb-textarea-plain share-tech-regular"
                 placeholder="List what goes in, as they told you"
                 rows={5}
-                required
+                required={!editingWallRecipe}
               />
             </InfoBoxFrame>
 
@@ -318,7 +356,7 @@ export default function FriendRecipePage() {
                 className="tb-textarea-plain share-tech-regular"
                 placeholder="Prep, cook times, order of steps…"
                 rows={6}
-                required
+                required={!editingWallRecipe}
               />
             </InfoBoxFrame>
 
@@ -386,7 +424,7 @@ export default function FriendRecipePage() {
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.45, delay: 0.05 }}
         >
-          Community recipe swap
+          Saved recipes from the wall
         </motion.h1>
         <motion.p
           className="tb-intro-blurb share-tech-regular"
@@ -394,32 +432,17 @@ export default function FriendRecipePage() {
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.45, delay: 0.12 }}
         >
-          Recipes people have shared — tap to open, or + to save one and tag a public profile.
-        </motion.p>
-
-        {buddies.length === 0 ? (
-          <motion.div
-            className="tb-empty-block--friend"
-            initial={{ y: 16, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.12 }}
+          Open the{" "}
+          <button
+            type="button"
+            onClick={() => navigate("/")}
+            className="tb-link-wide share-tech-bold"
+            style={{ background: "none", border: "none", padding: 0, cursor: "pointer", font: "inherit" }}
           >
-            <InfoBoxFrame variant={0}>
-              <p className="share-tech-regular" style={{ fontSize: "20pt", lineHeight: 1.375 }}>
-                Add someone under Saved buddies first so you can tag their profile on shared recipes.
-              </p>
-            </InfoBoxFrame>
-            <motion.button
-              type="button"
-              onClick={() => navigate("/add-buddy")}
-              className="tb-link-wide share-tech-bold"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              Add a taste profile
-            </motion.button>
-          </motion.div>
-        ) : null}
+            Taste wall
+          </button>{" "}
+          and tap <span className="share-tech-bold">Save on a recipe</span> to add it here. Tap a card to read it, or use + to type one by hand and tag a saved profile.
+        </motion.p>
 
         <motion.section
           className="tb-section-narrow"
@@ -429,14 +452,15 @@ export default function FriendRecipePage() {
           transition={{ delay: 0.15 }}
         >
           <h2 id="saved-recipes-heading" className="tb-section-heading share-tech-bold tb-text-coral">
-            Saved from the community
+            Your list
           </h2>
           {saved.length === 0 ? (
             <InfoBoxFrame variant={1}>
               <p className="share-tech-regular" style={{ fontSize: "20pt", lineHeight: 1.375 }}>
-                {buddies.length === 0
-                  ? "Nothing saved yet — add a profile in Saved buddies, then tap + for your first recipe."
-                  : "Nothing here yet — tap + below to save a recipe and link it to someone’s profile."}
+                Nothing saved yet — go to the Taste wall, find a recipe under “Fresh on the wall,” and tap Save.{" "}
+                {buddies.length > 0
+                  ? "Or tap + to add one by hand."
+                  : "Add a saved profile under Saved buddies if you want to use + and tag someone by hand."}
               </p>
             </InfoBoxFrame>
           ) : (
@@ -444,6 +468,7 @@ export default function FriendRecipePage() {
               {saved.map((r, i) => {
                 const isExpanded = expandedRecipeId === r.id;
                 const allergyList = parseAllergyTags(r.allergies);
+                const accIds = parseAllergenCsv(r.accommodates ?? "");
                 return (
                   <li key={r.id} className="tb-li-relative">
                     <div className="tb-card-relative">
@@ -451,10 +476,20 @@ export default function FriendRecipePage() {
                         {isExpanded ? (
                           <>
                             <h3 className="tb-recipe-h3 tb-recipe-h3--pad share-tech-bold">{r.recipeName}</h3>
+                            {accIds.length > 0 ? (
+                              <>
+                                <p className="tb-panel-heading--spaced share-tech-bold">Free from</p>
+                                <AllergenBadgeRow
+                                  mode="accommodates"
+                                  ids={accIds}
+                                  ariaLabel="Recipe is free from"
+                                />
+                              </>
+                            ) : null}
                             {allergyList.length > 0 ? (
                               <>
-                                <p className="tb-panel-heading--spaced share-tech-bold">Allergies</p>
-                                <ul className="tb-allergy-list tb-allergy-list--pad" aria-label="Allergens">
+                                <p className="tb-panel-heading--spaced share-tech-bold">Contains / warnings</p>
+                                <ul className="tb-allergy-list tb-allergy-list--pad" aria-label="Allergen notes">
                                   {allergyList.map((tag, ti) => (
                                     <li key={`${r.id}-allergy-${ti}`} className="tb-allergy-pill share-tech-bold">
                                       {tag}
@@ -508,7 +543,7 @@ export default function FriendRecipePage() {
                                 whileHover={{ scale: 1.06, opacity: 0.88 }}
                                 whileTap={{ scale: 0.94 }}
                               >
-                                <img alt="" src={imgRemoveRecipe} draggable={false} className="tb-icon-x-img" />
+                                <img alt="" src={imgRecipeX} draggable={false} className="tb-recipe-x-icon" />
                               </motion.button>
                             </div>
                           </>
@@ -520,8 +555,15 @@ export default function FriendRecipePage() {
                             onClick={() => setExpandedRecipeId(r.id)}
                           >
                             <h3 className="tb-recipe-h3 share-tech-bold">{r.recipeName}</h3>
+                            {accIds.length > 0 ? (
+                              <AllergenBadgeRow
+                                mode="accommodates"
+                                ids={accIds}
+                                ariaLabel="Recipe is free from"
+                              />
+                            ) : null}
                             {allergyList.length > 0 ? (
-                              <ul className="tb-allergy-list tb-allergy-list--collapsed" aria-label="Allergens">
+                              <ul className="tb-allergy-list tb-allergy-list--collapsed" aria-label="Allergen notes">
                                 {allergyList.map((tag, ti) => (
                                   <li key={`${r.id}-allergy-${ti}`} className="tb-allergy-pill share-tech-bold">
                                     {tag}
@@ -547,27 +589,11 @@ export default function FriendRecipePage() {
                           type="button"
                           onClick={() => setExpandedRecipeId(null)}
                           className="tb-chevron-btn"
-                          aria-label="Minimize recipe"
+                          aria-label="Close recipe"
                           whileHover={{ opacity: 0.75 }}
                           whileTap={{ scale: 0.94 }}
                         >
-                          <svg
-                            width="22"
-                            height="22"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                            aria-hidden
-                            className="tb-shrink-0"
-                          >
-                            <path
-                              d="M6 14l6-6 6 6"
-                              stroke={INFO_PANEL_TEXT}
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                          </svg>
+                          <img alt="" src={imgRecipeX} draggable={false} className="tb-recipe-x-icon" aria-hidden />
                         </motion.button>
                       ) : null}
                     </div>
@@ -583,7 +609,7 @@ export default function FriendRecipePage() {
             type="button"
             onClick={() => navigate("/friend-recipe/add")}
             className="tb-fab-add"
-            aria-label="Add a community recipe"
+            aria-label="Add a recipe by hand"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.45, delay: 0.18 }}

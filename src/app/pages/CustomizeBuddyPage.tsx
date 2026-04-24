@@ -1,11 +1,11 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { motion } from "motion/react";
 import { useAuth } from "../context/AuthContext";
 import Navigation from "../components/Navigation";
 import GrayTasteHeader from "../components/GrayTasteHeader";
 import BuddyAvatar from "../components/BuddyAvatar";
-import BuddyCustomizerRow from "../components/BuddyCustomizerRow";
+import BuddySvgPickerStrip from "../components/BuddySvgPickerStrip";
 import { ChalkPillFrame } from "../components/ChalkPillFrame";
 import { PAGE_SHELL_SCROLL } from "../brand";
 import { BUDDY_PROFILE_CIRCLE_MAX } from "../buddyLayout";
@@ -13,15 +13,15 @@ import {
   buddyBodyOptions,
   buddyHatOptions,
   buddySmileOptions,
+  BUDDY_BACKDROP_COUNT,
+  BUDDY_BACKDROP_LIGHT_INDICES,
+  BUDDY_BACKDROP_COLOR_INDICES,
+  BUDDY_BACKDROP_DARK_INDICES,
   coerceBuddyBodyKey,
   coerceBuddyHatKey,
   coerceBuddySmileKey,
-  cycleBuddyOption,
-  getBuddyBodyLabel,
-  getBuddyCircleBackgroundLabel,
-  getBuddyHatLabel,
-  getBuddySmileLabel,
-  BUDDY_CIRCLE_COUNT,
+  getBuddyBackdropAtIndex,
+  getBuddyBackdropLabel,
   type BuddyBodyKey,
   type BuddyHatKey,
   type BuddySmileKey,
@@ -32,8 +32,12 @@ function defaultDisplayName(): string {
   return "Taste buddy";
 }
 
-function cycleInDirection<T extends string>(setValue: (value: T) => void, options: readonly { key: T }[], current: T, direction: -1 | 1) {
-  setValue(cycleBuddyOption(options, current, direction));
+function backdropOptionsForIndices(indices: readonly number[]) {
+  return indices.map((i) => ({
+    key: String(i),
+    label: getBuddyBackdropLabel(i),
+    src: getBuddyBackdropAtIndex(i),
+  }));
 }
 
 export default function CustomizeBuddyPage() {
@@ -69,8 +73,9 @@ export default function CustomizeBuddyPage() {
       }
       if (data) {
         setDisplayName(data.display_name?.trim() || defaultDisplayName());
-        const circleIdx = Math.max(0, Math.min(BUDDY_CIRCLE_COUNT - 1, Math.floor(data.buddy_color_index ?? 0)));
-        setBuddyBodyKey(coerceBuddyBodyKey(data.buddy_body_key, data.buddy_body_key ? 0 : circleIdx));
+        const circleIdx = Math.max(0, Math.min(BUDDY_BACKDROP_COUNT - 1, Math.floor(data.buddy_color_index ?? 0)));
+        const legacyBodyHint = circleIdx >= 0 && circleIdx <= 5 ? circleIdx : 0;
+        setBuddyBodyKey(coerceBuddyBodyKey(data.buddy_body_key, data.buddy_body_key ? 0 : legacyBodyHint));
         setBuddyCircleIndex(circleIdx);
         setBuddyHatKey(coerceBuddyHatKey(data.buddy_hat_key));
         setBuddySmileKey(coerceBuddySmileKey(data.buddy_smile_key));
@@ -95,6 +100,49 @@ export default function CustomizeBuddyPage() {
     hatKey: buddyHatKey,
     smileKey: buddySmileKey,
   };
+
+  const allBackdropOptions = useMemo(
+    () => [
+      ...backdropOptionsForIndices(BUDDY_BACKDROP_LIGHT_INDICES),
+      ...backdropOptionsForIndices(BUDDY_BACKDROP_COLOR_INDICES),
+      ...backdropOptionsForIndices(BUDDY_BACKDROP_DARK_INDICES),
+    ],
+    []
+  );
+
+  const bodyPickerOptions = useMemo(
+    () =>
+      buddyBodyOptions.map((o) => ({
+        key: o.key,
+        label: o.label,
+        src: o.pickerSrc ?? o.asset!,
+      })),
+    []
+  );
+
+  const hatPickerOptions = useMemo(
+    () =>
+      buddyHatOptions.map((o) => ({
+        key: o.key,
+        label: o.label,
+        src: o.pickerSrc ?? o.asset!,
+      })),
+    []
+  );
+
+  const smilePickerOptions = useMemo(
+    () =>
+      buddySmileOptions.map((o) => ({
+        key: o.key,
+        label: o.label,
+        src: o.pickerSrc ?? o.asset!,
+      })),
+    []
+  );
+
+  const setBackdrop = useCallback((k: string) => {
+    setBuddyCircleIndex(Math.max(0, Math.min(BUDDY_BACKDROP_COUNT - 1, Number.parseInt(k, 10) || 0)));
+  }, []);
 
   const buildPayload = useCallback((): TasteProfileUpsert => {
     const partiesRaw = partiesAttended.trim();
@@ -176,85 +224,79 @@ export default function CustomizeBuddyPage() {
           <p className="share-tech-regular tb-text-coral">Loading…</p>
         ) : (
           <div className="tb-customize-buddy-page">
-            <motion.h1
-              className="tb-page-title share-tech-bold tb-text-coral"
-              style={{ textAlign: "center", marginBottom: "0.5rem" }}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.35 }}
-            >
-              Customize buddy
-            </motion.h1>
-            <p className="tb-buddy-customize-page-hint share-tech-regular">
-              Save stores this look in your profile for your public page and taste wall tile. Other profile fields are unchanged unless you edit them on Profile.
-            </p>
+            <div className="tb-customize-preview-block">
+              <h1 className="tb-page-title share-tech-bold tb-text-coral tb-customize-page-title">Customize buddy</h1>
 
-            <motion.div
-              className="tb-profile-page-buddy-hero"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.35, delay: 0.05 }}
-            >
-              <div className="tb-profile-page-buddy-hero-avatar">
-                <BuddyAvatar
-                  selection={selection}
-                  circleBackgroundIndex={buddyCircleIndex}
-                  className={`${BUDDY_PROFILE_CIRCLE_MAX} tb-buddy-profile-circle--hero tb-buddy-profile-circle--page-hero`}
-                  innerClassName="tb-buddy-face-inner"
-                  imgClassName="tb-buddy-face-img"
-                />
-              </div>
-            </motion.div>
-
-            <div className="tb-buddy-customize-controls">
-              <BuddyCustomizerRow
-                label="Circle backdrop"
-                valueLabel={getBuddyCircleBackgroundLabel(buddyCircleIndex)}
-                onPrev={() => setBuddyCircleIndex((i) => (i - 1 + BUDDY_CIRCLE_COUNT) % BUDDY_CIRCLE_COUNT)}
-                onNext={() => setBuddyCircleIndex((i) => (i + 1) % BUDDY_CIRCLE_COUNT)}
-              />
-              <BuddyCustomizerRow
-                label="Buddy color"
-                valueLabel={getBuddyBodyLabel(buddyBodyKey)}
-                onPrev={() => cycleInDirection(setBuddyBodyKey, buddyBodyOptions, buddyBodyKey, -1)}
-                onNext={() => cycleInDirection(setBuddyBodyKey, buddyBodyOptions, buddyBodyKey, 1)}
-              />
-              <BuddyCustomizerRow
-                label="Headwear"
-                valueLabel={getBuddyHatLabel(buddyHatKey)}
-                onPrev={() => cycleInDirection(setBuddyHatKey, buddyHatOptions, buddyHatKey, -1)}
-                onNext={() => cycleInDirection(setBuddyHatKey, buddyHatOptions, buddyHatKey, 1)}
-              />
-              <BuddyCustomizerRow
-                label="Expression"
-                valueLabel={getBuddySmileLabel(buddySmileKey)}
-                onPrev={() => cycleInDirection(setBuddySmileKey, buddySmileOptions, buddySmileKey, -1)}
-                onNext={() => cycleInDirection(setBuddySmileKey, buddySmileOptions, buddySmileKey, 1)}
-              />
-              <p className="tb-customizer-summary share-tech-regular">
-                {getBuddyCircleBackgroundLabel(buddyCircleIndex)} backdrop · {getBuddyBodyLabel(buddyBodyKey)} buddy · {getBuddyHatLabel(buddyHatKey)} ·{" "}
-                {getBuddySmileLabel(buddySmileKey)}.
-              </p>
+              <motion.div
+                className="tb-profile-page-buddy-hero tb-customize-buddy-hero"
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.28 }}
+              >
+                <div className="tb-profile-page-buddy-hero-avatar">
+                  <BuddyAvatar
+                    selection={selection}
+                    circleBackgroundIndex={buddyCircleIndex}
+                    className={`${BUDDY_PROFILE_CIRCLE_MAX} tb-buddy-profile-circle--hero tb-buddy-profile-circle--page-hero`}
+                    innerClassName="tb-buddy-face-inner"
+                    imgClassName="tb-buddy-face-img"
+                  />
+                </div>
+              </motion.div>
             </div>
 
-            {saveError ? (
-              <p className="tb-intro-blurb share-tech-regular" style={{ marginTop: "1rem" }}>
-                {saveError}
-              </p>
-            ) : null}
+            <div className="tb-customize-pickers-block">
+              <div className="tb-buddy-customize-controls tb-buddy-customize-controls--svg-only">
+                <BuddySvgPickerStrip
+                  chipVariant="backdrop"
+                  gridColumns={7}
+                  groupLabel="Backdrop color — light, medium, and dark rows of seven"
+                  options={allBackdropOptions}
+                  selectedKey={String(buddyCircleIndex)}
+                  onSelect={setBackdrop}
+                />
+                <BuddySvgPickerStrip
+                  gridColumns={7}
+                  groupLabel="Buddy body color"
+                  options={bodyPickerOptions}
+                  selectedKey={buddyBodyKey}
+                  onSelect={(k) => setBuddyBodyKey(k as BuddyBodyKey)}
+                />
+                <BuddySvgPickerStrip
+                  gridColumns={7}
+                  groupLabel="Headwear"
+                  options={hatPickerOptions}
+                  selectedKey={buddyHatKey}
+                  onSelect={(k) => setBuddyHatKey(k as BuddyHatKey)}
+                />
+                <BuddySvgPickerStrip
+                  gridColumns={5}
+                  groupLabel="Expression"
+                  options={smilePickerOptions}
+                  selectedKey={buddySmileKey}
+                  onSelect={(k) => setBuddySmileKey(k as BuddySmileKey)}
+                />
+              </div>
 
-            <div className="tb-buddy-customize-page-actions">
-              <motion.button
-                type="button"
-                className="tb-submit-wrap"
-                disabled={saving}
-                whileTap={{ scale: saving ? 1 : 0.97 }}
-                onClick={() => void handleSave()}
-              >
-                <ChalkPillFrame variant={0} fillClassName="tb-pill-fill-coral" innerClassName="tb-pill-inner tb-pill-inner--lg">
-                  <span className="tb-pill-text-white share-tech-regular">{saving ? "Saving…" : "Save changes"}</span>
-                </ChalkPillFrame>
-              </motion.button>
+              {saveError ? (
+                <p className="tb-intro-blurb share-tech-regular" style={{ marginTop: "1rem" }}>
+                  {saveError}
+                </p>
+              ) : null}
+
+              <div className="tb-buddy-customize-page-actions">
+                <motion.button
+                  type="button"
+                  className="tb-submit-wrap"
+                  disabled={saving}
+                  whileTap={{ scale: saving ? 1 : 0.97 }}
+                  onClick={() => void handleSave()}
+                >
+                  <ChalkPillFrame variant={0} fillClassName="tb-pill-fill-coral" innerClassName="tb-pill-inner tb-pill-inner--lg">
+                    <span className="tb-pill-text-white share-tech-regular">{saving ? "Saving…" : "Save changes"}</span>
+                  </ChalkPillFrame>
+                </motion.button>
+              </div>
             </div>
           </div>
         )}

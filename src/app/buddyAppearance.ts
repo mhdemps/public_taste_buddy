@@ -1,16 +1,34 @@
-import lightCirclePurple from "@project-assets/light purple circle.png";
-import lightCircleBlue from "@project-assets/light blue circle.png";
-import lightCircleYellow from "@project-assets/light yellow circle.png";
-import lightCircleGreen from "@project-assets/light green circle.png";
-import lightCircleRed from "@project-assets/light red circle.png";
-import lightCircleOrange from "@project-assets/light orange circle.png";
+import lightPurpleSvg from "../../assets/light purple.svg";
+import lightBlueSvg from "../../assets/light blue.svg";
+import lightYellowSvg from "../../assets/light yellow.svg";
+import lightGreenSvg from "../../assets/light green.svg";
+import lightRedSvg from "../../assets/light red.svg";
+import lightOrangeSvg from "../../assets/light orange.svg";
+import lightPinkSvg from "../../assets/light pink.svg";
 
-import blueBody from "../../assets/Blue.svg";
-import greenBody from "../../assets/Green.svg";
-import orangeBody from "../../assets/Orange.svg";
-import pinkBody from "../../assets/Pink.svg";
-import purpleBody from "../../assets/Purple.svg";
-import yellowBody from "../../assets/Yellow.svg";
+import colorPurpleSvg from "../../assets/Purple.svg";
+import colorBlueSvg from "../../assets/Blue.svg";
+import colorYellowSvg from "../../assets/Yellow.svg";
+import colorGreenSvg from "../../assets/Green.svg";
+import colorPinkSvg from "../../assets/Pink.svg";
+import colorOrangeSvg from "../../assets/Orange.svg";
+import colorRedSvg from "../../assets/red.svg";
+
+import darkPurpleSvg from "../../assets/dark purple.svg";
+import darkBlueSvg from "../../assets/dark blue.svg";
+import darkYellowSvg from "../../assets/dark yellow.svg";
+import darkGreenSvg from "../../assets/dark green.svg";
+import darkRedSvg from "../../assets/dark red.svg";
+import darkOrangeSvg from "../../assets/dark orange.svg";
+import darkPinkSvg from "../../assets/dark pink.svg";
+
+import purpleBody from "../../assets/purple body.svg";
+import blueBody from "../../assets/blue body.svg";
+import yellowBody from "../../assets/yellow body.svg";
+import greenBody from "../../assets/green body.svg";
+import pinkBody from "../../assets/pink body.svg";
+import orangeBody from "../../assets/orange body.svg";
+import redBody from "../../assets/red body.svg";
 
 import buckTeefSmile from "../../assets/Buck Teeth.svg";
 import grinSmile from "../../assets/Grin.svg";
@@ -24,7 +42,82 @@ import jdHat from "../../assets/Spinny.svg";
 import partyHat from "../../assets/Party Hat.svg";
 import sousChefHat from "../../assets/Sous Chef.svg";
 
-export type BuddyBodyKey = "purple" | "blue" | "yellow" | "green" | "pink" | "orange";
+import purpleBodyDisplay from "../../assets/purple body display.svg";
+import blueBodyDisplay from "../../assets/blue body display.svg";
+import yellowBodyDisplay from "../../assets/yellow body display.svg";
+import greenBodyDisplay from "../../assets/green body display.svg";
+import pinkBodyDisplay from "../../assets/pink body display.svg";
+import orangeBodyDisplay from "../../assets/orange body display.svg";
+import redBodyDisplay from "../../assets/red body display.svg";
+
+import chefHatDisplay from "../../assets/chef display.svg";
+import sousChefHatDisplay from "../../assets/sous chef display.svg";
+import cowboyHatDisplay from "../../assets/cowboy display.svg";
+import partyHatDisplay from "../../assets/party hat display.svg";
+import spinnyHatDisplay from "../../assets/spinny display.svg";
+import noHatDisplay from "../../assets/NO.svg";
+
+import smileDisplay from "../../assets/smile display.svg";
+import beamDisplay from "../../assets/beam display.svg";
+import grinDisplay from "../../assets/grin display.svg";
+import smirkDisplay from "../../assets/smirk display.svg";
+import goofyTeethDisplay from "../../assets/goofy teeth display.svg";
+
+/** Flat list: light SVG (0–6), color SVG (7–13), dark SVG (14–20). */
+const buddyBackdropSrcTable = [
+  lightPurpleSvg,
+  lightBlueSvg,
+  lightYellowSvg,
+  lightGreenSvg,
+  lightRedSvg,
+  lightOrangeSvg,
+  lightPinkSvg,
+  colorPurpleSvg,
+  colorBlueSvg,
+  colorYellowSvg,
+  colorGreenSvg,
+  colorPinkSvg,
+  colorOrangeSvg,
+  colorRedSvg,
+  darkPurpleSvg,
+  darkBlueSvg,
+  darkYellowSvg,
+  darkGreenSvg,
+  darkRedSvg,
+  darkOrangeSvg,
+  darkPinkSvg,
+] as const;
+
+const buddyBackdropLabelTable = [
+  "Light purple",
+  "Light blue",
+  "Light yellow",
+  "Light green",
+  "Light red",
+  "Light orange",
+  "Light pink",
+  "Color purple",
+  "Color blue",
+  "Color yellow",
+  "Color green",
+  "Color pink",
+  "Color orange",
+  "Color red",
+  "Dark purple",
+  "Dark blue",
+  "Dark yellow",
+  "Dark green",
+  "Dark red",
+  "Dark orange",
+  "Dark pink",
+] as const;
+
+/** Customize UI: light → color → dark */
+export const BUDDY_BACKDROP_LIGHT_INDICES = [0, 1, 2, 3, 4, 5, 6] as const;
+export const BUDDY_BACKDROP_COLOR_INDICES = [7, 8, 9, 10, 11, 12, 13] as const;
+export const BUDDY_BACKDROP_DARK_INDICES = [14, 15, 16, 17, 18, 19, 20] as const;
+
+export type BuddyBodyKey = "purple" | "blue" | "yellow" | "green" | "pink" | "orange" | "red";
 export type BuddyHatKey = "none" | "chef" | "sous-chef" | "cowboy" | "party" | "jd";
 export type BuddySmileKey = "smile" | "happy" | "grin" | "smirk" | "buck-teef";
 
@@ -37,56 +130,45 @@ export type BuddySvgSelection = {
 type Option<T extends string> = {
   key: T;
   label: string;
+  /** Layer art on the buddy character */
   asset?: string;
+  /** Customize-page chip thumbnail only (e.g. * display.svg) */
+  pickerSrc?: string;
 };
 
-const lightCircles = [
-  lightCirclePurple,
-  lightCircleBlue,
-  lightCircleYellow,
-  lightCircleGreen,
-  lightCircleRed,
-  lightCircleOrange,
-] as const;
+export const BUDDY_BACKDROP_COUNT = buddyBackdropSrcTable.length;
 
-/** Stored as `buddy_color_index` in profiles: which light circle PNG (0–5). */
-export const BUDDY_CIRCLE_COUNT = lightCircles.length;
+/** @deprecated Use BUDDY_BACKDROP_COUNT — kept for call sites that still say “circle”. */
+export const BUDDY_CIRCLE_COUNT = BUDDY_BACKDROP_COUNT;
 
-export const buddyCircleBackgroundLabels = [
-  "Light purple",
-  "Light blue",
-  "Light yellow",
-  "Light green",
-  "Light red",
-  "Light orange",
-] as const;
-
-const CIRCLE_FOR_BUDDY_COLOR = [2, 5, 0, 1, 3, 0] as const;
+/** @deprecated Use getBuddyBackdropLabel */
+export const buddyCircleBackgroundLabels = buddyBackdropLabelTable;
 
 export const buddyBodyOptions: readonly Option<BuddyBodyKey>[] = [
-  { key: "purple", label: "Purple", asset: purpleBody },
-  { key: "blue", label: "Blue", asset: blueBody },
-  { key: "yellow", label: "Yellow", asset: yellowBody },
-  { key: "green", label: "Green", asset: greenBody },
-  { key: "pink", label: "Pink", asset: pinkBody },
-  { key: "orange", label: "Orange", asset: orangeBody },
+  { key: "purple", label: "Purple", asset: purpleBody, pickerSrc: purpleBodyDisplay },
+  { key: "blue", label: "Blue", asset: blueBody, pickerSrc: blueBodyDisplay },
+  { key: "yellow", label: "Yellow", asset: yellowBody, pickerSrc: yellowBodyDisplay },
+  { key: "green", label: "Green", asset: greenBody, pickerSrc: greenBodyDisplay },
+  { key: "pink", label: "Pink", asset: pinkBody, pickerSrc: pinkBodyDisplay },
+  { key: "orange", label: "Orange", asset: orangeBody, pickerSrc: orangeBodyDisplay },
+  { key: "red", label: "Red", asset: redBody, pickerSrc: redBodyDisplay },
 ] as const;
 
 export const buddyHatOptions: readonly Option<BuddyHatKey>[] = [
-  { key: "none", label: "None" },
-  { key: "chef", label: "Chef toque", asset: chefHat },
-  { key: "sous-chef", label: "Sous-chef", asset: sousChefHat },
-  { key: "cowboy", label: "Cowboy hat", asset: cowboyHat },
-  { key: "party", label: "Party hat", asset: partyHat },
-  { key: "jd", label: "Ball cap", asset: jdHat },
+  { key: "none", label: "None", pickerSrc: noHatDisplay },
+  { key: "chef", label: "Chef toque", asset: chefHat, pickerSrc: chefHatDisplay },
+  { key: "sous-chef", label: "Sous-chef", asset: sousChefHat, pickerSrc: sousChefHatDisplay },
+  { key: "cowboy", label: "Cowboy hat", asset: cowboyHat, pickerSrc: cowboyHatDisplay },
+  { key: "party", label: "Party hat", asset: partyHat, pickerSrc: partyHatDisplay },
+  { key: "jd", label: "Ball cap", asset: jdHat, pickerSrc: spinnyHatDisplay },
 ] as const;
 
 export const buddySmileOptions: readonly Option<BuddySmileKey>[] = [
-  { key: "smile", label: "Classic smile", asset: smileSmile },
-  { key: "happy", label: "Beaming", asset: happySmile },
-  { key: "grin", label: "Big grin", asset: grinSmile },
-  { key: "smirk", label: "Smirk", asset: smirkSmile },
-  { key: "buck-teef", label: "Goofy teeth", asset: buckTeefSmile },
+  { key: "smile", label: "Classic smile", asset: smileSmile, pickerSrc: smileDisplay },
+  { key: "happy", label: "Beaming", asset: happySmile, pickerSrc: beamDisplay },
+  { key: "grin", label: "Big grin", asset: grinSmile, pickerSrc: grinDisplay },
+  { key: "smirk", label: "Smirk", asset: smirkSmile, pickerSrc: smirkDisplay },
+  { key: "buck-teef", label: "Goofy teeth", asset: buckTeefSmile, pickerSrc: goofyTeethDisplay },
 ] as const;
 
 const bodyIndexByKey: Record<BuddyBodyKey, number> = {
@@ -96,9 +178,10 @@ const bodyIndexByKey: Record<BuddyBodyKey, number> = {
   green: 3,
   pink: 4,
   orange: 5,
+  red: 6,
 };
 
-const legacyBodyKeyByPaletteIndex: BuddyBodyKey[] = ["purple", "blue", "yellow", "green", "pink", "orange"];
+const legacyBodyKeyByPaletteIndex: BuddyBodyKey[] = ["purple", "blue", "yellow", "green", "pink", "orange", "red"];
 
 const bodyAssetByKey: Record<BuddyBodyKey, string> = Object.fromEntries(
   buddyBodyOptions.map((option) => [option.key, option.asset!])
@@ -115,6 +198,20 @@ const hatAssetByKey: Record<Exclude<BuddyHatKey, "none">, string> = {
 const smileAssetByKey: Record<BuddySmileKey, string> = Object.fromEntries(
   buddySmileOptions.map((option) => [option.key, option.asset!])
 ) as Record<BuddySmileKey, string>;
+
+function clampBackdropIndex(index: number): number {
+  return Math.max(0, Math.min(BUDDY_BACKDROP_COUNT - 1, Math.floor(index)));
+}
+
+export function getBuddyBackdropAtIndex(index: number): string {
+  const i = clampBackdropIndex(index);
+  return buddyBackdropSrcTable[i] ?? buddyBackdropSrcTable[0];
+}
+
+export function getBuddyBackdropLabel(index: number): string {
+  const i = clampBackdropIndex(index);
+  return buddyBackdropLabelTable[i] ?? buddyBackdropLabelTable[0];
+}
 
 export function getDefaultBuddySvgSelection(): BuddySvgSelection {
   return {
@@ -170,21 +267,27 @@ export function coerceBuddySvgSelection(
     typeof input === "object" && input
       ? "buddy_body_key" in input
         ? input.buddy_body_key
-        : input.bodyKey
+        : "bodyKey" in input
+          ? input.bodyKey
+          : undefined
       : undefined;
 
   const hatValue =
     typeof input === "object" && input
       ? "buddy_hat_key" in input
         ? input.buddy_hat_key
-        : input.hatKey
+        : "hatKey" in input
+          ? input.hatKey
+          : undefined
       : undefined;
 
   const smileValue =
     typeof input === "object" && input
       ? "buddy_smile_key" in input
         ? input.buddy_smile_key
-        : input.smileKey
+        : "smileKey" in input
+          ? input.smileKey
+          : undefined
       : undefined;
 
   return {
@@ -194,21 +297,23 @@ export function coerceBuddySvgSelection(
   };
 }
 
+/** Pair light backdrop slot (0–5) to buddy hue for defaults — 7 body hues. */
+const CIRCLE_FOR_BUDDY_COLOR = [2, 5, 0, 1, 3, 0, 4] as const;
+
 export function circleForBuddyColorIndex(buddyColorIndex: number): string {
-  const clampedIndex = Math.max(0, Math.min(5, Math.floor(buddyColorIndex)));
-  const circleIndex = CIRCLE_FOR_BUDDY_COLOR[clampedIndex] ?? 2;
-  return lightCircles[circleIndex] ?? lightCircleYellow;
+  const clamped = Math.max(0, Math.min(CIRCLE_FOR_BUDDY_COLOR.length - 1, Math.floor(buddyColorIndex)));
+  const circleSlot = CIRCLE_FOR_BUDDY_COLOR[clamped] ?? 2;
+  return getBuddyBackdropAtIndex(circleSlot);
 }
 
-/** Circle art for a saved profile / wall card (`buddy_color_index`). */
+/** @deprecated Alias for getBuddyBackdropAtIndex */
 export function getLightCircleImageAtIndex(circleIndex: number): string {
-  const i = Math.max(0, Math.min(lightCircles.length - 1, Math.floor(circleIndex)));
-  return lightCircles[i] ?? lightCirclePurple;
+  return getBuddyBackdropAtIndex(circleIndex);
 }
 
+/** @deprecated Alias for getBuddyBackdropLabel */
 export function getBuddyCircleBackgroundLabel(circleIndex: number): string {
-  const i = Math.max(0, Math.min(buddyCircleBackgroundLabels.length - 1, Math.floor(circleIndex)));
-  return buddyCircleBackgroundLabels[i] ?? "Light purple";
+  return getBuddyBackdropLabel(circleIndex);
 }
 
 export function getBuddyCircleImage(bodyKey: BuddyBodyKey): string {

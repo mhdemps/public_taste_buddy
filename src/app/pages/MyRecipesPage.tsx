@@ -7,12 +7,15 @@ import { MY_RECIPES_STORAGE_BASE, scopedStorageKey } from "../userStorage";
 import GrayTasteHeader from "../components/GrayTasteHeader";
 import { InfoBoxFrame } from "../components/InfoBoxFrame";
 import { ChalkPillFrame } from "../components/ChalkPillFrame";
+import { PAGE_INTRO_BLURB_TEXT, PAGE_SHELL_SCROLL } from "../brand";
 import {
-  INFO_PANEL_TEXT,
-  PAGE_INTRO_BLURB_TEXT,
-  PAGE_SHELL_SCROLL,
-} from "../brand";
-import imgRemoveRecipe from "@project-assets/party-remove-x.png";
+  formatAllergenCsv,
+  parseAllergenCsv,
+  type AllergenTagId,
+} from "../allergyTagConfig";
+import { AllergenIconPicker } from "../components/AllergenIconPicker";
+import { AllergenBadgeRow } from "../components/AllergenBadgeRow";
+import imgRecipeX from "@project-assets/X.svg";
 import imgAddRecipe from "@project-assets/madison-is-pretty.png";
 import imgYourRecipesHat from "@project-assets/thick hat.png";
 
@@ -22,6 +25,8 @@ export type MyRecipeEntry = {
   id: string;
   recipeName: string;
   allergies: string;
+  /** Comma-separated allergen ids this recipe avoids (free-from). */
+  accommodates?: string;
   ingredients: string;
   directions: string;
   notes: string;
@@ -59,6 +64,7 @@ function loadRecipes(storageKey: string): MyRecipeEntry[] {
       .map((row) => ({
         ...row,
         allergies: typeof row.allergies === "string" ? row.allergies : "",
+        accommodates: typeof (row as MyRecipeEntry).accommodates === "string" ? (row as MyRecipeEntry).accommodates : "",
       }));
   } catch {
     return [];
@@ -94,6 +100,7 @@ export default function MyRecipesPage() {
 
   const [recipeName, setRecipeName] = useState("");
   const [allergies, setAllergies] = useState("");
+  const [accommodateIds, setAccommodateIds] = useState<AllergenTagId[]>([]);
   const [ingredients, setIngredients] = useState("");
   const [directions, setDirections] = useState("");
   const [notes, setNotes] = useState("");
@@ -106,6 +113,7 @@ export default function MyRecipesPage() {
     if (isAddView) {
       setRecipeName("");
       setAllergies("");
+      setAccommodateIds([]);
       setIngredients("");
       setDirections("");
       setNotes("");
@@ -119,6 +127,7 @@ export default function MyRecipesPage() {
     }
     setRecipeName(found.recipeName);
     setAllergies(found.allergies);
+    setAccommodateIds(parseAllergenCsv(found.accommodates ?? ""));
     setIngredients(found.ingredients);
     setDirections(found.directions);
     setNotes(found.notes);
@@ -137,6 +146,7 @@ export default function MyRecipesPage() {
         ...existing,
         recipeName: recipeName.trim(),
         allergies: allergies.trim(),
+        accommodates: formatAllergenCsv(accommodateIds),
         ingredients: ingredients.trim(),
         directions: directions.trim(),
         notes: notes.trim(),
@@ -146,6 +156,7 @@ export default function MyRecipesPage() {
       refresh();
       setRecipeName("");
       setAllergies("");
+      setAccommodateIds([]);
       setIngredients("");
       setDirections("");
       setNotes("");
@@ -157,6 +168,7 @@ export default function MyRecipesPage() {
       id: `my-recipe-${Date.now()}`,
       recipeName: recipeName.trim(),
       allergies: allergies.trim(),
+      accommodates: formatAllergenCsv(accommodateIds),
       ingredients: ingredients.trim(),
       directions: directions.trim(),
       notes: notes.trim(),
@@ -167,6 +179,7 @@ export default function MyRecipesPage() {
     refresh();
     setRecipeName("");
     setAllergies("");
+    setAccommodateIds([]);
     setIngredients("");
     setDirections("");
     setNotes("");
@@ -246,8 +259,14 @@ export default function MyRecipesPage() {
             </InfoBoxFrame>
 
             <InfoBoxFrame variant={1}>
+              <AllergenIconPicker
+                mode="accommodates"
+                selected={accommodateIds}
+                onChange={setAccommodateIds}
+                groupLabel="Free from (recipe accommodates)"
+              />
               <label htmlFor="my-recipe-allergies" className="tb-field-label-bold share-tech-bold">
-                Allergy tags (optional)
+                Contains / may contain (optional notes)
               </label>
               <input
                 id="my-recipe-allergies"
@@ -255,7 +274,7 @@ export default function MyRecipesPage() {
                 value={allergies}
                 onChange={(e) => setAllergies(e.target.value)}
                 className="tb-input-plain share-tech-regular"
-                placeholder="e.g. nuts, dairy — comma-separated"
+                placeholder="e.g. traces of nuts — for label warnings"
               />
             </InfoBoxFrame>
 
@@ -387,6 +406,7 @@ export default function MyRecipesPage() {
               {saved.map((r, i) => {
                 const isExpanded = expandedRecipeId === r.id;
                 const allergyList = parseAllergyTags(r.allergies);
+                const accIds = parseAllergenCsv(r.accommodates ?? "");
                 return (
                   <li key={r.id} className="tb-li-relative">
                     <div className="tb-card-relative">
@@ -394,10 +414,20 @@ export default function MyRecipesPage() {
                         {isExpanded ? (
                           <>
                             <h3 className="tb-recipe-h3 tb-recipe-h3--pad share-tech-bold">{r.recipeName}</h3>
+                            {accIds.length > 0 ? (
+                              <>
+                                <p className="tb-panel-heading--spaced share-tech-bold">Free from</p>
+                                <AllergenBadgeRow
+                                  mode="accommodates"
+                                  ids={accIds}
+                                  ariaLabel="Recipe is free from"
+                                />
+                              </>
+                            ) : null}
                             {allergyList.length > 0 ? (
                               <>
-                                <p className="tb-panel-heading--spaced share-tech-bold">Allergies</p>
-                                <ul className="tb-allergy-list tb-allergy-list--pad" aria-label="Allergens">
+                                <p className="tb-panel-heading--spaced share-tech-bold">Contains / warnings</p>
+                                <ul className="tb-allergy-list tb-allergy-list--pad" aria-label="Allergen notes">
                                   {allergyList.map((tag, ti) => (
                                     <li key={`${r.id}-allergy-${ti}`} className="tb-allergy-pill share-tech-bold">
                                       {tag}
@@ -447,7 +477,7 @@ export default function MyRecipesPage() {
                                 whileHover={{ scale: 1.06, opacity: 0.88 }}
                                 whileTap={{ scale: 0.94 }}
                               >
-                                <img alt="" src={imgRemoveRecipe} draggable={false} className="tb-icon-x-img" />
+                                <img alt="" src={imgRecipeX} draggable={false} className="tb-recipe-x-icon" />
                               </motion.button>
                             </div>
                           </>
@@ -459,8 +489,15 @@ export default function MyRecipesPage() {
                             onClick={() => setExpandedRecipeId(r.id)}
                           >
                             <h3 className="tb-recipe-h3 share-tech-bold">{r.recipeName}</h3>
+                            {accIds.length > 0 ? (
+                              <AllergenBadgeRow
+                                mode="accommodates"
+                                ids={accIds}
+                                ariaLabel="Recipe is free from"
+                              />
+                            ) : null}
                             {allergyList.length > 0 ? (
-                              <ul className="tb-allergy-list tb-allergy-list--collapsed" aria-label="Allergens">
+                              <ul className="tb-allergy-list tb-allergy-list--collapsed" aria-label="Allergen notes">
                                 {allergyList.map((tag, ti) => (
                                   <li key={`${r.id}-allergy-${ti}`} className="tb-allergy-pill share-tech-bold">
                                     {tag}
@@ -482,27 +519,11 @@ export default function MyRecipesPage() {
                           type="button"
                           onClick={() => setExpandedRecipeId(null)}
                           className="tb-chevron-btn"
-                          aria-label="Minimize recipe"
+                          aria-label="Close recipe"
                           whileHover={{ opacity: 0.75 }}
                           whileTap={{ scale: 0.94 }}
                         >
-                          <svg
-                            width="22"
-                            height="22"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                            aria-hidden
-                            className="tb-shrink-0"
-                          >
-                            <path
-                              d="M6 14l6-6 6 6"
-                              stroke={INFO_PANEL_TEXT}
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                          </svg>
+                          <img alt="" src={imgRecipeX} draggable={false} className="tb-recipe-x-icon" aria-hidden />
                         </motion.button>
                       ) : null}
                     </div>

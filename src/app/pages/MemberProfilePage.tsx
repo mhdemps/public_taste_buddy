@@ -11,6 +11,8 @@ import { BUDDY_PROFILE_CIRCLE_MAX } from "../buddyLayout";
 import BuddyAvatar from "../components/BuddyAvatar";
 import { coerceBuddySvgSelection } from "../buddyAppearance";
 import { fetchProfileByUserId, fetchPublicRecipesForUser, type PublicRecipeRow, type TasteProfileRow } from "../../lib/communityApi";
+import { decodeProfileAllergiesField, parseAllergenCsv } from "../allergyTagConfig";
+import { AllergenBadgeRow } from "../components/AllergenBadgeRow";
 
 function displayFromProfile(p: TasteProfileRow): string {
   return (p.display_name?.trim() || "Taste buddy").slice(0, 80);
@@ -77,6 +79,7 @@ export default function MemberProfilePage() {
 
   const selection = profile ? coerceBuddySvgSelection(profile) : null;
   const name = profile ? displayFromProfile(profile) : "…";
+  const profileAllergyDecode = profile?.allergies ? decodeProfileAllergiesField(profile.allergies) : { tagIds: [], extraNotes: "" };
 
   return (
     <div className={PAGE_SHELL_SCROLL} data-name="Member profile">
@@ -187,10 +190,21 @@ export default function MemberProfilePage() {
                   <p className="tb-detail-p share-tech-regular">{profile.recipes_given}</p>
                 </InfoBoxFrame>
               )}
-              {profile?.allergies && (
+              {(profileAllergyDecode.tagIds.length > 0 || profileAllergyDecode.extraNotes) && (
                 <InfoBoxFrame variant={1} className="tb-bento-card tb-bento-card--wide">
                   <h3 className="tb-detail-h3 share-tech-bold">Allergies &amp; dietary notes</h3>
-                  <p className="tb-pre-wrap share-tech-regular">{profile.allergies}</p>
+                  {profileAllergyDecode.tagIds.length > 0 ? (
+                    <AllergenBadgeRow
+                      mode="profile"
+                      ids={profileAllergyDecode.tagIds}
+                      ariaLabel="Allergens this profile avoids"
+                    />
+                  ) : null}
+                  {profileAllergyDecode.extraNotes ? (
+                    <p className="tb-pre-wrap share-tech-regular" style={{ marginTop: profileAllergyDecode.tagIds.length ? "0.75rem" : 0 }}>
+                      {profileAllergyDecode.extraNotes}
+                    </p>
+                  ) : null}
                 </InfoBoxFrame>
               )}
             </motion.div>
@@ -201,14 +215,24 @@ export default function MemberProfilePage() {
                   On the wall
                 </h2>
                 <div className="tb-detail-stack">
-                  {recipes.map((r) => (
+                  {recipes.map((r) => {
+                    const accIds = parseAllergenCsv(r.accommodates ?? "");
+                    return (
                     <InfoBoxFrame key={r.id} variant={0}>
                       <p className="share-tech-bold tb-text-coral" style={{ fontSize: "20pt", marginBottom: "0.35rem" }}>
                         {r.recipe_name}
                       </p>
+                      {accIds.length > 0 ? (
+                        <div style={{ marginBottom: "0.5rem" }}>
+                          <p className="share-tech-bold" style={{ fontSize: "18pt", marginBottom: "0.25rem" }}>
+                            Free from
+                          </p>
+                          <AllergenBadgeRow mode="accommodates" ids={accIds} ariaLabel="Recipe is free from" />
+                        </div>
+                      ) : null}
                       {r.allergies.trim() ? (
                         <p className="share-tech-regular tb-pre-wrap" style={{ fontSize: "20pt", marginBottom: "0.35rem" }}>
-                          <span className="share-tech-bold">Allergies / notes:</span> {r.allergies}
+                          <span className="share-tech-bold">Contains / notes:</span> {r.allergies}
                         </p>
                       ) : null}
                       {r.ingredients.trim() ? (
@@ -227,7 +251,8 @@ export default function MemberProfilePage() {
                         </p>
                       ) : null}
                     </InfoBoxFrame>
-                  ))}
+                    );
+                  })}
                 </div>
               </>
             )}

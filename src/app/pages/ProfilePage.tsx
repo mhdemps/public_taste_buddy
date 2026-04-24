@@ -14,12 +14,14 @@ import {
   coerceBuddyBodyKey,
   coerceBuddyHatKey,
   coerceBuddySmileKey,
-  BUDDY_CIRCLE_COUNT,
+  BUDDY_BACKDROP_COUNT,
   type BuddyBodyKey,
   type BuddyHatKey,
   type BuddySmileKey,
 } from "../buddyAppearance";
 import type { MyRecipeEntry } from "./MyRecipesPage";
+import { decodeProfileAllergiesField, encodeProfileAllergiesField, type AllergenTagId } from "../allergyTagConfig";
+import { AllergenIconPicker } from "../components/AllergenIconPicker";
 import {
   deletePublicRecipe,
   fetchProfileByUserId,
@@ -76,7 +78,8 @@ export default function ProfilePage() {
   const [favoriteFood, setFavoriteFood] = useState("");
   const [personality, setPersonality] = useState("");
   const [specialty, setSpecialty] = useState("");
-  const [allergies, setAllergies] = useState("");
+  const [allergyTagIds, setAllergyTagIds] = useState<AllergenTagId[]>([]);
+  const [allergyExtraNotes, setAllergyExtraNotes] = useState("");
   const [partiesAttended, setPartiesAttended] = useState("");
   const [recipesGiven, setRecipesGiven] = useState("");
 
@@ -119,17 +122,18 @@ export default function ProfilePage() {
       }
       if (data) {
         setDisplayName(data.display_name?.trim() || defaultDisplayName());
-        const circleIdx = Math.max(0, Math.min(BUDDY_CIRCLE_COUNT - 1, Math.floor(data.buddy_color_index ?? 0)));
-        setBuddyBodyKey(
-          coerceBuddyBodyKey(data.buddy_body_key, data.buddy_body_key ? 0 : circleIdx)
-        );
+        const circleIdx = Math.max(0, Math.min(BUDDY_BACKDROP_COUNT - 1, Math.floor(data.buddy_color_index ?? 0)));
+        const legacyBodyHint = circleIdx >= 0 && circleIdx <= 5 ? circleIdx : 0;
+        setBuddyBodyKey(coerceBuddyBodyKey(data.buddy_body_key, data.buddy_body_key ? 0 : legacyBodyHint));
         setBuddyCircleIndex(circleIdx);
         setBuddyHatKey(coerceBuddyHatKey(data.buddy_hat_key));
         setBuddySmileKey(coerceBuddySmileKey(data.buddy_smile_key));
         setFavoriteFood(data.favorite_food ?? "");
         setPersonality(data.personality ?? "");
         setSpecialty(data.specialty ?? "");
-        setAllergies(data.allergies ?? "");
+        const dec = decodeProfileAllergiesField(data.allergies ?? "");
+        setAllergyTagIds(dec.tagIds);
+        setAllergyExtraNotes(dec.extraNotes);
         setPartiesAttended(data.parties_attended != null ? String(data.parties_attended) : "");
         setRecipesGiven(data.recipes_given ?? "");
       } else {
@@ -173,7 +177,7 @@ export default function ProfilePage() {
       favorite_food: favoriteFood.trim() || null,
       personality: personality.trim() || null,
       specialty: specialty.trim() || null,
-      allergies: allergies.trim() || null,
+      allergies: encodeProfileAllergiesField(allergyTagIds, allergyExtraNotes).trim() || null,
       parties_attended: partiesNum,
       recipes_given: recipesGiven.trim() || null,
     };
@@ -187,7 +191,8 @@ export default function ProfilePage() {
     favoriteFood,
     personality,
     specialty,
-    allergies,
+    allergyTagIds,
+    allergyExtraNotes,
     partiesAttended,
     recipesGiven,
   ]);
@@ -216,6 +221,7 @@ export default function ProfilePage() {
       source_local_id: r.id,
       recipe_name: r.recipeName,
       allergies: r.allergies,
+      accommodates: r.accommodates ?? "",
       ingredients: r.ingredients,
       directions: r.directions,
       notes: r.notes,
@@ -382,15 +388,21 @@ export default function ProfilePage() {
 
                 <div className="tb-bento-card tb-bento-card--wide">
                   <InfoBoxFrame variant={2}>
-                    <label htmlFor="profile-allergies" className="tb-field-label--tight share-tech-regular">
-                      Allergies &amp; dietary notes
+                    <AllergenIconPicker
+                      mode="profile"
+                      selected={allergyTagIds}
+                      onChange={setAllergyTagIds}
+                      groupLabel="Allergies you avoid"
+                    />
+                    <label htmlFor="profile-allergies-notes" className="tb-field-label--tight share-tech-regular">
+                      Extra dietary notes (optional)
                     </label>
                     <textarea
-                      id="profile-allergies"
+                      id="profile-allergies-notes"
                       className="tb-textarea-plain share-tech-regular"
-                      value={allergies}
-                      onChange={(e) => setAllergies(e.target.value)}
-                      placeholder="Optional"
+                      value={allergyExtraNotes}
+                      onChange={(e) => setAllergyExtraNotes(e.target.value)}
+                      placeholder="Anything else others should know"
                       rows={3}
                     />
                   </InfoBoxFrame>

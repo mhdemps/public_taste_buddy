@@ -38,6 +38,32 @@ async function readJsonArray(filePath) {
   return Array.isArray(parsed) ? parsed : [];
 }
 
+const BACKDROP_MIGRATED_V2 = "backdrop_migrated_v2";
+const BUDDY_BACKDROP_MAX_V2 = 20;
+
+function migrateBuddyBackdropIndices(rows) {
+  let changed = false;
+  const next = rows.map((p) => {
+    if (p[BACKDROP_MIGRATED_V2]) return p;
+    changed = true;
+    let c = Math.floor(Number(p.buddy_color_index)) || 0;
+    if (c >= 6 && c <= 26) c -= 6;
+    if (c < 0) c = 0;
+    if (c > BUDDY_BACKDROP_MAX_V2) c = BUDDY_BACKDROP_MAX_V2;
+    return { ...p, buddy_color_index: c, [BACKDROP_MIGRATED_V2]: true };
+  });
+  return { rows: next, changed };
+}
+
+async function readProfilesWithBackdropMigration() {
+  const rows = await readJsonArray(profilesPath);
+  const { rows: next, changed } = migrateBuddyBackdropIndices(rows);
+  if (changed) {
+    await writeJsonArray(profilesPath, next);
+  }
+  return next;
+}
+
 async function writeJsonArray(filePath, rows) {
   await ensureDataFile(filePath);
   const tempPath = `${filePath}.tmp`;
@@ -65,18 +91,19 @@ function sortByDateDesc(rows, key) {
 
 async function handleProfiles(req, res, pathname) {
   if (req.method === "GET" && pathname === "/api/profiles") {
-    const profiles = sortByDateDesc(await readJsonArray(profilesPath), "updated_at");
+    const profiles = sortByDateDesc(await readProfilesWithBackdropMigration(), "updated_at");
     return sendJson(res, 200, profiles);
   }
 
   if (req.method === "POST" && pathname === "/api/profiles") {
-    const profiles = await readJsonArray(profilesPath);
+    const profiles = await readProfilesWithBackdropMigration();
     const id = randomUUID();
     const now = new Date().toISOString();
     const nextProfile = {
       id,
       display_name: "New profile",
       buddy_color_index: 0,
+      backdrop_migrated_v2: true,
       buddy_body_key: "purple",
       buddy_hat_key: "none",
       buddy_smile_key: "smile",
@@ -98,18 +125,19 @@ async function handleProfiles(req, res, pathname) {
 
   const profileId = decodeURIComponent(profileByIdMatch[1]);
   if (req.method === "GET") {
-    const profiles = await readJsonArray(profilesPath);
+    const profiles = await readProfilesWithBackdropMigration();
     const profile = profiles.find((row) => row.id === profileId) ?? null;
     return sendJson(res, 200, profile);
   }
 
   if (req.method === "PUT") {
     const body = await readBody(req);
-    const profiles = await readJsonArray(profilesPath);
+    const profiles = await readProfilesWithBackdropMigration();
     const nextProfile = {
       id: profileId,
       display_name: body.display_name ?? null,
       buddy_color_index: body.buddy_color_index ?? 0,
+      backdrop_migrated_v2: true,
       buddy_body_key: body.buddy_body_key ?? null,
       buddy_hat_key: body.buddy_hat_key ?? null,
       buddy_smile_key: body.buddy_smile_key ?? null,
@@ -168,6 +196,7 @@ async function handlePublicRecipes(req, res, pathname, searchParams) {
       source_local_id: body.source_local_id ?? null,
       recipe_name: body.recipe_name ?? "",
       allergies: body.allergies ?? "",
+      accommodates: body.accommodates ?? "",
       ingredients: body.ingredients ?? "",
       directions: body.directions ?? "",
       notes: body.notes ?? "",

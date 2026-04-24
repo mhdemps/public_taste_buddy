@@ -4,7 +4,7 @@ import {
   getBuddyCircleImage,
   getBuddyHatAsset,
   getBuddySmileAsset,
-  getLightCircleImageAtIndex,
+  getBuddyBackdropAtIndex,
   type BuddySvgSelection,
 } from "../buddyAppearance";
 import { BUDDY_IN_CIRCLE_H_PCT, BUDDY_IN_CIRCLE_W_PCT } from "../buddyLayout";
@@ -14,7 +14,7 @@ type BuddyAvatarProps = {
   alt?: string;
   /** Overrides `circleBackgroundIndex` and body-default circle. */
   circleImage?: string;
-  /** Uses saved profile / wall `buddy_color_index` (0–5 light circles). */
+  /** Uses saved profile / wall `buddy_color_index` (backdrop index). */
   circleBackgroundIndex?: number;
   circleStyle?: CSSProperties;
   className?: string;
@@ -38,7 +38,7 @@ export default function BuddyAvatar({
   const resolvedCircleImage =
     circleImage ??
     (circleBackgroundIndex != null && !Number.isNaN(circleBackgroundIndex)
-      ? getLightCircleImageAtIndex(circleBackgroundIndex)
+      ? getBuddyBackdropAtIndex(circleBackgroundIndex)
       : getBuddyCircleImage(selection.bodyKey));
 
   return (
