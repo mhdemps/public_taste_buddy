@@ -4,8 +4,7 @@
   "version": "0.0.1",
   "type": "module",
   "scripts": {
-    "build": "node scripts/build-favicon.mjs && vite build",
-    "build:favicon": "node scripts/build-favicon.mjs",
+    "build": "vite build",
     "start": "node server/index.js",
     "dev": "node server/dev.js",
     "dev:vite": "vite",
