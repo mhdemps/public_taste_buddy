@@ -334,6 +334,16 @@ export async function handleApiFetch(request) {
   if (pathname.length > 1 && pathname.endsWith("/")) {
     pathname = pathname.replace(/\/+$/, "") || "/";
   }
+  // Some hosts forward the path after `/api` only; reattach so routes match.
+  if (!pathname.startsWith("/api") && pathname !== "/") {
+    if (
+      pathname === "/health" ||
+      pathname.startsWith("/profiles") ||
+      pathname.startsWith("/public-recipes")
+    ) {
+      pathname = "/api" + pathname;
+    }
+  }
   const searchParams = u.searchParams;
   const method = request.method;
 

@@ -65,6 +65,14 @@ async function parseJsonResponse<T>(response: Response): Promise<T> {
   try {
     return JSON.parse(text) as T;
   } catch {
+    const isHtml = /<!DOCTYPE|NOT_FOUND|page could not be found/i.test(text);
+    if (isHtml) {
+      throw new Error(
+        `API route returned HTML instead of JSON (HTTP ${response.status}). ` +
+          "On Vercel, deploy the serverless `api/` route (Node, not Edge) and keep `data/**` in the function. " +
+          "You can also set VITE_API_ORIGIN to a separate JSON API and rebuild."
+      );
+    }
     const preview = text.slice(0, 120).replace(/\s+/g, " ");
     throw new Error(`Not JSON (HTTP ${response.status}): ${preview}`);
   }

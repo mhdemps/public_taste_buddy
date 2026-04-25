@@ -14,6 +14,8 @@ export default function BuddySvgPickerStrip({
   chipVariant = "default",
   gridColumns,
   groupClassName = "",
+  /** Pad the grid to this many cells with inert spacers (e.g. 8th column to align with other 8-col rows). */
+  trailingInertCount = 0,
 }: {
   options: readonly BuddySvgPickerOption[];
   selectedKey: string;
@@ -24,6 +26,7 @@ export default function BuddySvgPickerStrip({
   gridColumns?: 5 | 7 | 8;
   /** Extra class on outer group (e.g. headwear centering) */
   groupClassName?: string;
+  trailingInertCount?: number;
 }) {
   const chipMod = chipVariant === "backdrop" ? " tb-svg-picker-chip--backdrop" : "";
   const stripClass = [
@@ -59,6 +62,9 @@ export default function BuddySvgPickerStrip({
             </button>
           );
         })}
+        {Array.from({ length: Math.max(0, trailingInertCount) }, (_, i) => (
+          <div key={`_inert-pad-${i}`} className="tb-svg-picker-pad" aria-hidden="true" />
+        ))}
       </div>
     </div>
   );

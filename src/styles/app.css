@@ -67,9 +67,9 @@
 }
 
 .tb-intro-buddy-img {
-  max-height: min(380px, 48vh);
+  max-height: min(430px, 52vh);
   width: auto;
-  max-width: min(280px, 78vw);
+  max-width: min(320px, 84vw);
   object-fit: contain;
   object-position: bottom;
   user-select: none;
@@ -77,8 +77,8 @@
 
 .tb-home-buddy-img {
   height: auto;
-  max-height: min(240px, 38vh);
-  width: min(200px, 58vw);
+  max-height: min(275px, 42vh);
+  width: min(230px, 64vw);
   max-width: 100%;
   object-fit: contain;
   object-position: bottom;
@@ -786,7 +786,7 @@
   display: flex;
   width: 100%;
   min-width: 0;
-  max-width: min(16.25rem, 100%);
+  max-width: min(18.75rem, 100%);
   flex-direction: column;
   align-items: center;
   justify-self: center;
@@ -797,7 +797,7 @@
 
 @media (min-width: 640px) {
   .tb-buddy-card {
-    max-width: 17rem;
+    max-width: 19.5rem;
     padding-left: 0;
     padding-right: 0;
   }
@@ -819,19 +819,19 @@
 
 @media (min-width: 640px) {
   .tb-buddy-scale-wrap {
-    transform: scale(1.05);
+    transform: scale(1.12);
   }
 }
 
 @media (min-width: 768px) {
   .tb-buddy-scale-wrap {
-    transform: scale(1.09);
+    transform: scale(1.18);
   }
 }
 
 @media (min-width: 1024px) {
   .tb-buddy-scale-wrap {
-    transform: scale(1.12);
+    transform: scale(1.22);
   }
 }
 
@@ -1096,7 +1096,7 @@
 
 .tb-buddy-profile-kicker--hero {
   margin-top: 1rem;
-  max-width: 22rem;
+  max-width: 24.5rem;
 }
 
 .tb-buddy-profile-circle {
@@ -1107,28 +1107,28 @@
   width: 100%;
   overflow: hidden;
   border-radius: 50%;
-  max-width: 15.25rem;
+  max-width: 17.5rem;
 }
 
 .tb-buddy-profile-circle--hero {
-  max-width: 16.25rem;
+  max-width: 18.75rem;
 }
 
 .tb-buddy-profile-circle--page-hero {
-  max-width: 17rem;
+  max-width: 19.5rem;
 }
 
 @media (min-width: 640px) {
   .tb-buddy-profile-circle {
-    max-width: 17rem;
+    max-width: 19.5rem;
   }
 
   .tb-buddy-profile-circle--hero {
-    max-width: 18rem;
+    max-width: 21rem;
   }
 
   .tb-buddy-profile-circle--page-hero {
-    max-width: 19rem;
+    max-width: 22.5rem;
   }
 
   .tb-profile-hero {
@@ -1281,7 +1281,7 @@
 }
 
 .tb-buddy-profile-circle--modal {
-  max-width: 11.5rem;
+  max-width: 13.5rem;
 }
 
 .tb-buddy-profile-circle--modal .tb-buddy-face-layer {
@@ -1307,7 +1307,7 @@
 
 @media (min-width: 640px) {
   .tb-buddy-profile-circle--modal {
-    max-width: 12.5rem;
+    max-width: 14.5rem;
   }
 }
 
@@ -1325,7 +1325,7 @@
   position: relative;
   z-index: 2;
   width: 100%;
-  max-width: 20.5rem;
+  max-width: 24rem;
   filter: drop-shadow(0 14px 32px rgba(45, 45, 45, 0.16));
 }
 
@@ -1367,9 +1367,9 @@
 
 .tb-profile-picker-avatar--sm {
   position: relative;
-  width: 3.5rem;
-  min-width: 3.5rem;
-  max-width: 3.5rem;
+  width: 4.25rem;
+  min-width: 4.25rem;
+  max-width: 4.25rem;
   flex-shrink: 0;
 }
 
@@ -1398,7 +1398,7 @@
 }
 
 .tb-profile-picker-expand .tb-profile-page-buddy-hero-avatar {
-  max-width: 18rem;
+  max-width: 20.5rem;
 }
 
 .tb-customize-buddy-page {
@@ -1445,12 +1445,12 @@
 }
 
 .tb-customize-preview-block .tb-buddy-profile-circle--page-hero {
-  max-width: 15rem;
+  max-width: 17.5rem;
 }
 
 @media (min-width: 640px) {
   .tb-customize-preview-block .tb-buddy-profile-circle--page-hero {
-    max-width: 16rem;
+    max-width: 19.5rem;
   }
 }
 
@@ -1532,10 +1532,24 @@
     height: 2.45rem;
   }
 
+  .tb-svg-picker-pad {
+    width: 2.45rem;
+    height: 2.45rem;
+  }
+
   .tb-svg-picker-chip--backdrop {
     width: 2.45rem;
     height: 2.45rem;
   }
+}
+
+/** Inert grid cell so 7-option rows match 8-column width (e.g. Headwear vs Eyes). */
+.tb-svg-picker-pad {
+  width: 2.85rem;
+  height: 2.85rem;
+  flex-shrink: 0;
+  pointer-events: none;
+  visibility: hidden;
 }
 
 .tb-svg-picker-chip {
@@ -1640,7 +1654,7 @@
 .tb-preview-label {
   margin-bottom: 0.5rem;
   width: 100%;
-  max-width: 12.5rem;
+  max-width: 14.5rem;
   text-align: center;
   font-size: 18pt;
   color: #2d2d2d;
@@ -1650,7 +1664,7 @@
   position: relative;
   z-index: 2;
   width: 100%;
-  max-width: 12.5rem;
+  max-width: 14.5rem;
   filter: drop-shadow(0 10px 22px rgba(45, 45, 45, 0.16));
 }
 
@@ -1660,7 +1674,7 @@
 }
 
 .tb-buddy-profile-circle--preview {
-  max-width: 12.5rem;
+  max-width: 14.5rem;
 }
 
 .tb-buddy-profile-circle--preview .tb-buddy-face-layer {
@@ -1676,7 +1690,7 @@
 
   .tb-profile-preview-col {
     flex: 0 0 auto;
-    width: min(38%, 13rem);
+    width: min(40%, 15.5rem);
     align-items: center;
   }
 
