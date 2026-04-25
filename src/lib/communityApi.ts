@@ -3,6 +3,7 @@ export type TasteProfileRow = {
   display_name: string | null;
   buddy_color_index: number;
   buddy_body_key: string | null;
+  buddy_eye_key: string | null;
   buddy_hat_key: string | null;
   buddy_smile_key: string | null;
   favorite_food: string | null;
@@ -33,6 +34,7 @@ export type TasteProfileUpsert = {
   display_name: string;
   buddy_color_index: number;
   buddy_body_key?: string | null;
+  buddy_eye_key?: string | null;
   buddy_hat_key?: string | null;
   buddy_smile_key?: string | null;
   favorite_food?: string | null;
@@ -44,9 +46,10 @@ export type TasteProfileUpsert = {
 };
 
 /**
- * Local dev: Vite proxies `/api` → `server/index.js`.
- * Production (e.g. Vercel): set `VITE_API_ORIGIN` to your hosted API (no trailing slash), e.g.
- * `https://your-app.onrender.com`, then rebuild the frontend.
+ * Local dev: use relative `/api` so Vite proxies to `server/index.js` (same origin — no CORS).
+ * Do not use a bare `http://127.0.0.1:3001` default in the browser: `localhost:5173` → `127.0.0.1:3001`
+ * is cross-origin and often surfaces as "Failed to fetch" even when the API is up.
+ * Production: set `VITE_API_ORIGIN` to your hosted API (no trailing slash), then rebuild.
  */
 const API_ORIGIN = (import.meta.env.VITE_API_ORIGIN as string | undefined)?.replace(/\/$/, "") ?? "";
 const API_BASE = API_ORIGIN ? `${API_ORIGIN}/api` : "/api";

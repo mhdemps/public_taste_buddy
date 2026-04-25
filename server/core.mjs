@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { text } from "node:stream/consumers";
 import { fileURLToPath } from "node:url";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -16,7 +17,8 @@ const publicRecipesPath = path.join(DATA_DIR, "public_recipes.json");
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type",
+  /** Browsers may request these on preflight when the page and API are different origins. */
+  "Access-Control-Allow-Headers": "Content-Type, Accept, Authorization, Origin, X-Requested-With",
 };
 
 function sendJson(res, statusCode, payload) {
@@ -102,13 +104,13 @@ async function writeJsonArray(filePath, rows) {
 }
 
 async function readBody(req) {
-  const chunks = [];
-  for await (const chunk of req) {
-    chunks.push(chunk);
+  const raw = (await text(req)).trim();
+  if (!raw) return {};
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return {};
   }
-  if (chunks.length === 0) return {};
-  const raw = Buffer.concat(chunks).toString("utf8");
-  return raw ? JSON.parse(raw) : {};
 }
 
 async function readJsonBodyFromFetch(request) {
@@ -149,6 +151,7 @@ async function routeProfiles(method, pathname, getBody) {
       buddy_color_index: 0,
       backdrop_migrated_v2: true,
       buddy_body_key: "purple",
+      buddy_eye_key: "open",
       buddy_hat_key: "none",
       buddy_smile_key: "smile",
       favorite_food: null,
@@ -176,21 +179,46 @@ async function routeProfiles(method, pathname, getBody) {
 
   if (method === "PUT") {
     const body = await getBody();
+    const b = body && typeof body === "object" && !Array.isArray(body) ? body : {};
     const profiles = await readProfilesWithBackdropMigration();
+    const existing = profiles.find((row) => row.id === profileId) ?? null;
+    /** @param {string} k @param {unknown} fromExisting */
+    const pick = (k, fromExisting) => (k in b ? b[k] : fromExisting);
     const nextProfile = {
       id: profileId,
-      display_name: body.display_name ?? null,
-      buddy_color_index: body.buddy_color_index ?? 0,
+      display_name: pick("display_name", existing?.display_name) ?? null,
+      buddy_color_index: (() => {
+        if ("buddy_color_index" in b) {
+          const n = Math.floor(Number(b.buddy_color_index));
+          return Number.isFinite(n) ? n : 0;
+        }
+        return existing?.buddy_color_index ?? 0;
+      })(),
       backdrop_migrated_v2: true,
-      buddy_body_key: body.buddy_body_key ?? null,
-      buddy_hat_key: body.buddy_hat_key ?? null,
-      buddy_smile_key: body.buddy_smile_key ?? null,
-      favorite_food: body.favorite_food ?? null,
-      personality: body.personality ?? null,
-      specialty: body.specialty ?? null,
-      allergies: body.allergies ?? null,
-      parties_attended: body.parties_attended ?? null,
-      recipes_given: body.recipes_given ?? null,
+      buddy_body_key: pick("buddy_body_key", existing?.buddy_body_key) ?? null,
+      // If the client omits the key (e.g. JSON.stringify dropped undefined), keep stored value; default to "open".
+      buddy_eye_key: (() => {
+        if ("buddy_eye_key" in b) {
+          return b.buddy_eye_key == null || b.buddy_eye_key === "" ? null : String(b.buddy_eye_key);
+        }
+        if (existing?.buddy_eye_key != null && existing.buddy_eye_key !== "") {
+          return String(existing.buddy_eye_key);
+        }
+        return "open";
+      })(),
+      buddy_hat_key: pick("buddy_hat_key", existing?.buddy_hat_key) ?? null,
+      buddy_smile_key: pick("buddy_smile_key", existing?.buddy_smile_key) ?? null,
+      favorite_food: pick("favorite_food", existing?.favorite_food) ?? null,
+      personality: pick("personality", existing?.personality) ?? null,
+      specialty: pick("specialty", existing?.specialty) ?? null,
+      allergies: pick("allergies", existing?.allergies) ?? null,
+      parties_attended: (() => {
+        if ("parties_attended" in b) {
+          return b.parties_attended;
+        }
+        return existing?.parties_attended ?? null;
+      })(),
+      recipes_given: pick("recipes_given", existing?.recipes_given) ?? null,
       updated_at: new Date().toISOString(),
     };
     const nextProfiles = profiles.filter((row) => row.id !== profileId);

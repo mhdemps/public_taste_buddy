@@ -3,6 +3,7 @@ import {
   getBuddyBodyAsset,
   getBuddyCircleImage,
   getBuddyHatAsset,
+  getBuddyEyeAsset,
   getBuddySmileAsset,
   getBuddyBackdropAtIndex,
   type BuddySvgSelection,
@@ -33,6 +34,7 @@ export default function BuddyAvatar({
   imgClassName = "tb-buddy-face-img",
 }: BuddyAvatarProps) {
   const bodySrc = getBuddyBodyAsset(selection.bodyKey);
+  const eyeSrc = getBuddyEyeAsset(selection.eyeKey);
   const hatSrc = getBuddyHatAsset(selection.hatKey);
   const smileSrc = getBuddySmileAsset(selection.smileKey);
   const resolvedCircleImage =
@@ -56,6 +58,9 @@ export default function BuddyAvatar({
         >
           <div className="tb-buddy-svg-stack">
             <img alt={alt} className={`${imgClassName} tb-buddy-svg-layer`} src={bodySrc} draggable={false} />
+            {eyeSrc ? (
+              <img alt="" className={`${imgClassName} tb-buddy-svg-layer tb-buddy-svg-layer--eyes`} src={eyeSrc} draggable={false} />
+            ) : null}
             {hatSrc ? <img alt="" className={`${imgClassName} tb-buddy-svg-layer tb-buddy-svg-layer--hat`} src={hatSrc} draggable={false} /> : null}
             <img alt="" className={`${imgClassName} tb-buddy-svg-layer tb-buddy-svg-layer--smile`} src={smileSrc} draggable={false} />
           </div>

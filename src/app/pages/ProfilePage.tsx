@@ -12,10 +12,12 @@ import { PAGE_SHELL_SCROLL, PAGE_INTRO_BLURB_TEXT } from "../brand";
 import { BUDDY_PROFILE_CIRCLE_MAX } from "../buddyLayout";
 import {
   coerceBuddyBodyKey,
+  coerceBuddyEyeKey,
   coerceBuddyHatKey,
   coerceBuddySmileKey,
   BUDDY_BACKDROP_COUNT,
   type BuddyBodyKey,
+  type BuddyEyeKey,
   type BuddyHatKey,
   type BuddySmileKey,
 } from "../buddyAppearance";
@@ -32,6 +34,7 @@ import {
   type PublicRecipeRow,
   type TasteProfileUpsert,
 } from "../../lib/communityApi";
+import imgTrashDelete from "@project-assets/Trash.svg";
 
 const LEGACY_MY_RECIPES_KEY = "tasteBuddyMyRecipes";
 
@@ -73,6 +76,7 @@ export default function ProfilePage() {
   const [displayName, setDisplayName] = useState(defaultDisplayName);
   const [buddyBodyKey, setBuddyBodyKey] = useState<BuddyBodyKey>("purple");
   const [buddyCircleIndex, setBuddyCircleIndex] = useState(2);
+  const [buddyEyeKey, setBuddyEyeKey] = useState<BuddyEyeKey>("open");
   const [buddyHatKey, setBuddyHatKey] = useState<BuddyHatKey>("none");
   const [buddySmileKey, setBuddySmileKey] = useState<BuddySmileKey>("smile");
   const [favoriteFood, setFavoriteFood] = useState("");
@@ -126,6 +130,7 @@ export default function ProfilePage() {
         const legacyBodyHint = circleIdx >= 0 && circleIdx <= 5 ? circleIdx : 0;
         setBuddyBodyKey(coerceBuddyBodyKey(data.buddy_body_key, data.buddy_body_key ? 0 : legacyBodyHint));
         setBuddyCircleIndex(circleIdx);
+        setBuddyEyeKey(coerceBuddyEyeKey(data.buddy_eye_key));
         setBuddyHatKey(coerceBuddyHatKey(data.buddy_hat_key));
         setBuddySmileKey(coerceBuddySmileKey(data.buddy_smile_key));
         setFavoriteFood(data.favorite_food ?? "");
@@ -156,6 +161,7 @@ export default function ProfilePage() {
 
   const selection = {
     bodyKey: buddyBodyKey,
+    eyeKey: buddyEyeKey,
     hatKey: buddyHatKey,
     smileKey: buddySmileKey,
   };
@@ -172,6 +178,7 @@ export default function ProfilePage() {
       display_name: displayName.trim() || defaultDisplayName(),
       buddy_color_index: buddyCircleIndex,
       buddy_body_key: buddyBodyKey,
+      buddy_eye_key: coerceBuddyEyeKey(buddyEyeKey),
       buddy_hat_key: buddyHatKey,
       buddy_smile_key: buddySmileKey,
       favorite_food: favoriteFood.trim() || null,
@@ -186,6 +193,7 @@ export default function ProfilePage() {
     displayName,
     buddyCircleIndex,
     buddyBodyKey,
+    buddyEyeKey,
     buddyHatKey,
     buddySmileKey,
     favoriteFood,
@@ -233,7 +241,8 @@ export default function ProfilePage() {
     await refreshWallRecipes();
   };
 
-  const removeFromWall = async (recipeId: string) => {
+  const removeFromWall = async (recipeId: string, recipeName: string) => {
+    if (!confirm(`Are you sure you want to remove "${recipeName}" from your wall?`)) return;
     setRecipeAction(null);
     const { error } = await deletePublicRecipe(recipeId, userId);
     if (error) {
@@ -490,10 +499,11 @@ export default function ProfilePage() {
                   <motion.button
                     type="button"
                     className="tb-link-text share-tech-regular"
-                    style={{ marginTop: "0.5rem", display: "inline-block" }}
+                    style={{ marginTop: "0.5rem", display: "inline-flex", alignItems: "center", gap: "0.35rem" }}
                     whileTap={{ scale: 0.98 }}
-                    onClick={() => void removeFromWall(r.id)}
+                    onClick={() => void removeFromWall(r.id, r.recipe_name?.trim() || "Untitled")}
                   >
+                    <img alt="" src={imgTrashDelete} draggable={false} className="tb-recipe-x-icon" aria-hidden />
                     Remove from wall
                   </motion.button>
                 </InfoBoxFrame>

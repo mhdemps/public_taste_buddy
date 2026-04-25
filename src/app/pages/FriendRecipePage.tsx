@@ -22,7 +22,8 @@ import {
 } from "../allergyTagConfig";
 import { AllergenIconPicker } from "../components/AllergenIconPicker";
 import { AllergenBadgeRow } from "../components/AllergenBadgeRow";
-import imgRecipeX from "@project-assets/X.svg";
+import imgRecipeClose from "@project-assets/X.svg";
+import imgTrashDelete from "@project-assets/Trash.svg";
 import imgAddRecipe from "@project-assets/madison-is-pretty.png";
 import imgBuddyRecipeHero from "@project-assets/sunny.png";
 
@@ -212,7 +213,7 @@ export default function FriendRecipePage() {
   };
 
   const handleRemove = (entry: FriendRecipeEntry) => {
-    if (!confirm(`Remove "${entry.recipeName}" from your saved recipes?`)) return;
+    if (!confirm(`Are you sure you want to remove "${entry.recipeName}" from your saved recipes?`)) return;
     persistSavedCommunityRecipes(
       recipesStorageKey,
       loadSavedCommunityRecipes(recipesStorageKey).filter((r) => r.id !== entry.id)
@@ -543,7 +544,7 @@ export default function FriendRecipePage() {
                                 whileHover={{ scale: 1.06, opacity: 0.88 }}
                                 whileTap={{ scale: 0.94 }}
                               >
-                                <img alt="" src={imgRecipeX} draggable={false} className="tb-recipe-x-icon" />
+                                <img alt="" src={imgTrashDelete} draggable={false} className="tb-recipe-x-icon" />
                               </motion.button>
                             </div>
                           </>
@@ -593,7 +594,7 @@ export default function FriendRecipePage() {
                           whileHover={{ opacity: 0.75 }}
                           whileTap={{ scale: 0.94 }}
                         >
-                          <img alt="" src={imgRecipeX} draggable={false} className="tb-recipe-x-icon" aria-hidden />
+                          <img alt="" src={imgRecipeClose} draggable={false} className="tb-recipe-x-icon" aria-hidden />
                         </motion.button>
                       ) : null}
                     </div>

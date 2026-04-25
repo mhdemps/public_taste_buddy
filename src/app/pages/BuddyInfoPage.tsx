@@ -93,7 +93,11 @@ export default function BuddyInfoPage() {
   const detailCircle = circleForBuddyColor(getBuddyColorIndex(buddy.buddyImage));
 
   const handleRemove = () => {
-    if (confirm(`Remove ${buddy.name} from your list? Their public profile info will no longer appear here.`)) {
+    if (
+      confirm(
+        `Are you sure you want to remove ${buddy.name} from your list? Their public profile info will no longer appear here.`
+      )
+    ) {
       removeBuddy(buddyId!);
       navigate("/buddies");
     }

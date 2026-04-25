@@ -15,7 +15,8 @@ import {
 } from "../allergyTagConfig";
 import { AllergenIconPicker } from "../components/AllergenIconPicker";
 import { AllergenBadgeRow } from "../components/AllergenBadgeRow";
-import imgRecipeX from "@project-assets/X.svg";
+import imgRecipeClose from "@project-assets/X.svg";
+import imgTrashDelete from "@project-assets/Trash.svg";
 import imgAddRecipe from "@project-assets/madison-is-pretty.png";
 import imgYourRecipesHat from "@project-assets/thick hat.png";
 
@@ -187,7 +188,7 @@ export default function MyRecipesPage() {
   };
 
   const handleRemove = (entry: MyRecipeEntry) => {
-    if (!confirm(`Remove "${entry.recipeName}" from your recipes?`)) return;
+    if (!confirm(`Are you sure you want to remove "${entry.recipeName}" from your recipes?`)) return;
     persistRecipes(myRecipesStorageKey, loadRecipes(myRecipesStorageKey).filter((r) => r.id !== entry.id));
     refresh();
     setExpandedRecipeId((cur) => (cur === entry.id ? null : cur));
@@ -477,7 +478,7 @@ export default function MyRecipesPage() {
                                 whileHover={{ scale: 1.06, opacity: 0.88 }}
                                 whileTap={{ scale: 0.94 }}
                               >
-                                <img alt="" src={imgRecipeX} draggable={false} className="tb-recipe-x-icon" />
+                                <img alt="" src={imgTrashDelete} draggable={false} className="tb-recipe-x-icon" />
                               </motion.button>
                             </div>
                           </>
@@ -523,7 +524,7 @@ export default function MyRecipesPage() {
                           whileHover={{ opacity: 0.75 }}
                           whileTap={{ scale: 0.94 }}
                         >
-                          <img alt="" src={imgRecipeX} draggable={false} className="tb-recipe-x-icon" aria-hidden />
+                          <img alt="" src={imgRecipeClose} draggable={false} className="tb-recipe-x-icon" aria-hidden />
                         </motion.button>
                       ) : null}
                     </div>

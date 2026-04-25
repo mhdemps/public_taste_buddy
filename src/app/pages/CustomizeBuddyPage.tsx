@@ -11,18 +11,20 @@ import { PAGE_SHELL_SCROLL } from "../brand";
 import { BUDDY_PROFILE_CIRCLE_MAX } from "../buddyLayout";
 import {
   buddyBodyOptions,
+  buddyEyeOptions,
   buddyHatOptions,
   buddySmileOptions,
   BUDDY_BACKDROP_COUNT,
-  BUDDY_BACKDROP_LIGHT_INDICES,
-  BUDDY_BACKDROP_COLOR_INDICES,
-  BUDDY_BACKDROP_DARK_INDICES,
+  BUDDY_BACKDROP_PICKER_INDICES,
   coerceBuddyBodyKey,
+  coerceBuddyEyeKey,
   coerceBuddyHatKey,
   coerceBuddySmileKey,
   getBuddyBackdropAtIndex,
   getBuddyBackdropLabel,
+  toColorRowBackdropIndex,
   type BuddyBodyKey,
+  type BuddyEyeKey,
   type BuddyHatKey,
   type BuddySmileKey,
 } from "../buddyAppearance";
@@ -51,7 +53,9 @@ export default function CustomizeBuddyPage() {
 
   const [displayName, setDisplayName] = useState(defaultDisplayName);
   const [buddyBodyKey, setBuddyBodyKey] = useState<BuddyBodyKey>("purple");
-  const [buddyCircleIndex, setBuddyCircleIndex] = useState(2);
+  /** Default: color-row yellow (same column as legacy light default index 2). */
+  const [buddyCircleIndex, setBuddyCircleIndex] = useState(9);
+  const [buddyEyeKey, setBuddyEyeKey] = useState<BuddyEyeKey>("open");
   const [buddyHatKey, setBuddyHatKey] = useState<BuddyHatKey>("none");
   const [buddySmileKey, setBuddySmileKey] = useState<BuddySmileKey>("smile");
   const [favoriteFood, setFavoriteFood] = useState("");
@@ -73,10 +77,11 @@ export default function CustomizeBuddyPage() {
       }
       if (data) {
         setDisplayName(data.display_name?.trim() || defaultDisplayName());
-        const circleIdx = Math.max(0, Math.min(BUDDY_BACKDROP_COUNT - 1, Math.floor(data.buddy_color_index ?? 0)));
-        const legacyBodyHint = circleIdx >= 0 && circleIdx <= 5 ? circleIdx : 0;
+        const rawCircle = Math.max(0, Math.min(BUDDY_BACKDROP_COUNT - 1, Math.floor(data.buddy_color_index ?? 0)));
+        const legacyBodyHint = rawCircle >= 0 && rawCircle <= 5 ? rawCircle : 0;
         setBuddyBodyKey(coerceBuddyBodyKey(data.buddy_body_key, data.buddy_body_key ? 0 : legacyBodyHint));
-        setBuddyCircleIndex(circleIdx);
+        setBuddyCircleIndex(toColorRowBackdropIndex(rawCircle));
+        setBuddyEyeKey(coerceBuddyEyeKey(data.buddy_eye_key));
         setBuddyHatKey(coerceBuddyHatKey(data.buddy_hat_key));
         setBuddySmileKey(coerceBuddySmileKey(data.buddy_smile_key));
         setFavoriteFood(data.favorite_food ?? "");
@@ -97,16 +102,13 @@ export default function CustomizeBuddyPage() {
 
   const selection = {
     bodyKey: buddyBodyKey,
+    eyeKey: buddyEyeKey,
     hatKey: buddyHatKey,
     smileKey: buddySmileKey,
   };
 
   const allBackdropOptions = useMemo(
-    () => [
-      ...backdropOptionsForIndices(BUDDY_BACKDROP_LIGHT_INDICES),
-      ...backdropOptionsForIndices(BUDDY_BACKDROP_COLOR_INDICES),
-      ...backdropOptionsForIndices(BUDDY_BACKDROP_DARK_INDICES),
-    ],
+    () => backdropOptionsForIndices(BUDDY_BACKDROP_PICKER_INDICES),
     []
   );
 
@@ -140,8 +142,20 @@ export default function CustomizeBuddyPage() {
     []
   );
 
+  const eyePickerOptions = useMemo(
+    () =>
+      buddyEyeOptions.map((o) => ({
+        key: o.key,
+        label: o.label,
+        src: o.pickerSrc ?? o.asset!,
+      })),
+    []
+  );
+
   const setBackdrop = useCallback((k: string) => {
-    setBuddyCircleIndex(Math.max(0, Math.min(BUDDY_BACKDROP_COUNT - 1, Number.parseInt(k, 10) || 0)));
+    const n = Number.parseInt(k, 10);
+    if (Number.isNaN(n)) return;
+    setBuddyCircleIndex(Math.max(7, Math.min(13, n)));
   }, []);
 
   const buildPayload = useCallback((): TasteProfileUpsert => {
@@ -156,6 +170,7 @@ export default function CustomizeBuddyPage() {
       display_name: displayName.trim() || defaultDisplayName(),
       buddy_color_index: buddyCircleIndex,
       buddy_body_key: buddyBodyKey,
+      buddy_eye_key: coerceBuddyEyeKey(buddyEyeKey),
       buddy_hat_key: buddyHatKey,
       buddy_smile_key: buddySmileKey,
       favorite_food: favoriteFood.trim() || null,
@@ -170,6 +185,7 @@ export default function CustomizeBuddyPage() {
     displayName,
     buddyCircleIndex,
     buddyBodyKey,
+    buddyEyeKey,
     buddyHatKey,
     buddySmileKey,
     favoriteFood,
@@ -250,7 +266,7 @@ export default function CustomizeBuddyPage() {
                 <BuddySvgPickerStrip
                   chipVariant="backdrop"
                   gridColumns={7}
-                  groupLabel="Backdrop color — light, medium, and dark rows of seven"
+                  groupLabel="Backdrop color"
                   options={allBackdropOptions}
                   selectedKey={String(buddyCircleIndex)}
                   onSelect={setBackdrop}
@@ -263,7 +279,14 @@ export default function CustomizeBuddyPage() {
                   onSelect={(k) => setBuddyBodyKey(k as BuddyBodyKey)}
                 />
                 <BuddySvgPickerStrip
-                  gridColumns={7}
+                  gridColumns={8}
+                  groupLabel="Eyes"
+                  options={eyePickerOptions}
+                  selectedKey={buddyEyeKey}
+                  onSelect={(k) => setBuddyEyeKey(coerceBuddyEyeKey(k))}
+                />
+                <BuddySvgPickerStrip
+                  gridColumns={8}
                   groupLabel="Headwear"
                   options={hatPickerOptions}
                   selectedKey={buddyHatKey}

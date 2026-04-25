@@ -13,6 +13,7 @@ export default function BuddySvgPickerStrip({
   groupLabel,
   chipVariant = "default",
   gridColumns,
+  groupClassName = "",
 }: {
   options: readonly BuddySvgPickerOption[];
   selectedKey: string;
@@ -20,19 +21,22 @@ export default function BuddySvgPickerStrip({
   groupLabel: string;
   chipVariant?: "default" | "backdrop";
   /** Fixed column count so rows stay full — no single orphan chip. */
-  gridColumns?: 5 | 7;
+  gridColumns?: 5 | 7 | 8;
+  /** Extra class on outer group (e.g. headwear centering) */
+  groupClassName?: string;
 }) {
   const chipMod = chipVariant === "backdrop" ? " tb-svg-picker-chip--backdrop" : "";
   const stripClass = [
     "tb-svg-picker-strip",
     gridColumns === 7 ? "tb-svg-picker-strip--grid tb-svg-picker-strip--c7" : "",
+    gridColumns === 8 ? "tb-svg-picker-strip--grid tb-svg-picker-strip--c8" : "",
     gridColumns === 5 ? "tb-svg-picker-strip--grid tb-svg-picker-strip--c5" : "",
   ]
     .filter(Boolean)
     .join(" ");
 
   return (
-    <div className="tb-svg-picker-group" role="group" aria-label={groupLabel}>
+    <div className={["tb-svg-picker-group", groupClassName].filter(Boolean).join(" ")} role="group" aria-label={groupLabel}>
       <div className={stripClass}>
         {options.map((opt) => {
           const selected = opt.key === selectedKey;

@@ -193,7 +193,7 @@ export default function AttendPartyPage() {
   };
 
   const handleDeleteParty = (plan: PartyPlanEntry) => {
-    if (!confirm(`Remove "${plan.partyName}" from your saved parties?`)) {
+    if (!confirm(`Are you sure you want to remove "${plan.partyName}" from your saved parties?`)) {
       return;
     }
     persistPlans(partyStorageKey, loadPartyPlans(partyStorageKey).filter((p) => p.id !== plan.id));

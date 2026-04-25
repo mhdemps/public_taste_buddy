@@ -524,7 +524,7 @@
   object-fit: contain;
 }
 
-/* X.svg — recipe remove + collapse (exit) */
+/* Trash.svg — delete recipe; X.svg — collapse expanded recipe */
 .tb-recipe-x-icon {
   pointer-events: none;
   display: block;
@@ -786,7 +786,7 @@
   display: flex;
   width: 100%;
   min-width: 0;
-  max-width: min(13.5rem, 100%);
+  max-width: min(16.25rem, 100%);
   flex-direction: column;
   align-items: center;
   justify-self: center;
@@ -797,7 +797,7 @@
 
 @media (min-width: 640px) {
   .tb-buddy-card {
-    max-width: 14rem;
+    max-width: 17rem;
     padding-left: 0;
     padding-right: 0;
   }
@@ -819,19 +819,19 @@
 
 @media (min-width: 640px) {
   .tb-buddy-scale-wrap {
-    transform: scale(1.02);
+    transform: scale(1.05);
   }
 }
 
 @media (min-width: 768px) {
   .tb-buddy-scale-wrap {
-    transform: scale(1.06);
+    transform: scale(1.09);
   }
 }
 
 @media (min-width: 1024px) {
   .tb-buddy-scale-wrap {
-    transform: scale(1.08);
+    transform: scale(1.12);
   }
 }
 
@@ -905,6 +905,10 @@
   height: 100%;
   object-fit: contain;
   object-position: center;
+}
+
+.tb-buddy-svg-layer--eyes {
+  z-index: 1;
 }
 
 .tb-buddy-svg-layer--hat {
@@ -1103,28 +1107,28 @@
   width: 100%;
   overflow: hidden;
   border-radius: 50%;
-  max-width: 12.75rem;
+  max-width: 15.25rem;
 }
 
 .tb-buddy-profile-circle--hero {
-  max-width: 13.5rem;
+  max-width: 16.25rem;
 }
 
 .tb-buddy-profile-circle--page-hero {
-  max-width: 14.25rem;
+  max-width: 17rem;
 }
 
 @media (min-width: 640px) {
   .tb-buddy-profile-circle {
-    max-width: 14.25rem;
+    max-width: 17rem;
   }
 
   .tb-buddy-profile-circle--hero {
-    max-width: 15rem;
+    max-width: 18rem;
   }
 
   .tb-buddy-profile-circle--page-hero {
-    max-width: 15.75rem;
+    max-width: 19rem;
   }
 
   .tb-profile-hero {
@@ -1321,7 +1325,7 @@
   position: relative;
   z-index: 2;
   width: 100%;
-  max-width: 17rem;
+  max-width: 20.5rem;
   filter: drop-shadow(0 14px 32px rgba(45, 45, 45, 0.16));
 }
 
@@ -1394,7 +1398,7 @@
 }
 
 .tb-profile-picker-expand .tb-profile-page-buddy-hero-avatar {
-  max-width: 15rem;
+  max-width: 18rem;
 }
 
 .tb-customize-buddy-page {
@@ -1411,6 +1415,9 @@
   position: sticky;
   top: 0;
   z-index: 6;
+  /* Preview is not interactive; without this, the sticky layer still captures hits on
+     the transparent area and blocks clicks on the picker rows below (e.g. Eyes). */
+  pointer-events: none;
   display: flex;
   width: 100%;
   flex-direction: column;
@@ -1438,12 +1445,12 @@
 }
 
 .tb-customize-preview-block .tb-buddy-profile-circle--page-hero {
-  max-width: 12.5rem;
+  max-width: 15rem;
 }
 
 @media (min-width: 640px) {
   .tb-customize-preview-block .tb-buddy-profile-circle--page-hero {
-    max-width: 13.25rem;
+    max-width: 16rem;
   }
 }
 
@@ -1455,14 +1462,28 @@
 .tb-buddy-customize-controls--svg-only {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 0.5rem;
 }
 
+/* Center every picker block in the main column; inner strip shrinks to chips so rows align. */
 .tb-svg-picker-group {
-  width: 100%;
-  max-width: 19.5rem;
+  display: flex;
+  width: min(100%, 25.5rem);
+  max-width: 25.5rem;
+  flex-direction: column;
+  align-items: center;
   margin-left: auto;
   margin-right: auto;
+  box-sizing: border-box;
+}
+
+.tb-svg-picker-group .tb-svg-picker-strip--grid {
+  width: fit-content;
+  max-width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  box-sizing: border-box;
 }
 
 .tb-svg-picker-strip {
@@ -1477,37 +1498,50 @@
 .tb-svg-picker-strip--grid {
   display: grid;
   justify-content: center;
-  gap: 0.26rem;
+  gap: 0.3rem;
   padding: 0.05rem 0;
 }
 
 .tb-svg-picker-strip--c7 {
-  grid-template-columns: repeat(7, minmax(0, 2.42rem));
+  grid-template-columns: repeat(7, minmax(0, 2.85rem));
+}
+
+.tb-svg-picker-strip--c8 {
+  grid-template-columns: repeat(8, minmax(0, 2.85rem));
 }
 
 .tb-svg-picker-strip--c5 {
-  grid-template-columns: repeat(5, minmax(0, 2.42rem));
+  grid-template-columns: repeat(5, minmax(0, 2.85rem));
 }
 
 @media (max-width: 380px) {
   .tb-svg-picker-strip--c7 {
-    grid-template-columns: repeat(7, minmax(0, 2.05rem));
+    grid-template-columns: repeat(7, minmax(0, 2.45rem));
+  }
+
+  .tb-svg-picker-strip--c8 {
+    grid-template-columns: repeat(8, minmax(0, 2.45rem));
   }
 
   .tb-svg-picker-strip--c5 {
-    grid-template-columns: repeat(5, minmax(0, 2.05rem));
+    grid-template-columns: repeat(5, minmax(0, 2.45rem));
   }
 
   .tb-svg-picker-strip--grid .tb-svg-picker-chip {
-    width: 2.05rem;
-    height: 2.05rem;
+    width: 2.45rem;
+    height: 2.45rem;
+  }
+
+  .tb-svg-picker-chip--backdrop {
+    width: 2.45rem;
+    height: 2.45rem;
   }
 }
 
 .tb-svg-picker-chip {
   display: inline-flex;
-  width: 2.42rem;
-  height: 2.42rem;
+  width: 2.85rem;
+  height: 2.85rem;
   flex-shrink: 0;
   align-items: center;
   justify-content: center;
@@ -1542,8 +1576,8 @@
 }
 
 .tb-svg-picker-chip--backdrop {
-  width: 2.42rem;
-  height: 2.42rem;
+  width: 2.85rem;
+  height: 2.85rem;
 }
 
 .tb-svg-picker-chip--backdrop .tb-svg-picker-chip-img-wrap img {

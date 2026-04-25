@@ -9,6 +9,7 @@ create table if not exists public.profiles (
   display_name text,
   buddy_color_index smallint not null default 0,
   buddy_body_key text default 'purple',
+  buddy_eye_key text default 'open',
   buddy_hat_key text default 'none',
   buddy_smile_key text default 'smile',
   favorite_food text,
@@ -24,6 +25,7 @@ alter table public.profiles enable row level security;
 
 alter table public.profiles add column if not exists buddy_color_index smallint not null default 0;
 alter table public.profiles add column if not exists buddy_body_key text default 'purple';
+alter table public.profiles add column if not exists buddy_eye_key text default 'open';
 alter table public.profiles add column if not exists buddy_hat_key text default 'none';
 alter table public.profiles add column if not exists buddy_smile_key text default 'smile';
 alter table public.profiles add column if not exists favorite_food text;
