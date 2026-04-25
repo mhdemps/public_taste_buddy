@@ -1445,12 +1445,12 @@
 }
 
 .tb-customize-preview-block .tb-buddy-profile-circle--page-hero {
-  max-width: 17.5rem;
+  max-width: 19.25rem;
 }
 
 @media (min-width: 640px) {
   .tb-customize-preview-block .tb-buddy-profile-circle--page-hero {
-    max-width: 19.5rem;
+    max-width: 21.5rem;
   }
 }
 
