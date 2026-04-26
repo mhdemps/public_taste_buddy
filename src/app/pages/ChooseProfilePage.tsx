@@ -276,7 +276,7 @@ export default function ChooseProfilePage() {
             </p>
             <p className="share-tech-regular" style={{ fontSize: "14pt", lineHeight: 1.4, color: "#2d2d2d", marginTop: "0.5rem" }}>
               This app needs the JSON API. On your computer run <code className="share-tech-regular">npm run dev</code> (Vite + API). On
-              Vercel: push this repo, set the project Root Directory to the folder that contains <code className="share-tech-regular">api/[...slug].js</code>, then redeploy. Open <code className="share-tech-regular">/api/health</code> — it should return JSON, not HTML.
+              Vercel: push this repo, set the project Root Directory to the repo root (the folder that contains <code className="share-tech-regular">api/</code> and <code className="share-tech-regular">vercel.json</code>), then redeploy. Open <code className="share-tech-regular">/api/health</code> — it should return JSON, not HTML.
               then trigger a new deployment.
             </p>
           </InfoBoxFrame>
