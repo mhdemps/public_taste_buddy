@@ -1,4 +1,4 @@
-import { handleApiFetch } from "../../server/core.mjs";
+import { handleApiFetch } from "../core.mjs";
 
 /** Direct route for GET/PUT/DELETE `/api/profiles/:id`. */
 export default {

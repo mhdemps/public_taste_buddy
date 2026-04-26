@@ -4,22 +4,11 @@
   "outputDirectory": "dist",
   "rewrites": [
     { "handle": "filesystem" },
-    {
-      "source": "/api$",
-      "destination": "/api/tb-route?tbpath="
-    },
-    {
-      "source": "/api/(?!tb-route)(.*)",
-      "destination": "/api/tb-route?tbpath=$1"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
-    }
+    { "source": "/(.*)", "destination": "/index.html" }
   ],
   "functions": {
     "api/**/*.js": {
-      "includeFiles": "data/**,server/**",
+      "includeFiles": "data/**",
       "maxDuration": 30
     }
   }
