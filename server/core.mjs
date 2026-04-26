@@ -268,6 +268,11 @@ async function routePublicRecipes(method, pathname, searchParams, getBody) {
     if (duplicate) {
       return { status: 409, payload: { error: "That recipe is already on the wall." } };
     }
+    const rawPhoto = body.photo_data_url;
+    const photo_data_url =
+      typeof rawPhoto === "string" && rawPhoto.startsWith("data:image/") && rawPhoto.length <= 1_500_000
+        ? rawPhoto
+        : "";
     const nextRecipe = {
       id: randomUUID(),
       user_id: body.user_id,
@@ -278,11 +283,43 @@ async function routePublicRecipes(method, pathname, searchParams, getBody) {
       ingredients: body.ingredients ?? "",
       directions: body.directions ?? "",
       notes: body.notes ?? "",
+      photo_data_url,
       created_at: new Date().toISOString(),
     };
     recipes.push(nextRecipe);
     await writeJsonArray(publicRecipesPath, recipes);
     return { status: 201, payload: nextRecipe };
+  }
+
+  const recipeByIdMatch = pathname.match(/^\/api\/public-recipes\/([^/]+)$/);
+  if (method === "PUT" && recipeByIdMatch) {
+    const recipeId = decodeURIComponent(recipeByIdMatch[1]);
+    const body = await getBody();
+    const userId = body.user_id;
+    if (typeof userId !== "string" || !userId.trim()) {
+      return { status: 400, payload: { error: "user_id required." } };
+    }
+    const recipes = await readJsonArray(publicRecipesPath, "public_recipes.json");
+    const idx = recipes.findIndex((row) => row.id === recipeId && row.user_id === userId);
+    if (idx < 0) {
+      return { status: 404, payload: { error: "Recipe not found." } };
+    }
+    const rawPhoto = body.photo_data_url;
+    if (typeof rawPhoto !== "string") {
+      return { status: 400, payload: { error: "photo_data_url required." } };
+    }
+    let photo_data_url = recipes[idx].photo_data_url ?? "";
+    if (rawPhoto === "") {
+      photo_data_url = "";
+    } else if (rawPhoto.startsWith("data:image/") && rawPhoto.length <= 1_500_000) {
+      photo_data_url = rawPhoto;
+    } else {
+      return { status: 400, payload: { error: "Invalid or oversized photo_data_url." } };
+    }
+    const updated = { ...recipes[idx], photo_data_url };
+    recipes[idx] = updated;
+    await writeJsonArray(publicRecipesPath, recipes);
+    return { status: 200, payload: updated };
   }
 
   const deleteMatch = pathname.match(/^\/api\/public-recipes\/([^/]+)$/);

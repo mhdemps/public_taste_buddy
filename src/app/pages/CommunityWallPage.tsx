@@ -18,6 +18,7 @@ import {
   type TasteProfileRow,
   type PublicRecipeRow,
 } from "../../lib/communityApi";
+import imgRecipeClose from "@project-assets/X.svg";
 
 function displayFromProfile(p: TasteProfileRow): string {
   return (p.display_name?.trim() || "Taste buddy").slice(0, 80);
@@ -31,6 +32,7 @@ export default function CommunityWallPage() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [savedWallIds, setSavedWallIds] = useState<Set<string>>(() => new Set());
   const [saveHint, setSaveHint] = useState<{ recipeId: string; message: string } | null>(null);
+  const [expandedWallRecipeId, setExpandedWallRecipeId] = useState<string | null>(null);
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -45,6 +47,10 @@ export default function CommunityWallPage() {
     return () => {
       cancelled = true;
     };
+  }, [location.key]);
+
+  useEffect(() => {
+    setExpandedWallRecipeId(null);
   }, [location.key]);
 
   useEffect(() => {
@@ -144,77 +150,146 @@ export default function CommunityWallPage() {
               Fresh on the wall
             </h2>
             <p className="tb-intro-blurb share-tech-regular" style={{ marginTop: "0.35rem", marginBottom: "0.25rem" }}>
-              Tap <span className="share-tech-bold">Save to my list</span> to copy a recipe to your saved recipes (bottom bar).
+              Tap a card to open the full recipe. Use <span className="share-tech-bold">Save to my list</span> to copy it to
+              your saved recipes (bottom bar).
             </p>
             <div className="tb-wall-recipe-stack">
               {recipes.map((r) => {
                 const wallAcc = parseAllergenCsv(r.accommodates ?? "");
+                const isExpanded = expandedWallRecipeId === r.id;
+                const hasPhoto = Boolean(r.photo_data_url && r.photo_data_url.startsWith("data:image/"));
+                const author = nameByUserId.get(r.user_id) ?? "Community member";
+
                 return (
-                <InfoBoxFrame key={r.id} variant={0} className="tb-wall-recipe-card">
-                  <p className="share-tech-bold tb-text-coral tb-wall-recipe-title">
-                    {r.recipe_name}
-                  </p>
-                  <p className="share-tech-regular tb-muted-hint tb-wall-recipe-author">
-                    {nameByUserId.get(r.user_id) ?? "Community member"}
-                  </p>
-                  <div className="tb-wall-recipe-actions">
-                    {savedWallIds.has(r.id) ? (
-                      <p className="share-tech-regular tb-muted-hint" style={{ margin: 0 }}>
-                        In your saved list
-                      </p>
-                    ) : (
-                      <motion.button
-                        type="button"
-                        className="tb-submit-wrap"
-                        whileTap={{ scale: 0.97 }}
-                        onClick={() => handleSaveWallRecipe(r)}
-                      >
-                        <ChalkPillFrame
-                          variant={2}
-                          fillClassName="tb-pill-fill-coral--tight"
-                          innerClassName="tb-pill-inner tb-pill-inner--sm"
+                    <InfoBoxFrame
+                      key={r.id}
+                      variant={0}
+                      className={`tb-wall-recipe-card${isExpanded ? " tb-wall-recipe-card--expanded" : ""}`}
+                    >
+                      {isExpanded ? (
+                        <>
+                          <motion.button
+                            type="button"
+                            onClick={() => setExpandedWallRecipeId(null)}
+                            className="tb-chevron-btn tb-wall-recipe-close"
+                            aria-label="Close recipe"
+                            whileHover={{ opacity: 0.75 }}
+                            whileTap={{ scale: 0.94 }}
+                          >
+                            <img alt="" src={imgRecipeClose} draggable={false} className="tb-recipe-x-icon" aria-hidden />
+                          </motion.button>
+                          <div className="tb-wall-recipe-media-wrap tb-wall-recipe-media-wrap--expanded">
+                            {hasPhoto ? (
+                              <img
+                                src={r.photo_data_url!}
+                                alt=""
+                                className="tb-wall-recipe-photo--hero"
+                                draggable={false}
+                              />
+                            ) : (
+                              <div className="tb-wall-recipe-placeholder" aria-hidden>
+                                <span className="tb-wall-recipe-placeholder-letter share-tech-bold">
+                                  {r.recipe_name.trim().charAt(0).toUpperCase() || "?"}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                          <p className="share-tech-bold tb-text-coral tb-wall-recipe-title tb-wall-recipe-title--below-media">
+                            {r.recipe_name}
+                          </p>
+                          <p className="share-tech-regular tb-muted-hint tb-wall-recipe-author">{author}</p>
+                          <div className="tb-wall-recipe-actions">
+                            {savedWallIds.has(r.id) ? (
+                              <p className="share-tech-regular tb-muted-hint" style={{ margin: 0 }}>
+                                In your saved list
+                              </p>
+                            ) : (
+                              <motion.button
+                                type="button"
+                                className="tb-submit-wrap"
+                                whileTap={{ scale: 0.97 }}
+                                onClick={() => handleSaveWallRecipe(r)}
+                              >
+                                <ChalkPillFrame
+                                  variant={2}
+                                  fillClassName="tb-pill-fill-coral--tight"
+                                  innerClassName="tb-pill-inner tb-pill-inner--sm"
+                                >
+                                  <span className="tb-pill-text-white share-tech-regular">Save to my list</span>
+                                </ChalkPillFrame>
+                              </motion.button>
+                            )}
+                            {saveHint?.recipeId === r.id ? (
+                              <p className="share-tech-regular tb-wall-recipe-save-hint" role="status">
+                                {saveHint.message}
+                              </p>
+                            ) : null}
+                          </div>
+                          {wallAcc.length > 0 ? (
+                            <div className="tb-wall-recipe-section">
+                              <p className="share-tech-bold tb-wall-recipe-label">Free from</p>
+                              <AllergenBadgeRow mode="accommodates" ids={wallAcc} ariaLabel="Recipe is free from" />
+                            </div>
+                          ) : null}
+                          {r.allergies.trim() ? (
+                            <div className="tb-wall-recipe-section">
+                              <p className="share-tech-bold tb-wall-recipe-label">Contains / notes</p>
+                              <p className="share-tech-regular tb-pre-wrap tb-wall-recipe-copy">{r.allergies}</p>
+                            </div>
+                          ) : null}
+                          {r.ingredients.trim() ? (
+                            <div className="tb-wall-recipe-section">
+                              <p className="share-tech-bold tb-wall-recipe-label">Ingredients</p>
+                              <p className="share-tech-regular tb-pre-wrap tb-wall-recipe-copy">{r.ingredients}</p>
+                            </div>
+                          ) : null}
+                          {r.directions.trim() ? (
+                            <div className="tb-wall-recipe-section">
+                              <p className="share-tech-bold tb-wall-recipe-label">Directions</p>
+                              <p className="share-tech-regular tb-pre-wrap tb-wall-recipe-copy">{r.directions}</p>
+                            </div>
+                          ) : null}
+                          {r.notes.trim() ? (
+                            <div className="tb-wall-recipe-section">
+                              <p className="share-tech-bold tb-wall-recipe-label">Notes</p>
+                              <p className="share-tech-regular tb-pre-wrap tb-wall-recipe-copy">{r.notes}</p>
+                            </div>
+                          ) : null}
+                        </>
+                      ) : (
+                        <motion.button
+                          type="button"
+                          className="tb-wall-recipe-collapsed"
+                          aria-expanded={false}
+                          onClick={() => setExpandedWallRecipeId(r.id)}
+                          whileTap={{ scale: 0.99 }}
                         >
-                          <span className="tb-pill-text-white share-tech-regular">Save to my list</span>
-                        </ChalkPillFrame>
-                      </motion.button>
-                    )}
-                    {saveHint?.recipeId === r.id ? (
-                      <p className="share-tech-regular tb-wall-recipe-save-hint" role="status">
-                        {saveHint.message}
-                      </p>
-                    ) : null}
-                  </div>
-                  {wallAcc.length > 0 ? (
-                    <div className="tb-wall-recipe-section">
-                      <p className="share-tech-bold tb-wall-recipe-label">Free from</p>
-                      <AllergenBadgeRow mode="accommodates" ids={wallAcc} ariaLabel="Recipe is free from" />
-                    </div>
-                  ) : null}
-                  {r.allergies.trim() ? (
-                    <div className="tb-wall-recipe-section">
-                      <p className="share-tech-bold tb-wall-recipe-label">Contains / notes</p>
-                      <p className="share-tech-regular tb-pre-wrap tb-wall-recipe-copy">{r.allergies}</p>
-                    </div>
-                  ) : null}
-                  {r.ingredients.trim() ? (
-                    <div className="tb-wall-recipe-section">
-                      <p className="share-tech-bold tb-wall-recipe-label">Ingredients</p>
-                      <p className="share-tech-regular tb-pre-wrap tb-wall-recipe-copy">{r.ingredients}</p>
-                    </div>
-                  ) : null}
-                  {r.directions.trim() ? (
-                    <div className="tb-wall-recipe-section">
-                      <p className="share-tech-bold tb-wall-recipe-label">Directions</p>
-                      <p className="share-tech-regular tb-pre-wrap tb-wall-recipe-copy">{r.directions}</p>
-                    </div>
-                  ) : null}
-                  {r.notes.trim() ? (
-                    <div className="tb-wall-recipe-section">
-                      <p className="share-tech-bold tb-wall-recipe-label">Notes</p>
-                      <p className="share-tech-regular tb-pre-wrap tb-wall-recipe-copy">{r.notes}</p>
-                    </div>
-                  ) : null}
-                </InfoBoxFrame>
+                          <div className="tb-wall-recipe-media-wrap">
+                            {hasPhoto ? (
+                              <img
+                                src={r.photo_data_url!}
+                                alt=""
+                                className="tb-wall-recipe-photo--hero"
+                                draggable={false}
+                              />
+                            ) : (
+                              <div className="tb-wall-recipe-placeholder" aria-hidden>
+                                <span className="tb-wall-recipe-placeholder-letter share-tech-bold">
+                                  {r.recipe_name.trim().charAt(0).toUpperCase() || "?"}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                          <p className="share-tech-bold tb-text-coral tb-wall-recipe-title tb-wall-recipe-title--below-media">
+                            {r.recipe_name}
+                          </p>
+                          <p className="share-tech-regular tb-muted-hint tb-wall-recipe-author tb-wall-recipe-author--collapsed">
+                            {author}
+                          </p>
+                          <p className="share-tech-regular tb-wall-recipe-expand-hint">Tap to open recipe →</p>
+                        </motion.button>
+                      )}
+                    </InfoBoxFrame>
                 );
               })}
             </div>

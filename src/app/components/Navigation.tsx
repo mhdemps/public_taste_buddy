@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router";
 import iconChef from "@project-assets/gray chef.png";
-import iconParty from "@project-assets/gray party.png";
+import iconWhisk from "@project-assets/whisk.svg";
 import iconHome from "@project-assets/gray home.png";
 import iconSave from "@project-assets/save.svg";
 import iconProfile from "@project-assets/gray buddy.png";
@@ -30,7 +30,7 @@ function NavIcon({ icon, tiltClass, onClick, ariaLabel }: NavIconProps) {
 
 const navItems = [
   { id: "chef", icon: iconChef, path: "/my-recipes" as const, ariaLabel: "My recipes" },
-  { id: "party", icon: iconParty, path: "/party" as const, ariaLabel: "Parties and gatherings" },
+  { id: "whisk", icon: iconWhisk, path: "/whisk" as const, ariaLabel: "Cook along with your recipes" },
   { id: "home", icon: iconHome, path: "/" as const, ariaLabel: "Taste wall" },
   { id: "welcome", icon: iconSave, path: "/friend-recipe" as const, ariaLabel: "Saved recipes from the wall" },
   { id: "profile", icon: iconProfile, path: "/profile" as const, ariaLabel: "My profile and wall posts" },

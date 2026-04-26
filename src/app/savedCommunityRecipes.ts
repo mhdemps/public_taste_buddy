@@ -15,6 +15,8 @@ export type SavedCommunityRecipeEntry = {
   ingredients: string;
   directions: string;
   notes: string;
+  /** Copied from wall post when saved from the taste wall. */
+  recipe_photo?: string;
   savedAt: string;
 };
 
@@ -39,13 +41,14 @@ export function loadSavedCommunityRecipes(storageKey: string): SavedCommunityRec
           typeof (row as SavedCommunityRecipeEntry).id === "string"
       )
       .map((row) => {
-        const r = row as SavedCommunityRecipeEntry & { wallRecipeId?: unknown };
+        const r = row as SavedCommunityRecipeEntry & { wallRecipeId?: unknown; recipe_photo?: unknown };
         return {
           ...r,
           allergies: typeof r.allergies === "string" ? r.allergies : "",
           accommodates: typeof r.accommodates === "string" ? r.accommodates : "",
           wallRecipeId: typeof r.wallRecipeId === "string" ? r.wallRecipeId : undefined,
           buddyId: typeof r.buddyId === "string" ? r.buddyId : undefined,
+          recipe_photo: typeof r.recipe_photo === "string" && r.recipe_photo.startsWith("data:image/") ? r.recipe_photo : undefined,
         };
       });
   } catch {
@@ -79,6 +82,7 @@ export function appendWallRecipeToSaved(
     ingredients: row.ingredients,
     directions: row.directions,
     notes: row.notes,
+    recipe_photo: row.photo_data_url && row.photo_data_url.startsWith("data:image/") ? row.photo_data_url : undefined,
     savedAt: new Date().toISOString(),
   };
   list.push(entry);

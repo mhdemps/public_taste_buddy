@@ -22,6 +22,15 @@ import {
 } from "../allergyTagConfig";
 import { AllergenIconPicker } from "../components/AllergenIconPicker";
 import { AllergenBadgeRow } from "../components/AllergenBadgeRow";
+import RecipeIngredientDirectionFields from "../components/RecipeIngredientDirectionFields";
+import {
+  directionRowsFromString,
+  directionsStringFromRows,
+  ingredientRowsFromString,
+  ingredientsStringFromRows,
+  newIngredientRow,
+  type IngredientRow,
+} from "../recipeLineEditorUtils";
 import imgRecipeClose from "@project-assets/X.svg";
 import imgTrashDelete from "@project-assets/Trash.svg";
 import imgAddRecipe from "@project-assets/madison-is-pretty.png";
@@ -61,8 +70,8 @@ export default function FriendRecipePage() {
   const [recipeName, setRecipeName] = useState("");
   const [allergies, setAllergies] = useState("");
   const [accommodateIds, setAccommodateIds] = useState<AllergenTagId[]>([]);
-  const [ingredients, setIngredients] = useState("");
-  const [directions, setDirections] = useState("");
+  const [ingredientRows, setIngredientRows] = useState<IngredientRow[]>(() => [newIngredientRow()]);
+  const [directionRows, setDirectionRows] = useState<string[]>(() => [""]);
   const [notes, setNotes] = useState("");
   const [wallAuthorLabel, setWallAuthorLabel] = useState("");
 
@@ -88,8 +97,8 @@ export default function FriendRecipePage() {
       setRecipeName("");
       setAllergies("");
       setAccommodateIds([]);
-      setIngredients("");
-      setDirections("");
+      setIngredientRows([newIngredientRow()]);
+      setDirectionRows([""]);
       setNotes("");
       setWallAuthorLabel("");
       return;
@@ -105,8 +114,8 @@ export default function FriendRecipePage() {
     setRecipeName(found.recipeName);
     setAllergies(found.allergies);
     setAccommodateIds(parseAllergenCsv(found.accommodates ?? ""));
-    setIngredients(found.ingredients);
-    setDirections(found.directions);
+    setIngredientRows(ingredientRowsFromString(found.ingredients));
+    setDirectionRows(directionRowsFromString(found.directions));
     setNotes(found.notes);
   }, [isAddView, editRecipeId, navigate, buddies, recipesStorageKey]);
 
@@ -124,6 +133,12 @@ export default function FriendRecipePage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const ingredients = ingredientsStringFromRows(ingredientRows);
+    const directions = directionsStringFromRows(directionRows);
+    if (!editingWallRecipe && (!ingredients.trim() || !directions.trim())) {
+      window.alert("Add at least one ingredient line and one direction step.");
+      return;
+    }
 
     if (editRecipeId) {
       const list = loadSavedCommunityRecipes(recipesStorageKey);
@@ -138,8 +153,8 @@ export default function FriendRecipePage() {
           recipeName: recipeName.trim(),
           allergies: allergies.trim(),
           accommodates: formatAllergenCsv(accommodateIds),
-          ingredients: ingredients.trim(),
-          directions: directions.trim(),
+          ingredients,
+          directions,
           notes: notes.trim(),
           savedAt: new Date().toISOString(),
         };
@@ -151,8 +166,8 @@ export default function FriendRecipePage() {
         setRecipeName("");
         setAllergies("");
         setAccommodateIds([]);
-        setIngredients("");
-        setDirections("");
+        setIngredientRows([newIngredientRow()]);
+        setDirectionRows([""]);
         setNotes("");
         navigate("/friend-recipe");
         return;
@@ -165,8 +180,8 @@ export default function FriendRecipePage() {
         recipeName: recipeName.trim(),
         allergies: allergies.trim(),
         accommodates: formatAllergenCsv(accommodateIds),
-        ingredients: ingredients.trim(),
-        directions: directions.trim(),
+        ingredients,
+        directions,
         notes: notes.trim(),
         savedAt: new Date().toISOString(),
       };
@@ -178,8 +193,8 @@ export default function FriendRecipePage() {
       setRecipeName("");
       setAllergies("");
       setAccommodateIds([]);
-      setIngredients("");
-      setDirections("");
+      setIngredientRows([newIngredientRow()]);
+      setDirectionRows([""]);
       setNotes("");
       navigate("/friend-recipe");
       return;
@@ -195,8 +210,8 @@ export default function FriendRecipePage() {
       recipeName: recipeName.trim(),
       allergies: allergies.trim(),
       accommodates: formatAllergenCsv(accommodateIds),
-      ingredients: ingredients.trim(),
-      directions: directions.trim(),
+      ingredients,
+      directions,
       notes: notes.trim(),
       savedAt: new Date().toISOString(),
     };
@@ -206,8 +221,8 @@ export default function FriendRecipePage() {
     setRecipeName("");
     setAllergies("");
     setAccommodateIds([]);
-    setIngredients("");
-    setDirections("");
+    setIngredientRows([newIngredientRow()]);
+    setDirectionRows([""]);
     setNotes("");
     navigate("/friend-recipe");
   };
@@ -331,35 +346,12 @@ export default function FriendRecipePage() {
               />
             </InfoBoxFrame>
 
-            <InfoBoxFrame variant={3}>
-              <label htmlFor="recipe-ingredients" className="tb-field-label-bold share-tech-bold">
-                Ingredients &amp; amounts
-              </label>
-              <textarea
-                id="recipe-ingredients"
-                value={ingredients}
-                onChange={(e) => setIngredients(e.target.value)}
-                className="tb-textarea-plain share-tech-regular"
-                placeholder="List what goes in, as they told you"
-                rows={5}
-                required={!editingWallRecipe}
-              />
-            </InfoBoxFrame>
-
-            <InfoBoxFrame variant={0}>
-              <label htmlFor="recipe-directions" className="tb-field-label-bold share-tech-bold">
-                Directions
-              </label>
-              <textarea
-                id="recipe-directions"
-                value={directions}
-                onChange={(e) => setDirections(e.target.value)}
-                className="tb-textarea-plain share-tech-regular"
-                placeholder="Prep, cook times, order of steps…"
-                rows={6}
-                required={!editingWallRecipe}
-              />
-            </InfoBoxFrame>
+            <RecipeIngredientDirectionFields
+              ingredientRows={ingredientRows}
+              onIngredientRowsChange={setIngredientRows}
+              directionRows={directionRows}
+              onDirectionRowsChange={setDirectionRows}
+            />
 
             <InfoBoxFrame variant={1}>
               <label htmlFor="recipe-notes" className="tb-field-label-bold share-tech-bold">
@@ -476,6 +468,14 @@ export default function FriendRecipePage() {
                       <InfoBoxFrame variant={i % 4}>
                         {isExpanded ? (
                           <>
+                            {r.recipe_photo && r.recipe_photo.startsWith("data:image/") ? (
+                              <img
+                                src={r.recipe_photo}
+                                alt=""
+                                className="tb-wall-recipe-photo tb-wall-recipe-photo--in-card"
+                                draggable={false}
+                              />
+                            ) : null}
                             <h3 className="tb-recipe-h3 tb-recipe-h3--pad share-tech-bold">{r.recipeName}</h3>
                             {accIds.length > 0 ? (
                               <>

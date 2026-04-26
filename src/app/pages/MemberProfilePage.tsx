@@ -219,6 +219,15 @@ export default function MemberProfilePage() {
                     const accIds = parseAllergenCsv(r.accommodates ?? "");
                     return (
                     <InfoBoxFrame key={r.id} variant={0}>
+                      {r.photo_data_url && r.photo_data_url.startsWith("data:image/") ? (
+                        <img
+                          src={r.photo_data_url}
+                          alt=""
+                          className="tb-wall-recipe-photo"
+                          draggable={false}
+                          style={{ marginBottom: "0.5rem" }}
+                        />
+                      ) : null}
                       <p className="share-tech-bold tb-text-coral" style={{ fontSize: "20pt", marginBottom: "0.35rem" }}>
                         {r.recipe_name}
                       </p>

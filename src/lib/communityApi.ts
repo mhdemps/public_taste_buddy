@@ -26,6 +26,8 @@ export type PublicRecipeRow = {
   ingredients: string;
   directions: string;
   notes: string;
+  /** Optional JPEG data URL from the author (shown on the taste wall). */
+  photo_data_url?: string | null;
   created_at: string;
 };
 
@@ -149,6 +151,7 @@ export async function insertPublicRecipe(row: {
   ingredients: string;
   directions: string;
   notes: string;
+  photo_data_url?: string | null;
 }): Promise<{ error: Error | null }> {
   const { error } = await requestJson<PublicRecipeRow>("/public-recipes", {
     method: "POST",
@@ -161,6 +164,24 @@ export async function insertPublicRecipe(row: {
       ingredients: row.ingredients,
       directions: row.directions,
       notes: row.notes,
+      photo_data_url: row.photo_data_url && row.photo_data_url.startsWith("data:image/") ? row.photo_data_url : "",
+    }),
+  });
+  return { error };
+}
+
+/** Attach or replace the wall cover image for a recipe you already posted (same user only). */
+export async function updatePublicRecipePhoto(
+  recipeId: string,
+  userId: string,
+  photo_data_url: string
+): Promise<{ error: Error | null }> {
+  const { error } = await requestJson<PublicRecipeRow>(`/public-recipes/${encodeURIComponent(recipeId)}`, {
+    method: "PUT",
+    body: JSON.stringify({
+      user_id: userId,
+      photo_data_url:
+        photo_data_url && photo_data_url.startsWith("data:image/") ? photo_data_url : "",
     }),
   });
   return { error };

@@ -63,6 +63,9 @@ create table if not exists public.public_recipes (
   created_at timestamptz not null default now()
 );
 
+alter table public.public_recipes add column if not exists photo_data_url text default '';
+alter table public.public_recipes add column if not exists accommodates text default '';
+
 create unique index if not exists public_recipes_user_source_unique
   on public.public_recipes (user_id, source_local_id)
   where source_local_id is not null;

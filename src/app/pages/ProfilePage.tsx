@@ -30,6 +30,7 @@ import {
   fetchPublicRecipesForUser,
   findPublicRecipeBySourceId,
   insertPublicRecipe,
+  updatePublicRecipePhoto,
   upsertMyProfile,
   type PublicRecipeRow,
   type TasteProfileUpsert,
@@ -51,10 +52,23 @@ function loadMyRecipesFromDisk(storageKey: string): MyRecipeEntry[] {
     if (!raw) return [];
     const parsed = JSON.parse(raw) as unknown;
     if (!Array.isArray(parsed)) return [];
-    return parsed.filter(
-      (row): row is MyRecipeEntry =>
-        !!row && typeof row === "object" && typeof (row as MyRecipeEntry).id === "string"
-    ) as MyRecipeEntry[];
+    return parsed
+      .filter(
+        (row): row is MyRecipeEntry =>
+          !!row && typeof row === "object" && typeof (row as MyRecipeEntry).id === "string"
+      )
+      .map((row) => {
+        const m = row as MyRecipeEntry & { recipe_photo?: unknown };
+        const recipe_photo =
+          typeof m.recipe_photo === "string" && m.recipe_photo.startsWith("data:image/") ? m.recipe_photo : undefined;
+        const { recipe_photo: _drop, ...rest } = m;
+        return {
+          ...rest,
+          allergies: typeof row.allergies === "string" ? row.allergies : "",
+          accommodates: typeof row.accommodates === "string" ? row.accommodates : "",
+          ...(recipe_photo ? { recipe_photo } : {}),
+        };
+      });
   } catch {
     return [];
   }
@@ -233,7 +247,18 @@ export default function ProfilePage() {
       ingredients: r.ingredients,
       directions: r.directions,
       notes: r.notes,
+      photo_data_url: r.recipe_photo && r.recipe_photo.startsWith("data:image/") ? r.recipe_photo : "",
     });
+    if (error) {
+      setRecipeAction(error.message);
+      return;
+    }
+    await refreshWallRecipes();
+  };
+
+  const syncWallPhoto = async (wallRow: PublicRecipeRow, photoUrl: string) => {
+    setRecipeAction(null);
+    const { error } = await updatePublicRecipePhoto(wallRow.id, userId, photoUrl);
     if (error) {
       setRecipeAction(error.message);
       return;
@@ -441,7 +466,8 @@ export default function ProfilePage() {
           <Link to="/my-recipes" className="tb-link-wide">
             My recipes
           </Link>{" "}
-          first. Tap below to copy one to the wall so other taste profiles can read it.
+          first. Tap below to copy one to the wall so other taste profiles can read it. Optional photos you add there show on
+          the wall too.
         </p>
 
         {recipeAction ? (
@@ -460,6 +486,14 @@ export default function ProfilePage() {
           ) : (
             myRecipes.map((r) => (
               <InfoBoxFrame key={r.id} variant={0}>
+                {r.recipe_photo && r.recipe_photo.startsWith("data:image/") ? (
+                  <img
+                    src={r.recipe_photo}
+                    alt=""
+                    className="tb-wall-recipe-photo tb-wall-recipe-photo--in-card"
+                    draggable={false}
+                  />
+                ) : null}
                 <p className="share-tech-bold tb-text-coral" style={{ fontSize: "20pt" }}>
                   {r.recipeName || "Untitled"}
                 </p>
@@ -491,23 +525,64 @@ export default function ProfilePage() {
               On your wall now
             </h2>
             <div className="tb-detail-stack">
-              {wallRecipes.map((r) => (
-                <InfoBoxFrame key={r.id} variant={1}>
-                  <p className="share-tech-bold tb-text-coral" style={{ fontSize: "20pt" }}>
-                    {r.recipe_name}
-                  </p>
-                  <motion.button
-                    type="button"
-                    className="tb-link-text share-tech-regular"
-                    style={{ marginTop: "0.5rem", display: "inline-flex", alignItems: "center", gap: "0.35rem" }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => void removeFromWall(r.id, r.recipe_name?.trim() || "Untitled")}
-                  >
-                    <img alt="" src={imgTrashDelete} draggable={false} className="tb-recipe-x-icon" aria-hidden />
-                    Remove from wall
-                  </motion.button>
-                </InfoBoxFrame>
-              ))}
+              {wallRecipes.map((r) => {
+                const localMatch = myRecipes.find((m) => m.id === (r.source_local_id ?? ""));
+                const localPhoto =
+                  localMatch?.recipe_photo && localMatch.recipe_photo.startsWith("data:image/")
+                    ? localMatch.recipe_photo
+                    : null;
+                const wallPhoto =
+                  r.photo_data_url && r.photo_data_url.startsWith("data:image/") ? r.photo_data_url : null;
+                const coverSrc = wallPhoto ?? localPhoto;
+                const needsPhotoSync = Boolean(localPhoto && !wallPhoto);
+                return (
+                  <InfoBoxFrame key={r.id} variant={1}>
+                    {coverSrc ? (
+                      <img
+                        src={coverSrc}
+                        alt=""
+                        className="tb-wall-recipe-photo tb-wall-recipe-photo--in-card"
+                        draggable={false}
+                      />
+                    ) : null}
+                    <p className="share-tech-bold tb-text-coral" style={{ fontSize: "20pt" }}>
+                      {r.recipe_name}
+                    </p>
+                    {needsPhotoSync ? (
+                      <>
+                        <p className="share-tech-regular tb-muted-hint" style={{ fontSize: "17pt", marginTop: "0.35rem" }}>
+                          Cover is saved in My recipes on this device. Sync it so the taste wall shows it too.
+                        </p>
+                        <motion.button
+                          type="button"
+                          className="tb-submit-wrap"
+                          style={{ marginTop: "0.5rem" }}
+                          whileTap={{ scale: 0.97 }}
+                          onClick={() => localPhoto && void syncWallPhoto(r, localPhoto)}
+                        >
+                          <ChalkPillFrame
+                            variant={2}
+                            fillClassName="tb-pill-fill-coral--tight"
+                            innerClassName="tb-pill-inner tb-pill-inner--sm"
+                          >
+                            <span className="tb-pill-text-white share-tech-regular">Sync cover to wall</span>
+                          </ChalkPillFrame>
+                        </motion.button>
+                      </>
+                    ) : null}
+                    <motion.button
+                      type="button"
+                      className="tb-link-text share-tech-regular"
+                      style={{ marginTop: "0.5rem", display: "inline-flex", alignItems: "center", gap: "0.35rem" }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => void removeFromWall(r.id, r.recipe_name?.trim() || "Untitled")}
+                    >
+                      <img alt="" src={imgTrashDelete} draggable={false} className="tb-recipe-x-icon" aria-hidden />
+                      Remove from wall
+                    </motion.button>
+                  </InfoBoxFrame>
+                );
+              })}
             </div>
           </>
         )}

@@ -15,6 +15,16 @@ import {
 } from "../allergyTagConfig";
 import { AllergenIconPicker } from "../components/AllergenIconPicker";
 import { AllergenBadgeRow } from "../components/AllergenBadgeRow";
+import RecipeIngredientDirectionFields from "../components/RecipeIngredientDirectionFields";
+import {
+  directionRowsFromString,
+  directionsStringFromRows,
+  ingredientRowsFromString,
+  ingredientsStringFromRows,
+  newIngredientRow,
+  type IngredientRow,
+} from "../recipeLineEditorUtils";
+import { compressImageFileToDataUrl } from "../recipePhoto";
 import imgRecipeClose from "@project-assets/X.svg";
 import imgTrashDelete from "@project-assets/Trash.svg";
 import imgAddRecipe from "@project-assets/madison-is-pretty.png";
@@ -31,6 +41,8 @@ export type MyRecipeEntry = {
   ingredients: string;
   directions: string;
   notes: string;
+  /** Compressed JPEG data URL; included when you post the recipe to the taste wall. */
+  recipe_photo?: string;
   savedAt: string;
 };
 
@@ -62,11 +74,18 @@ function loadRecipes(storageKey: string): MyRecipeEntry[] {
           typeof row === "object" &&
           typeof (row as MyRecipeEntry).id === "string"
       )
-      .map((row) => ({
-        ...row,
-        allergies: typeof row.allergies === "string" ? row.allergies : "",
-        accommodates: typeof (row as MyRecipeEntry).accommodates === "string" ? (row as MyRecipeEntry).accommodates : "",
-      }));
+      .map((row) => {
+        const m = row as MyRecipeEntry & { recipe_photo?: unknown };
+        const recipe_photo =
+          typeof m.recipe_photo === "string" && m.recipe_photo.startsWith("data:image/") ? m.recipe_photo : undefined;
+        const { recipe_photo: _drop, ...rest } = m;
+        return {
+          ...rest,
+          allergies: typeof row.allergies === "string" ? row.allergies : "",
+          accommodates: typeof (row as MyRecipeEntry).accommodates === "string" ? (row as MyRecipeEntry).accommodates : "",
+          ...(recipe_photo ? { recipe_photo } : {}),
+        };
+      });
   } catch {
     return [];
   }
@@ -77,8 +96,20 @@ function sortNewestFirst(list: MyRecipeEntry[]) {
 }
 
 function persistRecipes(storageKey: string, list: MyRecipeEntry[]) {
-  localStorage.setItem(storageKey, JSON.stringify(list));
+  try {
+    localStorage.setItem(storageKey, JSON.stringify(list));
+  } catch (e) {
+    if (e instanceof DOMException && e.name === "QuotaExceededError") {
+      window.alert(
+        "Could not save — browser storage is full. Try a smaller photo, or remove old recipes from this device."
+      );
+      throw e;
+    }
+    throw e;
+  }
 }
+
+export { loadRecipes as loadMyRecipeEntries, sortNewestFirst as sortMyRecipesNewestFirst };
 
 export default function MyRecipesPage() {
   const location = useLocation();
@@ -102,9 +133,10 @@ export default function MyRecipesPage() {
   const [recipeName, setRecipeName] = useState("");
   const [allergies, setAllergies] = useState("");
   const [accommodateIds, setAccommodateIds] = useState<AllergenTagId[]>([]);
-  const [ingredients, setIngredients] = useState("");
-  const [directions, setDirections] = useState("");
+  const [ingredientRows, setIngredientRows] = useState<IngredientRow[]>(() => [newIngredientRow()]);
+  const [directionRows, setDirectionRows] = useState<string[]>(() => [""]);
   const [notes, setNotes] = useState("");
+  const [recipePhoto, setRecipePhoto] = useState<string | null>(null);
 
   const refresh = useCallback(() => {
     setSaved(sortNewestFirst(loadRecipes(myRecipesStorageKey)));
@@ -115,9 +147,10 @@ export default function MyRecipesPage() {
       setRecipeName("");
       setAllergies("");
       setAccommodateIds([]);
-      setIngredients("");
-      setDirections("");
+      setIngredientRows([newIngredientRow()]);
+      setDirectionRows([""]);
       setNotes("");
+      setRecipePhoto(null);
       return;
     }
     if (!editRecipeId) return;
@@ -129,13 +162,22 @@ export default function MyRecipesPage() {
     setRecipeName(found.recipeName);
     setAllergies(found.allergies);
     setAccommodateIds(parseAllergenCsv(found.accommodates ?? ""));
-    setIngredients(found.ingredients);
-    setDirections(found.directions);
+    setIngredientRows(ingredientRowsFromString(found.ingredients));
+    setDirectionRows(directionRowsFromString(found.directions));
     setNotes(found.notes);
+    setRecipePhoto(
+      found.recipe_photo && found.recipe_photo.startsWith("data:image/") ? found.recipe_photo : null
+    );
   }, [isAddView, editRecipeId, navigate, myRecipesStorageKey]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const ingredients = ingredientsStringFromRows(ingredientRows);
+    const directions = directionsStringFromRows(directionRows);
+    if (!ingredients.trim() || !directions.trim()) {
+      window.alert("Add at least one ingredient line and one direction step.");
+      return;
+    }
     if (editRecipeId) {
       const list = loadRecipes(myRecipesStorageKey);
       const existing = list.find((r) => r.id === editRecipeId);
@@ -148,19 +190,26 @@ export default function MyRecipesPage() {
         recipeName: recipeName.trim(),
         allergies: allergies.trim(),
         accommodates: formatAllergenCsv(accommodateIds),
-        ingredients: ingredients.trim(),
-        directions: directions.trim(),
+        ingredients,
+        directions,
         notes: notes.trim(),
         savedAt: new Date().toISOString(),
       };
-      persistRecipes(myRecipesStorageKey, list.map((r) => (r.id === editRecipeId ? updated : r)));
+      if (recipePhoto && recipePhoto.startsWith("data:image/")) updated.recipe_photo = recipePhoto;
+      else delete updated.recipe_photo;
+      try {
+        persistRecipes(myRecipesStorageKey, list.map((r) => (r.id === editRecipeId ? updated : r)));
+      } catch {
+        return;
+      }
       refresh();
       setRecipeName("");
       setAllergies("");
       setAccommodateIds([]);
-      setIngredients("");
-      setDirections("");
+      setIngredientRows([newIngredientRow()]);
+      setDirectionRows([""]);
       setNotes("");
+      setRecipePhoto(null);
       navigate("/my-recipes");
       return;
     }
@@ -170,20 +219,27 @@ export default function MyRecipesPage() {
       recipeName: recipeName.trim(),
       allergies: allergies.trim(),
       accommodates: formatAllergenCsv(accommodateIds),
-      ingredients: ingredients.trim(),
-      directions: directions.trim(),
+      ingredients,
+      directions,
       notes: notes.trim(),
       savedAt: new Date().toISOString(),
     };
+    if (recipePhoto && recipePhoto.startsWith("data:image/")) row.recipe_photo = recipePhoto;
     list.push(row);
-    persistRecipes(myRecipesStorageKey, list);
+    try {
+      persistRecipes(myRecipesStorageKey, list);
+    } catch {
+      list.pop();
+      return;
+    }
     refresh();
     setRecipeName("");
     setAllergies("");
     setAccommodateIds([]);
-    setIngredients("");
-    setDirections("");
+    setIngredientRows([newIngredientRow()]);
+    setDirectionRows([""]);
     setNotes("");
+    setRecipePhoto(null);
     navigate("/my-recipes");
   };
 
@@ -233,8 +289,8 @@ export default function MyRecipesPage() {
             transition={{ duration: 0.45, delay: 0.1 }}
           >
             {isEditView
-              ? "Update ingredients, steps, or notes — then save."
-              : "Save ingredients, steps, and notes you want to keep."}
+              ? "Update lines (one ingredient per row, numbered steps) — then save."
+              : "List ingredients with checkboxes, then numbered steps — Whisk will use them for cook mode."}
           </motion.p>
 
           <motion.form
@@ -279,34 +335,50 @@ export default function MyRecipesPage() {
               />
             </InfoBoxFrame>
 
-            <InfoBoxFrame variant={2}>
-              <label htmlFor="my-recipe-ingredients" className="tb-field-label-bold share-tech-bold">
-                Ingredients &amp; amounts
-              </label>
-              <textarea
-                id="my-recipe-ingredients"
-                value={ingredients}
-                onChange={(e) => setIngredients(e.target.value)}
-                className="tb-textarea-plain share-tech-regular"
-                placeholder="Everything that goes in"
-                rows={5}
-                required
-              />
-            </InfoBoxFrame>
+            <RecipeIngredientDirectionFields
+              ingredientRows={ingredientRows}
+              onIngredientRowsChange={setIngredientRows}
+              directionRows={directionRows}
+              onDirectionRowsChange={setDirectionRows}
+            />
 
-            <InfoBoxFrame variant={3}>
-              <label htmlFor="my-recipe-directions" className="tb-field-label-bold share-tech-bold">
-                Directions
+            <InfoBoxFrame variant={1}>
+              <p className="tb-field-label-bold share-tech-bold">Recipe photo (optional)</p>
+              <p className="tb-recipe-lines-hint share-tech-regular">
+                Appears on the taste wall when you post this recipe from your profile. Large images are resized automatically.
+              </p>
+              {recipePhoto ? (
+                <div className="tb-recipe-photo-preview-wrap">
+                  <img src={recipePhoto} alt="" className="tb-recipe-photo-preview" draggable={false} />
+                  <motion.button
+                    type="button"
+                    className="tb-recipe-photo-remove share-tech-bold"
+                    onClick={() => setRecipePhoto(null)}
+                    whileTap={{ scale: 0.97 }}
+                  >
+                    Remove photo
+                  </motion.button>
+                </div>
+              ) : null}
+              <label className="tb-recipe-photo-file-label share-tech-bold">
+                <span className="tb-recipe-photo-file-btn share-tech-regular">Choose image</span>
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  className="tb-visually-hidden"
+                  onChange={async (e) => {
+                    const f = e.target.files?.[0];
+                    e.target.value = "";
+                    if (!f) return;
+                    const url = await compressImageFileToDataUrl(f);
+                    if (!url) {
+                      window.alert("Could not use that image. Try a JPG or PNG under 12 MB.");
+                      return;
+                    }
+                    setRecipePhoto(url);
+                  }}
+                />
               </label>
-              <textarea
-                id="my-recipe-directions"
-                value={directions}
-                onChange={(e) => setDirections(e.target.value)}
-                className="tb-textarea-plain share-tech-regular"
-                placeholder="How you make it"
-                rows={6}
-                required
-              />
             </InfoBoxFrame>
 
             <InfoBoxFrame variant={0}>
@@ -414,6 +486,14 @@ export default function MyRecipesPage() {
                       <InfoBoxFrame variant={i % 4}>
                         {isExpanded ? (
                           <>
+                            {r.recipe_photo && r.recipe_photo.startsWith("data:image/") ? (
+                              <img
+                                src={r.recipe_photo}
+                                alt=""
+                                className="tb-wall-recipe-photo tb-wall-recipe-photo--in-card"
+                                draggable={false}
+                              />
+                            ) : null}
                             <h3 className="tb-recipe-h3 tb-recipe-h3--pad share-tech-bold">{r.recipeName}</h3>
                             {accIds.length > 0 ? (
                               <>
@@ -489,7 +569,17 @@ export default function MyRecipesPage() {
                             aria-expanded={false}
                             onClick={() => setExpandedRecipeId(r.id)}
                           >
-                            <h3 className="tb-recipe-h3 share-tech-bold">{r.recipeName}</h3>
+                            <div className="tb-recipe-collapsed-title-row">
+                              {r.recipe_photo && r.recipe_photo.startsWith("data:image/") ? (
+                                <img
+                                  src={r.recipe_photo}
+                                  alt=""
+                                  className="tb-recipe-thumb-collapsed"
+                                  draggable={false}
+                                />
+                              ) : null}
+                              <h3 className="tb-recipe-h3 share-tech-bold">{r.recipeName}</h3>
+                            </div>
                             {accIds.length > 0 ? (
                               <AllergenBadgeRow
                                 mode="accommodates"
