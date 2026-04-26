@@ -42,6 +42,7 @@ import jdHat from "../../assets/Spinny.svg";
 import partyHat from "../../assets/Party Hat.svg";
 import sousChefHat from "../../assets/Sous Chef.svg";
 import beretHat from "../../assets/beret.svg";
+import jesterHat from "../../assets/jester hat.svg";
 
 import purpleBodyDisplay from "../../assets/purple body display.svg";
 import blueBodyDisplay from "../../assets/blue body display.svg";
@@ -57,6 +58,7 @@ import cowboyHatDisplay from "../../assets/cowboy display.svg";
 import partyHatDisplay from "../../assets/party hat display.svg";
 import spinnyHatDisplay from "../../assets/spinny display.svg";
 import beretHatDisplay from "../../assets/beret display.svg";
+import jesterHatDisplay from "../../assets/jester display.svg";
 import noDisplayIcon from "../../assets/no display.svg";
 
 import smileDisplay from "../../assets/smile display.svg";
@@ -137,7 +139,7 @@ export const BUDDY_BACKDROP_DARK_INDICES = [14, 15, 16, 17, 18, 19, 20] as const
 export const BUDDY_BACKDROP_PICKER_INDICES = BUDDY_BACKDROP_COLOR_INDICES;
 
 export type BuddyBodyKey = "purple" | "blue" | "yellow" | "green" | "pink" | "orange" | "red";
-export type BuddyHatKey = "none" | "chef" | "sous-chef" | "cowboy" | "party" | "jd" | "beret";
+export type BuddyHatKey = "none" | "chef" | "sous-chef" | "cowboy" | "party" | "jd" | "beret" | "jester";
 export type BuddySmileKey = "smile" | "happy" | "grin" | "smirk" | "buck-teef";
 export type BuddyEyeKey = "none" | "open" | "heart" | "dizzy" | "wink" | "squint" | "up" | "down";
 
@@ -183,6 +185,7 @@ export const buddyHatOptions: readonly Option<BuddyHatKey>[] = [
   { key: "party", label: "Party hat", asset: partyHat, pickerSrc: partyHatDisplay },
   { key: "jd", label: "Ball cap", asset: jdHat, pickerSrc: spinnyHatDisplay },
   { key: "beret", label: "Beret", asset: beretHat, pickerSrc: beretHatDisplay },
+  { key: "jester", label: "Jester", asset: jesterHat, pickerSrc: jesterHatDisplay },
 ] as const;
 
 export const buddySmileOptions: readonly Option<BuddySmileKey>[] = [
@@ -227,6 +230,7 @@ const hatAssetByKey: Record<Exclude<BuddyHatKey, "none">, string> = {
   party: partyHat,
   jd: jdHat,
   beret: beretHat,
+  jester: jesterHat,
 };
 
 const smileAssetByKey: Record<BuddySmileKey, string> = Object.fromEntries(
@@ -291,7 +295,15 @@ export function coerceBuddyBodyKey(value: string | null | undefined, fallbackPal
 }
 
 export function coerceBuddyHatKey(value: string | null | undefined): BuddyHatKey {
-  if (value === "chef" || value === "sous-chef" || value === "cowboy" || value === "party" || value === "jd" || value === "beret") {
+  if (
+    value === "chef" ||
+    value === "sous-chef" ||
+    value === "cowboy" ||
+    value === "party" ||
+    value === "jd" ||
+    value === "beret" ||
+    value === "jester"
+  ) {
     return value;
   }
   return "none";

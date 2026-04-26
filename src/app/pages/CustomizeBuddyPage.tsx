@@ -289,7 +289,6 @@ export default function CustomizeBuddyPage() {
                   gridColumns={8}
                   groupLabel="Headwear"
                   options={hatPickerOptions}
-                  trailingInertCount={1}
                   selectedKey={buddyHatKey}
                   onSelect={(k) => setBuddyHatKey(k as BuddyHatKey)}
                 />
