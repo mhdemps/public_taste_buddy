@@ -21,5 +21,29 @@
     "directions": "1. chill",
     "notes": "",
     "created_at": "2026-04-26T06:25:50.592Z"
+  },
+  {
+    "id": "f71ad014-1e9e-4b92-874f-d81653e8a6ac",
+    "user_id": "d165bdd5-abc9-4631-9f0e-075188d4ce25",
+    "source_local_id": "my-recipe-1777234964789",
+    "recipe_name": "pennywise",
+    "allergies": "fear, death, will to live",
+    "accommodates": "dairy, egg, fish, shellfish, peanut, nuts, soy, sesame",
+    "ingredients": "h2o\npennywise\nfear\nscreams\nflour\nsalt",
+    "directions": "1. make pennywise\n2. mix ingredients\n3. play it theme song as background music\n4. wait an hour\n5. perform 4 sets of stretch and folds/coil folds every 30 minutes for 2 hours\n6. bulk fermentation\n7. pre shape dough\n8. final shaping\n9. place dough in floured banneton\n10. place in fridge for cold proof (1-48hrs)\n11. preheat oven\n12. preheat dutch oven for 30 min\n13. score dough\n14. bake covered at 475 degrees for 30 mins then uncovered at 425 for 20 minutes\n15. take bread out of oven and rest on counter for 2 hrs\n16. pray that the bread is good and enjoy!",
+    "notes": "recipe consumes your entire life you will eat, sleep, and breathe pennywise",
+    "created_at": "2026-04-26T20:26:15.440Z"
+  },
+  {
+    "id": "5e5a581f-9c8f-44b3-9269-e4cd096a5c61",
+    "user_id": "c88a9692-8595-496f-bc70-723a70b5392f",
+    "source_local_id": "my-recipe-1777235443948",
+    "recipe_name": "Chocolate Mousse",
+    "allergies": "",
+    "accommodates": "",
+    "ingredients": "Heavy Whipping Cream\nChocolate Chips\nVanilla Extract",
+    "directions": "1. step 1\n2. Step 2",
+    "notes": "",
+    "created_at": "2026-04-26T20:33:29.397Z"
   }
 ]

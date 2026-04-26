@@ -36,6 +36,7 @@ import {
   type TasteProfileUpsert,
 } from "../../lib/communityApi";
 import imgTrashDelete from "@project-assets/Trash.svg";
+import { dispatchProfileDisplaySaved } from "../profileDisplayEvents";
 
 const LEGACY_MY_RECIPES_KEY = "tasteBuddyMyRecipes";
 
@@ -228,6 +229,9 @@ export default function ProfilePage() {
     e.preventDefault();
     setSaveMessage(null);
     const { errorMessage } = await persistProfile();
+    if (!errorMessage) {
+      dispatchProfileDisplaySaved(displayName.trim() || defaultDisplayName());
+    }
     setSaveMessage(errorMessage ?? "Saved — you appear on the taste wall.");
   };
 

@@ -29,6 +29,7 @@ import {
   type BuddySmileKey,
 } from "../buddyAppearance";
 import { fetchProfileByUserId, upsertMyProfile, type TasteProfileUpsert } from "../../lib/communityApi";
+import { dispatchProfileDisplaySaved } from "../profileDisplayEvents";
 
 function defaultDisplayName(): string {
   return "Taste buddy";
@@ -205,6 +206,7 @@ export default function CustomizeBuddyPage() {
         setSaveError(error.message);
         return;
       }
+      dispatchProfileDisplaySaved(displayName.trim() || defaultDisplayName());
       navigate("/profile", {
         state: {
           saveMessage: "Saved — your taste wall tile and public profile now use this buddy. Recipe posts are separate and unchanged.",
