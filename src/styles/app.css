@@ -2385,13 +2385,8 @@
   align-items: center;
   justify-content: center;
   padding: 0.5rem 0.75rem 1.5rem;
-  background: linear-gradient(
-    165deg,
-    rgba(255, 252, 248, 0.94) 0%,
-    rgba(255, 236, 224, 0.96) 42%,
-    rgba(255, 245, 230, 0.92) 100%
-  );
-  backdrop-filter: blur(10px);
+  background: transparent;
+  pointer-events: none;
 }
 
 .tb-sign-in-intro-inner {
@@ -2410,7 +2405,6 @@
   aspect-ratio: 1;
   margin-left: auto;
   margin-right: auto;
-  filter: drop-shadow(0 16px 36px rgba(45, 45, 45, 0.18));
 }
 
 .tb-sign-in-intro-caption {

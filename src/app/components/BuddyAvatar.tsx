@@ -17,6 +17,8 @@ type BuddyAvatarProps = {
   circleImage?: string;
   /** Uses saved profile / wall `buddy_color_index` (backdrop index). */
   circleBackgroundIndex?: number;
+  /** When true, only the layered SVG (body, eyes, hat, smile) is shown — no circular backdrop image. */
+  hideBackdrop?: boolean;
   circleStyle?: CSSProperties;
   className?: string;
   innerClassName?: string;
@@ -28,6 +30,7 @@ export default function BuddyAvatar({
   alt = "",
   circleImage,
   circleBackgroundIndex,
+  hideBackdrop = false,
   circleStyle,
   className = "",
   innerClassName = "tb-buddy-face-inner",
@@ -45,7 +48,9 @@ export default function BuddyAvatar({
 
   return (
     <div className={className}>
-      <img alt="" className="tb-abs-cover" style={{ borderRadius: "50%", ...circleStyle }} src={resolvedCircleImage} draggable={false} />
+      {!hideBackdrop ? (
+        <img alt="" className="tb-abs-cover" style={{ borderRadius: "50%", ...circleStyle }} src={resolvedCircleImage} draggable={false} />
+      ) : null}
       <div className="tb-buddy-face-layer">
         <div
           className={innerClassName}

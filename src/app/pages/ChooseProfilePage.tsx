@@ -32,8 +32,6 @@ function markIntroSeenThisSession() {
   }
 }
 
-const INTRO_BACKDROP_INDEX = 5; /* light orange — matches orange buddy */
-
 function introBuddySelection(eyeKey: BuddyEyeKey): BuddySvgSelection {
   return {
     bodyKey: "orange",
@@ -88,15 +86,12 @@ export default function ChooseProfilePage() {
       return;
     }
     const ids: number[] = [];
-    ids.push(window.setTimeout(() => setIntroEyeKey("wink"), 520));
-    ids.push(window.setTimeout(() => setIntroEyeKey("open"), 880));
-    ids.push(window.setTimeout(() => setIntroEyeKey("wink"), 1240));
-    ids.push(window.setTimeout(() => setIntroEyeKey("open"), 1620));
+    ids.push(window.setTimeout(() => setIntroEyeKey("wink"), 480));
     ids.push(
       window.setTimeout(() => {
         markIntroSeenThisSession();
         setIntroPhase("main");
-      }, 2280)
+      }, 2200)
     );
     return () => ids.forEach((id) => window.clearTimeout(id));
   }, [loading, user, introPhase]);
@@ -151,7 +146,7 @@ export default function ChooseProfilePage() {
             <motion.section
               key="sign-in-intro"
               className="tb-sign-in-intro"
-              aria-label="Taste Buddy winks hello"
+              aria-label="Taste Buddy winks"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -165,7 +160,7 @@ export default function ChooseProfilePage() {
                 >
                   <BuddyAvatar
                     selection={introBuddySelection(introEyeKey)}
-                    circleBackgroundIndex={INTRO_BACKDROP_INDEX}
+                    hideBackdrop
                     className="tb-buddy-avatar-shell tb-sign-in-intro-buddy tb-buddy-profile-circle--page-hero"
                     innerClassName="tb-buddy-face-inner"
                     imgClassName="tb-buddy-face-img"
