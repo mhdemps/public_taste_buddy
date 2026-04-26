@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Navigate, useLocation, useNavigate } from "react-router";
 import { AnimatePresence, motion } from "motion/react";
 import { useAuth } from "../context/AuthContext";
@@ -72,9 +72,14 @@ export default function ChooseProfilePage() {
   const [pickerDeletingId, setPickerDeletingId] = useState<string | null>(null);
   const [pickerDeleteError, setPickerDeleteError] = useState<string | null>(null);
 
+  /** Ignore stale responses when refresh() runs twice (e.g. React Strict Mode) or location.key flaps. */
+  const profilesLoadGen = useRef(0);
+
   const refresh = useCallback(async () => {
+    const gen = ++profilesLoadGen.current;
     setLoadError(null);
     const { data, error } = await fetchCommunityProfiles();
+    if (gen !== profilesLoadGen.current) return;
     if (error) {
       setLoadError(error.message);
       return;
