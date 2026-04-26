@@ -1,28 +1,5 @@
 [
   {
-    "id": "0da52af4-341a-4552-a0dc-405742e72d36",
-    "user_id": "3dfef757-8b03-4039-a3ae-eb57db9f4ccd",
-    "source_local_id": "my-recipe-1776867992173",
-    "recipe_name": "food",
-    "allergies": "",
-    "ingredients": "n4rhrhdt4rmudt4rdky",
-    "directions": "juetldit4d,t",
-    "notes": "",
-    "created_at": "2026-04-22T14:26:37.847Z"
-  },
-  {
-    "id": "091f40dc-1c6b-4b48-9648-d986f87684ef",
-    "user_id": "150f191b-968f-4774-9156-7ac8418691bb",
-    "source_local_id": "my-recipe-1777184738906",
-    "recipe_name": "yummy food",
-    "allergies": "",
-    "accommodates": "",
-    "ingredients": "banana",
-    "directions": "1. chill",
-    "notes": "",
-    "created_at": "2026-04-26T06:25:50.592Z"
-  },
-  {
     "id": "f71ad014-1e9e-4b92-874f-d81653e8a6ac",
     "user_id": "d165bdd5-abc9-4631-9f0e-075188d4ce25",
     "source_local_id": "my-recipe-1777234964789",

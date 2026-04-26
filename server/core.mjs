@@ -131,6 +131,18 @@ function sortByDateDesc(rows, key) {
   });
 }
 
+/** Normalize profile UUIDs for comparison (case, whitespace). */
+function normalizeProfileId(id) {
+  if (id == null) return "";
+  return String(id).trim().toLowerCase();
+}
+
+function findProfileRowByUrlId(profiles, idFromUrl) {
+  const want = normalizeProfileId(idFromUrl);
+  if (!want) return null;
+  return profiles.find((row) => normalizeProfileId(row.id) === want) ?? null;
+}
+
 /**
  * @param {() => Promise<Record<string, unknown>>} getBody lazy; only called for routes that need JSON body
  * @returns {Promise<{ status: number, payload: unknown } | null>}
@@ -142,12 +154,21 @@ async function routeProfiles(method, pathname, getBody) {
   }
 
   if (method === "POST" && pathname === "/api/profiles") {
+    const body = await getBody();
+    let display_name = "New profile";
+    if (body && typeof body === "object" && !Array.isArray(body)) {
+      const raw = body.display_name ?? body.displayName;
+      if (typeof raw === "string") {
+        const t = raw.trim().slice(0, 80);
+        if (t) display_name = t;
+      }
+    }
     const profiles = await readProfilesWithBackdropMigration();
     const id = randomUUID();
     const now = new Date().toISOString();
     const nextProfile = {
       id,
-      display_name: "New profile",
+      display_name,
       buddy_color_index: 0,
       backdrop_migrated_v2: true,
       buddy_body_key: "purple",
@@ -173,7 +194,7 @@ async function routeProfiles(method, pathname, getBody) {
   const profileId = decodeURIComponent(profileByIdMatch[1]);
   if (method === "GET") {
     const profiles = await readProfilesWithBackdropMigration();
-    const profile = profiles.find((row) => row.id === profileId) ?? null;
+    const profile = findProfileRowByUrlId(profiles, profileId);
     return { status: 200, payload: profile };
   }
 
@@ -181,11 +202,12 @@ async function routeProfiles(method, pathname, getBody) {
     const body = await getBody();
     const b = body && typeof body === "object" && !Array.isArray(body) ? body : {};
     const profiles = await readProfilesWithBackdropMigration();
-    const existing = profiles.find((row) => row.id === profileId) ?? null;
+    const existing = findProfileRowByUrlId(profiles, profileId);
     /** @param {string} k @param {unknown} fromExisting */
     const pick = (k, fromExisting) => (k in b ? b[k] : fromExisting);
+    const canonicalId = existing?.id ?? profileId;
     const nextProfile = {
-      id: profileId,
+      id: canonicalId,
       display_name: pick("display_name", existing?.display_name) ?? null,
       buddy_color_index: (() => {
         if ("buddy_color_index" in b) {
@@ -221,10 +243,30 @@ async function routeProfiles(method, pathname, getBody) {
       recipes_given: pick("recipes_given", existing?.recipes_given) ?? null,
       updated_at: new Date().toISOString(),
     };
-    const nextProfiles = profiles.filter((row) => row.id !== profileId);
+    const nextProfiles = profiles.filter((row) => row.id !== canonicalId);
     nextProfiles.push(nextProfile);
     await writeJsonArray(profilesPath, nextProfiles);
     return { status: 200, payload: nextProfile };
+  }
+
+  if (method === "DELETE") {
+    const want = normalizeProfileId(profileId);
+    if (!want) {
+      return { status: 400, payload: { error: "Invalid profile id." } };
+    }
+    // Idempotent: on serverless hosts, /tmp may re-seed from bundle so the row can be "missing"
+    // even though the client still has the id in localStorage — still return 200 and clear wall rows.
+    const profiles = await readProfilesWithBackdropMigration();
+    const nextProfiles = profiles.filter((row) => normalizeProfileId(row.id) !== want);
+    if (nextProfiles.length !== profiles.length) {
+      await writeJsonArray(profilesPath, nextProfiles);
+    }
+    const recipes = await readJsonArray(publicRecipesPath, "public_recipes.json");
+    const nextRecipes = recipes.filter((row) => normalizeProfileId(row.user_id) !== want);
+    if (nextRecipes.length !== recipes.length) {
+      await writeJsonArray(publicRecipesPath, nextRecipes);
+    }
+    return { status: 200, payload: { ok: true } };
   }
 
   return null;
@@ -431,6 +473,15 @@ export async function handleApiRequest(req, res, requestUrl) {
     let pathname = normalizePublicPathname(url.pathname);
     if (pathname.length > 1 && pathname.endsWith("/")) {
       pathname = pathname.replace(/\/+$/, "") || "/";
+    }
+    if (!pathname.startsWith("/api") && pathname !== "/") {
+      if (
+        pathname === "/health" ||
+        pathname.startsWith("/profiles") ||
+        pathname.startsWith("/public-recipes")
+      ) {
+        pathname = "/api" + pathname;
+      }
     }
     if (pathname === "/api/health") {
       sendJson(res, 200, { ok: true });

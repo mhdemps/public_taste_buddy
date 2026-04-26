@@ -1494,6 +1494,42 @@
   max-width: 20.5rem;
 }
 
+.tb-profile-delete-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: var(--tb-copy-max);
+  align-self: center;
+  padding-bottom: 2rem;
+}
+
+.tb-profile-delete-confirm-box {
+  margin-top: 3rem;
+  width: 100%;
+  max-width: var(--tb-copy-max);
+}
+
+.tb-profile-delete-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1.1rem;
+}
+
+.tb-profile-delete-no:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.tb-profile-delete-error {
+  margin: 0.75rem 0 0;
+  font-size: 16pt;
+  text-align: center;
+  max-width: var(--tb-copy-max);
+}
+
 .tb-customize-buddy-page {
   display: flex;
   width: 100%;
@@ -2412,6 +2448,100 @@
   font-size: clamp(1.35rem, 4.2vw, 1.75rem);
   text-align: center;
   letter-spacing: 0.02em;
+}
+
+.tb-choose-profile-add-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+  width: 100%;
+  max-width: var(--tb-copy-max);
+}
+
+.tb-choose-profile-add-fields {
+  width: 100%;
+}
+
+.tb-choose-profile-add-hint {
+  margin: 0.5rem 0 0;
+  font-size: 15pt;
+  line-height: 1.35;
+}
+
+.tb-choose-profile-add-error {
+  margin: 0;
+  font-size: 16pt;
+  text-align: center;
+}
+
+.tb-choose-profile-add-submit-wrap {
+  align-self: center;
+}
+
+/* Choose profile — add profile modal */
+.tb-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  padding-bottom: max(1.25rem, env(safe-area-inset-bottom, 0px));
+  background: rgba(45, 45, 45, 0.42);
+  backdrop-filter: blur(6px);
+}
+
+.tb-modal-panel {
+  width: 100%;
+  max-width: min(26rem, calc(100vw - 2rem));
+  max-height: min(90dvh, 100%);
+  overflow: auto;
+  padding: 1.25rem 1.35rem 1.35rem;
+  border-radius: 18px;
+  background: linear-gradient(165deg, #fff9f4 0%, #ffe8d8 100%);
+  box-shadow: 0 20px 50px rgba(45, 45, 45, 0.22);
+}
+
+.tb-modal-title {
+  margin: 0 0 0.35rem;
+  font-size: clamp(1.35rem, 4vw, 1.65rem);
+  line-height: 1.2;
+}
+
+.tb-modal-subtitle {
+  margin: 0 0 1rem;
+  font-size: 16pt;
+  line-height: 1.35;
+}
+
+.tb-modal-error {
+  margin: 0.65rem 0 0;
+  font-size: 15pt;
+  line-height: 1.35;
+}
+
+.tb-modal-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1.1rem;
+}
+
+.tb-modal-cancel {
+  padding: 0.25rem 0.5rem;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font-size: 17pt;
+}
+
+.tb-modal-cancel:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 .tb-theme-pills-wrap--collapsed {

@@ -7,7 +7,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { ACTIVE_PROFILE_ID_STORAGE_KEY, SIGN_IN_INTRO_SESSION_STORAGE_KEY } from "../userStorage";
+import { ACTIVE_PROFILE_ID_STORAGE_KEY } from "../userStorage";
 
 export type AuthUser = { id: string };
 
@@ -42,11 +42,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = useCallback(() => {
     localStorage.removeItem(ACTIVE_PROFILE_ID_STORAGE_KEY);
-    try {
-      sessionStorage.removeItem(SIGN_IN_INTRO_SESSION_STORAGE_KEY);
-    } catch {
-      /* ignore */
-    }
     setUser(null);
   }, []);
 

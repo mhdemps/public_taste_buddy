@@ -82,12 +82,14 @@ async function parseJsonResponse<T>(response: Response): Promise<T> {
 
 async function requestJson<T>(path: string, init?: RequestInit): Promise<{ data: T; error: Error | null }> {
   try {
+    const headers = new Headers(init?.headers ?? undefined);
+    const hasBody = init?.body != null && init.body !== "";
+    if (hasBody && !headers.has("Content-Type")) {
+      headers.set("Content-Type", "application/json");
+    }
     const response = await fetch(`${API_BASE}${path}`, {
-      headers: {
-        "Content-Type": "application/json",
-        ...(init?.headers ?? {}),
-      },
       ...init,
+      headers,
     });
     const payload = await parseJsonResponse<T | { error?: string }>(response);
     if (!response.ok) {
@@ -112,8 +114,15 @@ export async function fetchCommunityProfiles(): Promise<{ data: TasteProfileRow[
 }
 
 /** Creates a new profile row (device-local JSON API). */
-export async function createProfile(): Promise<{ data: TasteProfileRow | null; error: Error | null }> {
-  return requestJson<TasteProfileRow>("/profiles", { method: "POST", body: "{}" });
+export async function createProfile(options?: {
+  display_name?: string;
+}): Promise<{ data: TasteProfileRow | null; error: Error | null }> {
+  const raw = options?.display_name;
+  const display_name = typeof raw === "string" ? raw.trim().slice(0, 80) : "";
+  return requestJson<TasteProfileRow>("/profiles", {
+    method: "POST",
+    body: JSON.stringify({ display_name }),
+  });
 }
 
 export async function fetchProfileByUserId(
@@ -126,6 +135,17 @@ export async function upsertMyProfile(payload: TasteProfileUpsert): Promise<{ er
   const { error } = await requestJson<TasteProfileRow>(`/profiles/${encodeURIComponent(payload.id)}`, {
     method: "PUT",
     body: JSON.stringify(payload),
+  });
+  return { error };
+}
+
+export async function deleteMyProfile(userId: string): Promise<{ error: Error | null }> {
+  const id = userId.trim();
+  if (!id) {
+    return { error: new Error("Missing profile id.") };
+  }
+  const { error } = await requestJson<{ ok: boolean }>(`/profiles/${encodeURIComponent(id)}`, {
+    method: "DELETE",
   });
   return { error };
 }

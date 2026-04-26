@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Navigate, useLocation, useNavigate } from "react-router";
 import { AnimatePresence, motion } from "motion/react";
 import { useAuth } from "../context/AuthContext";
@@ -6,14 +6,19 @@ import GrayTasteHeader from "../components/GrayTasteHeader";
 import BuddyAvatar from "../components/BuddyAvatar";
 import { InfoBoxFrame } from "../components/InfoBoxFrame";
 import { ChalkPillFrame } from "../components/ChalkPillFrame";
-import { PAGE_SHELL_SCROLL } from "../brand";
+import { PAGE_INTRO_BLURB_TEXT, PAGE_SHELL_SCROLL } from "../brand";
 import {
   BUDDY_CIRCLE_COUNT,
   coerceBuddySvgSelection,
   type BuddyEyeKey,
   type BuddySvgSelection,
 } from "../buddyAppearance";
-import { createProfile, fetchCommunityProfiles, type TasteProfileRow } from "../../lib/communityApi";
+import {
+  createProfile,
+  fetchCommunityProfiles,
+  upsertMyProfile,
+  type TasteProfileRow,
+} from "../../lib/communityApi";
 import { SIGN_IN_INTRO_SESSION_STORAGE_KEY } from "../userStorage";
 
 function readIntroSkippedThisSession(): boolean {
@@ -60,8 +65,10 @@ export default function ChooseProfilePage() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
+  const [newProfileName, setNewProfileName] = useState("");
+  const [createProfileError, setCreateProfileError] = useState<string | null>(null);
 
-  const refresh = async () => {
+  const refresh = useCallback(async () => {
     setLoadError(null);
     const { data, error } = await fetchCommunityProfiles();
     if (error) {
@@ -69,11 +76,11 @@ export default function ChooseProfilePage() {
       return;
     }
     setProfiles(data);
-  };
+  }, []);
 
   useEffect(() => {
     void refresh();
-  }, []);
+  }, [location.key, refresh]);
 
   useEffect(() => {
     if (loading || user) return;
@@ -116,19 +123,46 @@ export default function ChooseProfilePage() {
     navigate("/", { replace: true });
   };
 
-  const handleAddProfile = async () => {
+  const handleAddProfile = async (nameFromForm: string) => {
+    const trimmed = nameFromForm.trim();
     setCreating(true);
-    setLoadError(null);
+    setCreateProfileError(null);
     try {
-      const { data, error } = await createProfile();
+      const { data, error } = await createProfile({
+        display_name: trimmed,
+      });
       if (error) {
-        setLoadError(error.message);
+        setCreateProfileError(error.message);
         return;
       }
-      if (data) {
-        setProfiles((prev) => [data, ...prev.filter((p) => p.id !== data.id)]);
-        setExpandedId(data.id);
+      if (!data) return;
+
+      if (trimmed) {
+        const { error: syncError } = await upsertMyProfile({
+          id: data.id,
+          display_name: trimmed,
+          buddy_color_index: data.buddy_color_index ?? 0,
+          buddy_body_key: data.buddy_body_key,
+          buddy_eye_key: data.buddy_eye_key,
+          buddy_hat_key: data.buddy_hat_key,
+          buddy_smile_key: data.buddy_smile_key,
+          favorite_food: data.favorite_food,
+          personality: data.personality,
+          specialty: data.specialty,
+          allergies: data.allergies,
+          parties_attended: data.parties_attended,
+          recipes_given: data.recipes_given,
+        });
+        if (syncError) {
+          setCreateProfileError(syncError.message);
+          return;
+        }
       }
+
+      const merged: TasteProfileRow = trimmed ? { ...data, display_name: trimmed } : data;
+      setProfiles((prev) => [merged, ...prev.filter((p) => p.id !== merged.id)]);
+      setExpandedId(merged.id);
+      setNewProfileName("");
     } finally {
       setCreating(false);
     }
@@ -240,7 +274,10 @@ export default function ChooseProfilePage() {
                   <button
                     type="button"
                     className="tb-profile-picker-header"
-                    onClick={() => setExpandedId(open ? null : p.id)}
+                    onClick={() => {
+                      setCreateProfileError(null);
+                      setExpandedId(open ? null : p.id);
+                    }}
                     aria-expanded={open}
                   >
                     <BuddyAvatar
@@ -288,21 +325,52 @@ export default function ChooseProfilePage() {
           })}
         </div>
 
-        <div style={{ marginTop: "1.5rem" }}>
-          <motion.button
-            type="button"
-            className="tb-submit-wrap"
-            whileTap={{ scale: creating ? 1 : 0.97 }}
-            onClick={() => void handleAddProfile()}
-            disabled={creating}
-          >
-            <ChalkPillFrame variant={2} fillClassName="tb-pill-fill-coral" innerClassName="tb-pill-inner tb-pill-inner--md">
-              <span className="tb-pill-text-white share-tech-regular">
-                {creating ? "Creating…" : "Add new profile"}
-              </span>
-            </ChalkPillFrame>
-          </motion.button>
-        </div>
+        <form
+          className="tb-choose-profile-add-block"
+          onSubmit={(e) => {
+            e.preventDefault();
+            const fd = new FormData(e.currentTarget);
+            const name = String(fd.get("display_name") ?? "");
+            void handleAddProfile(name);
+          }}
+        >
+          <InfoBoxFrame variant={2} className="tb-choose-profile-add-fields">
+            <label htmlFor="choose-profile-new-name" className="tb-field-label-bold share-tech-bold">
+              Display name
+            </label>
+            <input
+              id="choose-profile-new-name"
+              name="display_name"
+              type="text"
+              className="tb-input-plain share-tech-regular"
+              placeholder="e.g. Chef Jamie"
+              maxLength={80}
+              value={newProfileName}
+              onChange={(e) => {
+                setCreateProfileError(null);
+                setNewProfileName(e.target.value);
+              }}
+              disabled={creating}
+              autoComplete="name"
+            />
+            <p className="share-tech-regular tb-choose-profile-add-hint" style={{ color: PAGE_INTRO_BLURB_TEXT }}>
+              Shows on the taste wall. You can change it later on your profile page.
+            </p>
+          </InfoBoxFrame>
+          {createProfileError ? (
+            <p className="share-tech-regular tb-text-coral tb-choose-profile-add-error" role="alert">
+              {createProfileError}
+            </p>
+          ) : null}
+          <motion.div className="tb-choose-profile-add-submit-wrap" whileTap={{ scale: creating ? 1 : 0.97 }}>
+            <button type="submit" className="tb-submit-wrap" disabled={creating}>
+              <ChalkPillFrame variant={2} fillClassName="tb-pill-fill-coral" innerClassName="tb-pill-inner tb-pill-inner--md">
+                <span className="tb-pill-text-white share-tech-regular">{creating ? "Creating…" : "Add new profile"}</span>
+              </ChalkPillFrame>
+            </button>
+          </motion.div>
+        </form>
+
         </motion.div>
       </div>
     </div>

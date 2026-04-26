@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link, useLocation } from "react-router";
+import { flushSync } from "react-dom";
+import { Link, useLocation, useNavigate } from "react-router";
 import { motion } from "motion/react";
 import { useAuth } from "../context/AuthContext";
 import Navigation from "../components/Navigation";
@@ -7,7 +8,7 @@ import GrayTasteHeader from "../components/GrayTasteHeader";
 import BuddyAvatar from "../components/BuddyAvatar";
 import { InfoBoxFrame } from "../components/InfoBoxFrame";
 import { ChalkPillFrame } from "../components/ChalkPillFrame";
-import { MY_RECIPES_STORAGE_BASE, scopedStorageKey } from "../userStorage";
+import { clearDeviceDataForProfile, MY_RECIPES_STORAGE_BASE, scopedStorageKey } from "../userStorage";
 import { PAGE_SHELL_SCROLL, PAGE_INTRO_BLURB_TEXT } from "../brand";
 import { BUDDY_PROFILE_CIRCLE_MAX } from "../buddyLayout";
 import {
@@ -25,6 +26,7 @@ import type { MyRecipeEntry } from "./MyRecipesPage";
 import { decodeProfileAllergiesField, encodeProfileAllergiesField, type AllergenTagId } from "../allergyTagConfig";
 import { AllergenIconPicker } from "../components/AllergenIconPicker";
 import {
+  deleteMyProfile,
   deletePublicRecipe,
   fetchProfileByUserId,
   fetchPublicRecipesForUser,
@@ -80,8 +82,9 @@ function defaultDisplayName(): string {
 }
 
 export default function ProfilePage() {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const userId = user!.id;
   const storageKey = scopedStorageKey(userId, MY_RECIPES_STORAGE_BASE);
 
@@ -106,6 +109,7 @@ export default function ProfilePage() {
   const [sharedIds, setSharedIds] = useState<Set<string>>(new Set());
   const [wallRecipes, setWallRecipes] = useState<PublicRecipeRow[]>([]);
   const [recipeAction, setRecipeAction] = useState<string | null>(null);
+  const [deleteProfileWorking, setDeleteProfileWorking] = useState(false);
 
   const refreshLocalRecipes = useCallback(() => {
     setMyRecipes(loadMyRecipesFromDisk(storageKey));
@@ -279,6 +283,23 @@ export default function ProfilePage() {
       return;
     }
     await refreshWallRecipes();
+  };
+
+  const handleDeleteProfile = async () => {
+    if (deleteProfileWorking) return;
+    setDeleteProfileWorking(true);
+    const id = userId.trim();
+    try {
+      // Always wipe device data first so a failed / unreachable API still removes local content.
+      clearDeviceDataForProfile(id);
+      await deleteMyProfile(id);
+      flushSync(() => {
+        signOut();
+      });
+      navigate("/sign-in", { replace: true });
+    } finally {
+      setDeleteProfileWorking(false);
+    }
   };
 
   return (
@@ -590,6 +611,23 @@ export default function ProfilePage() {
             </div>
           </>
         )}
+
+        <section className="tb-profile-delete-section" aria-label="Delete profile">
+          <motion.button
+            type="button"
+            className="tb-submit-wrap"
+            style={{ marginTop: "3rem" }}
+            whileTap={{ scale: deleteProfileWorking ? 1 : 0.97 }}
+            disabled={deleteProfileWorking}
+            onClick={() => void handleDeleteProfile()}
+          >
+            <ChalkPillFrame variant={2} fillClassName="tb-pill-fill-coral--tight" innerClassName="tb-pill-inner tb-pill-inner--md">
+              <span className="tb-pill-text-white share-tech-regular">
+                {deleteProfileWorking ? "Deleting…" : "Delete profile"}
+              </span>
+            </ChalkPillFrame>
+          </motion.button>
+        </section>
       </div>
     </div>
   );
