@@ -1494,6 +1494,16 @@
   max-width: 20.5rem;
 }
 
+.tb-profile-picker-delete-btn {
+  margin-top: 0.15rem;
+  color: var(--tb-coral, #ff3a00);
+}
+
+.tb-choose-profile-picker-delete-error {
+  margin: 0.5rem 0 0;
+  text-align: center;
+}
+
 .tb-profile-delete-section {
   display: flex;
   flex-direction: column;

@@ -1,3 +1,8 @@
+import {
+  filterOutLocallyRemovedProfiles,
+  isProfileRemovedLocally,
+} from "../app/userStorage";
+
 export type TasteProfileRow = {
   id: string;
   display_name: string | null;
@@ -53,6 +58,7 @@ export type TasteProfileUpsert = {
  * is cross-origin and often surfaces as "Failed to fetch" even when the API is up.
  * Production: set `VITE_API_ORIGIN` to your hosted API (no trailing slash), then rebuild.
  */
+
 const API_ORIGIN = (import.meta.env.VITE_API_ORIGIN as string | undefined)?.replace(/\/$/, "") ?? "";
 const API_BASE = API_ORIGIN ? `${API_ORIGIN}/api` : "/api";
 
@@ -110,7 +116,7 @@ async function requestJson<T>(path: string, init?: RequestInit): Promise<{ data:
 
 export async function fetchCommunityProfiles(): Promise<{ data: TasteProfileRow[]; error: Error | null }> {
   const { data, error } = await requestJson<TasteProfileRow[]>("/profiles");
-  return { data: data ?? [], error };
+  return { data: filterOutLocallyRemovedProfiles(data ?? []), error };
 }
 
 /** Creates a new profile row (device-local JSON API). */
@@ -128,6 +134,9 @@ export async function createProfile(options?: {
 export async function fetchProfileByUserId(
   userId: string
 ): Promise<{ data: TasteProfileRow | null; error: Error | null }> {
+  if (isProfileRemovedLocally(userId)) {
+    return { data: null, error: null };
+  }
   return requestJson<TasteProfileRow | null>(`/profiles/${encodeURIComponent(userId)}`);
 }
 
@@ -153,13 +162,20 @@ export async function deleteMyProfile(userId: string): Promise<{ error: Error | 
 export async function fetchPublicRecipesForUser(
   userId: string
 ): Promise<{ data: PublicRecipeRow[]; error: Error | null }> {
+  if (isProfileRemovedLocally(userId)) {
+    return { data: [], error: null };
+  }
   const { data, error } = await requestJson<PublicRecipeRow[]>(`/public-recipes/user/${encodeURIComponent(userId)}`);
   return { data: data ?? [], error };
 }
 
 export async function fetchWallRecipes(limit = 48): Promise<{ data: PublicRecipeRow[]; error: Error | null }> {
   const { data, error } = await requestJson<PublicRecipeRow[]>(`/public-recipes?limit=${encodeURIComponent(String(limit))}`);
-  return { data: data ?? [], error };
+  const rows = data ?? [];
+  return {
+    data: rows.filter((r) => !isProfileRemovedLocally(r.user_id)),
+    error,
+  };
 }
 
 export async function insertPublicRecipe(row: {
@@ -219,6 +235,9 @@ export async function findPublicRecipeBySourceId(
   userId: string,
   sourceLocalId: string
 ): Promise<{ data: PublicRecipeRow | null; error: Error | null }> {
+  if (isProfileRemovedLocally(userId)) {
+    return { data: null, error: null };
+  }
   return requestJson<PublicRecipeRow | null>(
     `/public-recipes/user/${encodeURIComponent(userId)}/source/${encodeURIComponent(sourceLocalId)}`
   );

@@ -15,11 +15,13 @@ import {
 } from "../buddyAppearance";
 import {
   createProfile,
+  deleteMyProfile,
   fetchCommunityProfiles,
   upsertMyProfile,
   type TasteProfileRow,
 } from "../../lib/communityApi";
-import { SIGN_IN_INTRO_SESSION_STORAGE_KEY } from "../userStorage";
+import imgTrashDelete from "@project-assets/Trash.svg";
+import { purgeProfileFromThisDevice, SIGN_IN_INTRO_SESSION_STORAGE_KEY } from "../userStorage";
 
 function readIntroSkippedThisSession(): boolean {
   try {
@@ -67,6 +69,8 @@ export default function ChooseProfilePage() {
   const [creating, setCreating] = useState(false);
   const [newProfileName, setNewProfileName] = useState("");
   const [createProfileError, setCreateProfileError] = useState<string | null>(null);
+  const [pickerDeletingId, setPickerDeletingId] = useState<string | null>(null);
+  const [pickerDeleteError, setPickerDeleteError] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
     setLoadError(null);
@@ -168,6 +172,22 @@ export default function ChooseProfilePage() {
     }
   };
 
+  const handleDeleteProfileFromPicker = async (row: TasteProfileRow) => {
+    const id = row.id.trim();
+    if (!id || pickerDeletingId) return;
+    setPickerDeleteError(null);
+    setPickerDeletingId(id);
+    try {
+      purgeProfileFromThisDevice(id);
+      const { error } = await deleteMyProfile(id);
+      if (error) setPickerDeleteError(error.message);
+      await refresh();
+      setExpandedId((cur) => (cur && cur.trim().toLowerCase() === id.toLowerCase() ? null : cur));
+    } finally {
+      setPickerDeletingId(null);
+    }
+  };
+
   const showIntro = introPhase === "intro";
 
   return (
@@ -243,6 +263,12 @@ export default function ChooseProfilePage() {
           under profile after you enter.
         </motion.p>
 
+        {pickerDeleteError ? (
+          <p className="share-tech-regular tb-text-coral tb-choose-profile-picker-delete-error" role="alert">
+            {pickerDeleteError}
+          </p>
+        ) : null}
+
         {loadError ? (
           <InfoBoxFrame variant={0}>
             <p className="share-tech-regular" style={{ fontSize: "16pt", lineHeight: 1.4, color: "#2d2d2d" }}>
@@ -268,6 +294,7 @@ export default function ChooseProfilePage() {
             const selection = coerceBuddySvgSelection(p);
             const circle = Math.max(0, Math.min(BUDDY_CIRCLE_COUNT - 1, Math.floor(p.buddy_color_index ?? 0)));
             const open = expandedId === p.id;
+            const rowDeleting = pickerDeletingId === p.id;
             return (
               <InfoBoxFrame key={p.id} variant={0}>
                 <div className="tb-profile-picker-row">
@@ -311,12 +338,24 @@ export default function ChooseProfilePage() {
                     <motion.button
                       type="button"
                       className="tb-submit-wrap"
-                      whileTap={{ scale: 0.97 }}
+                      whileTap={{ scale: rowDeleting || pickerDeletingId ? 1 : 0.97 }}
+                      disabled={Boolean(pickerDeletingId)}
                       onClick={() => goToWall(p.id)}
                     >
                       <ChalkPillFrame variant={0} fillClassName="tb-pill-fill-coral" innerClassName="tb-pill-inner tb-pill-inner--md">
                         <span className="tb-pill-text-white share-tech-regular">Go to taste wall</span>
                       </ChalkPillFrame>
+                    </motion.button>
+                    <motion.button
+                      type="button"
+                      className="tb-link-text share-tech-regular tb-profile-picker-delete-btn"
+                      style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem" }}
+                      whileTap={{ scale: rowDeleting ? 1 : 0.98 }}
+                      disabled={Boolean(pickerDeletingId)}
+                      onClick={() => void handleDeleteProfileFromPicker(p)}
+                    >
+                      <img alt="" src={imgTrashDelete} draggable={false} className="tb-recipe-x-icon" aria-hidden />
+                      {rowDeleting ? "Deleting…" : "Delete this profile"}
                     </motion.button>
                   </motion.div>
                 ) : null}

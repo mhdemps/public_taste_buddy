@@ -8,7 +8,7 @@ import GrayTasteHeader from "../components/GrayTasteHeader";
 import BuddyAvatar from "../components/BuddyAvatar";
 import { InfoBoxFrame } from "../components/InfoBoxFrame";
 import { ChalkPillFrame } from "../components/ChalkPillFrame";
-import { clearDeviceDataForProfile, MY_RECIPES_STORAGE_BASE, scopedStorageKey } from "../userStorage";
+import { MY_RECIPES_STORAGE_BASE, purgeProfileFromThisDevice, scopedStorageKey } from "../userStorage";
 import { PAGE_SHELL_SCROLL, PAGE_INTRO_BLURB_TEXT } from "../brand";
 import { BUDDY_PROFILE_CIRCLE_MAX } from "../buddyLayout";
 import {
@@ -291,7 +291,7 @@ export default function ProfilePage() {
     const id = userId.trim();
     try {
       // Always wipe device data first so a failed / unreachable API still removes local content.
-      clearDeviceDataForProfile(id);
+      purgeProfileFromThisDevice(id);
       await deleteMyProfile(id);
       flushSync(() => {
         signOut();
