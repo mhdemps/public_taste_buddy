@@ -10,7 +10,6 @@
   ],
   "functions": {
     "api/[...slug].js": {
-      "runtime": "nodejs20.x",
       "includeFiles": "data/**",
       "maxDuration": 30
     }
