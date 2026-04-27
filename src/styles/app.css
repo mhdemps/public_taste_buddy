@@ -14,6 +14,13 @@
   --tb-recipe-picker-gap-col: 0.26rem;
 }
 
+@media (max-width: 639px) {
+  :root {
+    --tb-recipe-picker-cell-max: 2.95rem;
+    --tb-recipe-picker-gap-col: 0.38rem;
+  }
+}
+
 @media (min-width: 640px) {
   :root {
     --tb-copy-max: min(calc(100vw - 3rem), 40rem);
@@ -540,6 +547,48 @@
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
+}
+
+/* Allergen icons: smaller glyphs + looser grid on phones so labels and taps read clearly */
+@media (max-width: 639px) {
+  .tb-allergen-picker-grid {
+    gap: 1.05rem 1.35rem;
+    justify-content: space-evenly;
+  }
+
+  .tb-allergen-chip {
+    width: 3.85rem;
+    gap: 0.4rem;
+  }
+
+  .tb-allergen-chip-circle {
+    width: 2.65rem;
+    height: 2.65rem;
+    padding: 0.28rem;
+  }
+
+  .tb-allergen-label {
+    max-width: 5rem;
+    font-size: 11pt;
+    line-height: 1.25;
+  }
+
+  .tb-allergen-badge-row {
+    gap: 0.75rem 1.1rem;
+    justify-content: space-evenly;
+  }
+
+  .tb-allergen-badge-item .tb-allergen-label {
+    max-width: 4.75rem;
+    font-size: 10.5pt;
+    line-height: 1.25;
+  }
+
+  .tb-allergen-badge-circle {
+    width: 2.35rem;
+    height: 2.35rem;
+    padding: 0.22rem;
+  }
 }
 
 .tb-recipe-body {
@@ -2082,6 +2131,43 @@
 
 .tb-svg-picker-strip--c5 {
   grid-template-columns: repeat(5, minmax(0, 2.85rem));
+}
+
+@media (max-width: 639px) {
+  .tb-svg-picker-strip--grid {
+    gap: 0.48rem;
+  }
+
+  .tb-svg-picker-strip {
+    gap: 0.42rem;
+  }
+
+  .tb-svg-picker-strip--c7 {
+    grid-template-columns: repeat(7, minmax(0, 2.6rem));
+  }
+
+  .tb-svg-picker-strip--c8 {
+    grid-template-columns: repeat(8, minmax(0, 2.6rem));
+  }
+
+  .tb-svg-picker-strip--c5 {
+    grid-template-columns: repeat(5, minmax(0, 2.6rem));
+  }
+
+  .tb-svg-picker-strip--grid .tb-svg-picker-chip {
+    width: 2.6rem;
+    height: 2.6rem;
+  }
+
+  .tb-svg-picker-pad {
+    width: 2.6rem;
+    height: 2.6rem;
+  }
+
+  .tb-svg-picker-chip--backdrop {
+    width: 2.6rem;
+    height: 2.6rem;
+  }
 }
 
 @media (max-width: 380px) {
@@ -3695,6 +3781,12 @@
   margin: 0;
   padding-bottom: 0;
   overflow: visible;
+}
+
+@media (max-width: 639px) {
+  .tb-recipe-display-grid {
+    gap: 0.36rem var(--tb-recipe-picker-gap-col);
+  }
 }
 
 .tb-recipe-display-option {
