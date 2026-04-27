@@ -86,6 +86,16 @@ async function parseJsonResponse<T>(response: Response): Promise<T> {
   }
 }
 
+/** Some Vercel layouts only wire up collection routes; subpaths return HTML 404. Fall back to list endpoints when we see that. */
+function isRoutingOrHtml404Error(err: Error | null): boolean {
+  if (!err) return false;
+  return /HTML instead of JSON|HTTP 404|Not JSON/i.test(err.message);
+}
+
+function normalizeProfileIdForLookup(id: string): string {
+  return id.trim().toLowerCase();
+}
+
 async function requestJson<T>(path: string, init?: RequestInit): Promise<{ data: T; error: Error | null }> {
   try {
     const headers = new Headers(init?.headers ?? undefined);
@@ -137,7 +147,14 @@ export async function fetchProfileByUserId(
   if (isProfileRemovedLocally(userId)) {
     return { data: null, error: null };
   }
-  return requestJson<TasteProfileRow | null>(`/profiles/${encodeURIComponent(userId)}`);
+  const direct = await requestJson<TasteProfileRow | null>(`/profiles/${encodeURIComponent(userId)}`);
+  if (!direct.error) return direct;
+  if (!isRoutingOrHtml404Error(direct.error)) return direct;
+  const { data, error } = await fetchCommunityProfiles();
+  if (error) return { data: null, error };
+  const want = normalizeProfileIdForLookup(userId);
+  const row = data.find((p) => normalizeProfileIdForLookup(p.id) === want) ?? null;
+  return { data: row, error: null };
 }
 
 export async function upsertMyProfile(payload: TasteProfileUpsert): Promise<{ error: Error | null }> {
@@ -165,8 +182,17 @@ export async function fetchPublicRecipesForUser(
   if (isProfileRemovedLocally(userId)) {
     return { data: [], error: null };
   }
-  const { data, error } = await requestJson<PublicRecipeRow[]>(`/public-recipes/user/${encodeURIComponent(userId)}`);
-  return { data: data ?? [], error };
+  const direct = await requestJson<PublicRecipeRow[]>(`/public-recipes/user/${encodeURIComponent(userId)}`);
+  if (!direct.error) {
+    return { data: direct.data ?? [], error: null };
+  }
+  if (!isRoutingOrHtml404Error(direct.error)) {
+    return { data: [], error: direct.error };
+  }
+  const { data, error } = await fetchWallRecipes(200);
+  if (error) return { data: [], error };
+  const uid = userId.trim();
+  return { data: data.filter((r) => r.user_id === uid), error: null };
 }
 
 export async function fetchWallRecipes(limit = 48): Promise<{ data: PublicRecipeRow[]; error: Error | null }> {
@@ -238,7 +264,13 @@ export async function findPublicRecipeBySourceId(
   if (isProfileRemovedLocally(userId)) {
     return { data: null, error: null };
   }
-  return requestJson<PublicRecipeRow | null>(
+  const direct = await requestJson<PublicRecipeRow | null>(
     `/public-recipes/user/${encodeURIComponent(userId)}/source/${encodeURIComponent(sourceLocalId)}`
   );
+  if (!direct.error) return direct;
+  if (!isRoutingOrHtml404Error(direct.error)) return direct;
+  const { data, error } = await fetchPublicRecipesForUser(userId);
+  if (error) return { data: null, error };
+  const row = data.find((r) => r.source_local_id === sourceLocalId) ?? null;
+  return { data: row, error: null };
 }
