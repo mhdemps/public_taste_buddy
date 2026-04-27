@@ -67,6 +67,13 @@ async function parseJsonResponse<T>(response: Response): Promise<T> {
   }
   const text = await response.text();
   if (!text.trim()) {
+    if (response.status === 405) {
+      throw new Error(
+        "API rejected the request (HTTP 405 Method Not Allowed). If you deploy to Vercel, ensure `vercel.json` " +
+          "uses a `filesystem` rewrite before the SPA fallback so `/api/*` reaches serverless routes, and that " +
+          "the JSON API is running locally when you use `npm run dev` (API on port 3001)."
+      );
+    }
     throw new Error(`Empty API response (HTTP ${response.status}).`);
   }
   try {
@@ -168,8 +175,9 @@ export async function fetchProfileByUserId(
 export async function upsertMyProfile(
   payload: TasteProfileUpsert
 ): Promise<{ data: TasteProfileRow | null; error: Error | null }> {
+  // POST matches server `PUT || POST` handler — survives hosts that return 405 on PUT (e.g. SPA fallback).
   const { data, error } = await requestJson<TasteProfileRow>(`/profiles/${encodeURIComponent(payload.id)}`, {
-    method: "PUT",
+    method: "POST",
     body: JSON.stringify(payload),
   });
   return { data: error ? null : data, error };

@@ -256,7 +256,8 @@ async function routeProfiles(method, pathname, getBody) {
     return { status: 200, payload: normalizeProfilePayload(profile) };
   }
 
-  if (method === "PUT") {
+  /** PUT (preferred) or POST — POST avoids HTTP 405 from SPA/static hosts that mishandle PUT on `/api/*`. */
+  if (method === "PUT" || method === "POST") {
     const body = await getBody();
     const b = body && typeof body === "object" && !Array.isArray(body) ? body : {};
     const profiles = await readProfilesWithBackdropMigration();

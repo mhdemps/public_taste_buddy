@@ -43,7 +43,7 @@ export const router = createBrowserRouter([
           { path: "whisk/cook/:source/:recipeId", Component: MakeRecipesPage },
           { path: "whisk", Component: MakeRecipesPage },
           { path: "friend-recipe/edit/:recipeId", Component: FriendRecipePage },
-          { path: "friend-recipe/add", Component: FriendRecipePage },
+          { path: "friend-recipe/add", element: <Navigate to="/friend-recipe" replace /> },
           { path: "friend-recipe", Component: FriendRecipePage },
           { path: "my-recipes/edit/:recipeId", Component: MyRecipesPage },
           { path: "my-recipes/add", Component: MyRecipesPage },

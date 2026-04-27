@@ -32,7 +32,6 @@ import {
 } from "../recipeLineEditorUtils";
 import imgRecipeClose from "@project-assets/X.svg";
 import imgTrashDelete from "@project-assets/Trash.svg";
-import imgAddRecipe from "@project-assets/madison-is-pretty.png";
 import iconCheck from "@project-assets/checked box.svg";
 
 export type FriendRecipeEntry = SavedCommunityRecipeEntry;
@@ -49,9 +48,7 @@ export default function FriendRecipePage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { recipeId: editRecipeId } = useParams<{ recipeId?: string }>();
-  const isAddView = location.pathname.endsWith("/add");
   const isEditView = Boolean(editRecipeId);
-  const isFormView = isAddView || isEditView;
   const { user } = useAuth();
   const recipesStorageKey = scopedStorageKey(user!.id, FRIEND_RECIPES_STORAGE_BASE);
   const { buddies } = useBuddies();
@@ -81,21 +78,6 @@ export default function FriendRecipePage() {
   }, [buddies, buddyId]);
 
   useEffect(() => {
-    if (isAddView && buddies.length === 0) {
-      navigate("/friend-recipe", { replace: true });
-    }
-  }, [isAddView, buddies.length, navigate]);
-
-  useEffect(() => {
-    if (isAddView) {
-      setRecipeName("");
-      setAllergies("");
-      setAccommodateIds([]);
-      setIngredientRows([newIngredientRow()]);
-      setDirectionRows([""]);
-      setNotes("");
-      return;
-    }
     if (!editRecipeId) return;
     const found = loadSavedCommunityRecipes(recipesStorageKey).find((r) => r.id === editRecipeId);
     if (!found || found.wallRecipeId) {
@@ -109,7 +91,7 @@ export default function FriendRecipePage() {
     setIngredientRows(ingredientRowsFromString(found.ingredients));
     setDirectionRows(directionRowsFromString(found.directions));
     setNotes(found.notes);
-  }, [isAddView, editRecipeId, navigate, buddies, recipesStorageKey]);
+  }, [editRecipeId, navigate, buddies, recipesStorageKey]);
 
   const selectedBuddy = useMemo(() => buddies.find((b) => b.id === buddyId), [buddies, buddyId]);
 
@@ -119,6 +101,7 @@ export default function FriendRecipePage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!editRecipeId) return;
     const ingredients = ingredientsStringFromRows(ingredientRows);
     const directions = directionsStringFromRows(directionRows);
     if (!ingredients.trim() || !directions.trim()) {
@@ -126,46 +109,15 @@ export default function FriendRecipePage() {
       return;
     }
 
-    if (editRecipeId) {
-      const list = loadSavedCommunityRecipes(recipesStorageKey);
-      const existing = list.find((r) => r.id === editRecipeId);
-      if (!existing) {
-        navigate("/friend-recipe");
-        return;
-      }
-      if (!selectedBuddy) return;
-      const updated: FriendRecipeEntry = {
-        ...existing,
-        buddyId: selectedBuddy.id,
-        friendName: selectedBuddy.name,
-        recipeName: recipeName.trim(),
-        allergies: allergies.trim(),
-        accommodates: formatAllergenCsv(accommodateIds),
-        ingredients,
-        directions,
-        notes: notes.trim(),
-        savedAt: new Date().toISOString(),
-      };
-      persistSavedCommunityRecipes(
-        recipesStorageKey,
-        list.map((r) => (r.id === editRecipeId ? updated : r))
-      );
-      refresh();
-      setRecipeName("");
-      setAllergies("");
-      setAccommodateIds([]);
-      setIngredientRows([newIngredientRow()]);
-      setDirectionRows([""]);
-      setNotes("");
+    const list = loadSavedCommunityRecipes(recipesStorageKey);
+    const existing = list.find((r) => r.id === editRecipeId);
+    if (!existing) {
       navigate("/friend-recipe");
       return;
     }
-
     if (!selectedBuddy) return;
-
-    const list = loadSavedCommunityRecipes(recipesStorageKey);
-    const row: FriendRecipeEntry = {
-      id: `recipe-${Date.now()}`,
+    const updated: FriendRecipeEntry = {
+      ...existing,
       buddyId: selectedBuddy.id,
       friendName: selectedBuddy.name,
       recipeName: recipeName.trim(),
@@ -176,8 +128,10 @@ export default function FriendRecipePage() {
       notes: notes.trim(),
       savedAt: new Date().toISOString(),
     };
-    list.push(row);
-    persistSavedCommunityRecipes(recipesStorageKey, list);
+    persistSavedCommunityRecipes(
+      recipesStorageKey,
+      list.map((r) => (r.id === editRecipeId ? updated : r))
+    );
     refresh();
     setRecipeName("");
     setAllergies("");
@@ -198,12 +152,8 @@ export default function FriendRecipePage() {
     setExpandedRecipeId((cur) => (cur === entry.id ? null : cur));
   };
 
-  if (isFormView) {
-    if (isAddView && buddies.length === 0) return null;
-
-    const formHelp = isEditView
-      ? "Update who shared it, tags, or steps — then save."
-      : "Credit a saved taste profile — pick them below, then add ingredients, steps, and tags.";
+  if (isEditView) {
+    const formHelp = "Update who shared it, tags, or steps — then save.";
 
     return (
       <div className={PAGE_SHELL_SCROLL}>
@@ -221,7 +171,7 @@ export default function FriendRecipePage() {
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.45, delay: 0.05 }}
           >
-            {isEditView ? "Edit saved recipe" : "Add a recipe by hand"}
+            Edit saved recipe
           </motion.h1>
 
           <motion.form
@@ -311,9 +261,7 @@ export default function FriendRecipePage() {
 
             <motion.button type="submit" className="tb-submit-wrap" whileTap={{ scale: 0.97 }}>
               <ChalkPillFrame variant={1} fillClassName="tb-pill-fill-coral" innerClassName="tb-pill-inner tb-pill-inner--lg">
-                <span className="tb-pill-text-white share-tech-regular">
-                  {isEditView ? "Save changes" : "Save recipe"}
-                </span>
+                <span className="tb-pill-text-white share-tech-regular">Save changes</span>
               </ChalkPillFrame>
             </motion.button>
 
@@ -333,7 +281,7 @@ export default function FriendRecipePage() {
   }
 
   const savedListHelp =
-    "Tap a card to open a recipe. Board saves show who posted — use + to add your own and tag a buddy profile.";
+    "Tap a card to open a recipe. Everything here is saved from the Buddy Board with the check control.";
 
   return (
     <div className={PAGE_SHELL_SCROLL}>
@@ -379,10 +327,7 @@ export default function FriendRecipePage() {
           {saved.length === 0 ? (
             <InfoBoxFrame variant={1}>
               <p className="share-tech-regular" style={{ fontSize: "20pt", lineHeight: 1.375 }}>
-                Nothing saved yet — open the Buddy Board and tap the check on a recipe, or{" "}
-                {buddies.length > 0
-                  ? "tap + to add a recipe and tag a buddy profile."
-                  : "add a buddy under Saved buddies, then tap + to save a recipe for them."}
+                Nothing saved yet — open the Buddy Board and tap the check on a recipe to save it here.
               </p>
             </InfoBoxFrame>
           ) : (
@@ -545,22 +490,6 @@ export default function FriendRecipePage() {
             </ul>
           )}
         </motion.section>
-
-        {buddies.length > 0 ? (
-          <motion.button
-            type="button"
-            onClick={() => navigate("/friend-recipe/add")}
-            className="tb-fab-add"
-            aria-label="Add a recipe by hand"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.45, delay: 0.18 }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <img alt="" className="tb-img-contain-full" src={imgAddRecipe} draggable={false} />
-          </motion.button>
-        ) : null}
       </motion.div>
     </div>
   );

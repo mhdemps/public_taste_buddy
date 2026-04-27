@@ -53,7 +53,7 @@ const navItems: readonly NavItemDef[] = [
     icon: iconSave,
     path: "/friend-recipe",
     label: "Saved",
-    description: "Recipes you saved for buddy profiles on this device",
+    description: "Recipes you saved from the Buddy Board",
   },
   {
     id: "whisk",
