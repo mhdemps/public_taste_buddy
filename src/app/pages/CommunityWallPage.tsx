@@ -83,7 +83,7 @@ export default function CommunityWallPage() {
         message:
           result === "duplicate"
             ? "Already in your saved list."
-            : "Saved — open Saved recipes in the bar below.",
+            : "Saved — tap Saved in the bar above.",
       });
       window.setTimeout(() => {
         setSaveHint((h) => (h?.recipeId === r.id ? null : h));
@@ -93,12 +93,12 @@ export default function CommunityWallPage() {
   );
 
   return (
-    <div className={PAGE_SHELL_SCROLL} data-name="Community wall">
+    <div className={PAGE_SHELL_SCROLL} data-name="Buddy board">
       <GrayTasteHeader />
       <Navigation />
 
       <motion.div
-        className="tb-main-column"
+        className="tb-main-column tb-buddy-board-page"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.45 }}
@@ -109,7 +109,7 @@ export default function CommunityWallPage() {
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.4, delay: 0.04 }}
         >
-          Taste wall
+          Buddy Board
         </motion.h1>
 
         {profilesLoadError && profiles.length === 0 ? (
@@ -120,7 +120,7 @@ export default function CommunityWallPage() {
 
         <div className="tb-buddies-grid-wrap">
           <motion.div
-            className="tb-buddies-grid"
+            className="tb-buddies-grid tb-buddies-grid--buddy-board"
             initial={{ y: 14, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.45, delay: 0.1 }}
@@ -157,11 +157,11 @@ export default function CommunityWallPage() {
         {recipes.length > 0 && (
           <>
             <h2 className="tb-section-heading share-tech-bold" style={{ marginTop: "2rem" }}>
-              Fresh on the wall
+              Fresh on the Buddy Board
             </h2>
             <p className="tb-intro-blurb share-tech-regular" style={{ marginTop: "0.35rem", marginBottom: "0.25rem" }}>
               Tap a card to open the full recipe. Use <span className="share-tech-bold">Save to my list</span> to copy it to
-              your saved recipes (bottom bar).
+              your saved recipes (navigation bar above).
             </p>
             <div className="tb-wall-recipe-stack">
               {recipes.map((r) => {

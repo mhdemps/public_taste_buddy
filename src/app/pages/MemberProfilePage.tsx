@@ -68,7 +68,7 @@ export default function MemberProfilePage() {
           <motion.button type="button" onClick={() => navigate("/")} className="tb-submit-wrap" whileTap={{ scale: 0.98 }}>
             <ChalkPillFrame variant={0} fillClassName="tb-pill-fill-light" innerClassName="tb-pill-inner tb-pill-inner--md">
               <span className="share-tech-bold tb-text-coral" style={{ fontSize: "20pt" }}>
-                Wall
+                Buddy Board
               </span>
             </ChalkPillFrame>
           </motion.button>
@@ -92,7 +92,7 @@ export default function MemberProfilePage() {
             type="button"
             onClick={() => navigate("/")}
             className="tb-submit-wrap"
-            aria-label="Back to wall"
+            aria-label="Back to Buddy Board"
             initial={{ y: -8, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.35 }}
@@ -103,7 +103,7 @@ export default function MemberProfilePage() {
                 ‹
               </span>
               <span className="share-tech-bold tb-text-coral" style={{ fontSize: "20pt" }}>
-                Wall
+                Buddy Board
               </span>
             </ChalkPillFrame>
           </motion.button>
@@ -146,7 +146,7 @@ export default function MemberProfilePage() {
               animate={{ y: 0, opacity: 1 }}
               transition={{ duration: 0.4, delay: 0.12 }}
             >
-              Public taste profile on the wall
+              Public taste profile on the Buddy Board
             </motion.p>
 
             {isOwn && (
@@ -178,12 +178,6 @@ export default function MemberProfilePage() {
                   <p className="tb-detail-p share-tech-regular">{profile.specialty}</p>
                 </InfoBoxFrame>
               )}
-              {profile?.parties_attended != null && (
-                <InfoBoxFrame variant={3} className="tb-bento-card">
-                  <h3 className="tb-detail-h3 share-tech-bold">Parties attended</h3>
-                  <p className="tb-detail-p share-tech-regular">{profile.parties_attended}</p>
-                </InfoBoxFrame>
-              )}
               {profile?.recipes_given && (
                 <InfoBoxFrame variant={0} className="tb-bento-card">
                   <h3 className="tb-detail-h3 share-tech-bold">What you share</h3>
@@ -212,7 +206,7 @@ export default function MemberProfilePage() {
             {recipes.length > 0 && (
               <>
                 <h2 className="tb-section-heading share-tech-bold" style={{ marginTop: "2rem" }}>
-                  On the wall
+                  On the Buddy Board
                 </h2>
                 <div className="tb-detail-stack">
                   {recipes.map((r) => {

@@ -19,7 +19,6 @@ function buddyToForm(b: {
   favoriteFood?: string;
   personality?: string;
   specialty?: string;
-  partiesAttended?: number;
   recipesGiven?: string;
   allergies?: string;
 }): BuddyEditablePayload {
@@ -28,7 +27,6 @@ function buddyToForm(b: {
     favoriteFood: b.favoriteFood ?? "",
     personality: b.personality ?? "",
     specialty: b.specialty ?? "",
-    partiesAttended: b.partiesAttended != null ? String(b.partiesAttended) : "",
     recipesGiven: b.recipesGiven ?? "",
     allergies: b.allergies ?? "",
   };
@@ -45,7 +43,6 @@ export default function BuddyInfoPage() {
     favoriteFood: "",
     personality: "",
     specialty: "",
-    partiesAttended: "",
     recipesGiven: "",
     allergies: "",
   });
@@ -81,7 +78,7 @@ export default function BuddyInfoPage() {
               innerClassName="tb-pill-inner tb-pill-inner--md"
             >
               <span className="share-tech-bold tb-text-coral" style={{ fontSize: "20pt" }}>
-                Wall
+                Buddy Board
               </span>
             </ChalkPillFrame>
           </motion.button>
@@ -263,21 +260,6 @@ export default function BuddyInfoPage() {
             </InfoBoxFrame>
 
             <InfoBoxFrame variant={0}>
-              <label htmlFor="edit-parties" className="tb-field-label--tight share-tech-regular">
-                Gatherings joined
-              </label>
-              <input
-                id="edit-parties"
-                type="number"
-                min={0}
-                value={form.partiesAttended}
-                onChange={(e) => setForm((f) => ({ ...f, partiesAttended: e.target.value }))}
-                className="tb-input-plain share-tech-regular"
-                placeholder="Optional"
-              />
-            </InfoBoxFrame>
-
-            <InfoBoxFrame variant={1}>
               <label htmlFor="edit-recipes" className="tb-field-label--tight share-tech-regular">
                 Recipes shared
               </label>
@@ -291,7 +273,7 @@ export default function BuddyInfoPage() {
               />
             </InfoBoxFrame>
 
-            <InfoBoxFrame variant={2}>
+            <InfoBoxFrame variant={1}>
               <label htmlFor="edit-allergies" className="tb-field-label--tight share-tech-regular">
                 Allergies &amp; restrictions
               </label>
@@ -330,13 +312,6 @@ export default function BuddyInfoPage() {
               <InfoBoxFrame variant={2}>
                 <h3 className="tb-detail-h3 share-tech-bold">Specialty</h3>
                 <p className="tb-detail-p share-tech-regular">{buddy.specialty}</p>
-              </InfoBoxFrame>
-            )}
-
-            {buddy.partiesAttended !== undefined && buddy.partiesAttended !== null && (
-              <InfoBoxFrame variant={3}>
-                <h3 className="tb-detail-h3 share-tech-bold">Gatherings joined</h3>
-                <p className="tb-detail-p share-tech-regular">{buddy.partiesAttended}</p>
               </InfoBoxFrame>
             )}
 

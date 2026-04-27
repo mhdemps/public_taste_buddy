@@ -29,7 +29,6 @@ export interface Buddy {
   favoriteFood?: string;
   personality?: string;
   specialty?: string;
-  partiesAttended?: number;
   recipesGiven?: string;
   /** Foods to avoid — free text or comma-separated tags */
   allergies?: string;
@@ -40,7 +39,6 @@ export interface BuddyEditablePayload {
   favoriteFood: string;
   personality: string;
   specialty: string;
-  partiesAttended: string;
   recipesGiven: string;
   allergies: string;
 }
@@ -287,14 +285,6 @@ export function BuddiesProvider({ children, userId }: { children: ReactNode; use
   };
 
   const updateBuddy = (id: string, payload: BuddyEditablePayload) => {
-    const partiesRaw = payload.partiesAttended.trim();
-    let partiesAttended: number | undefined;
-    if (partiesRaw === "") partiesAttended = undefined;
-    else {
-      const n = Number.parseInt(partiesRaw, 10);
-      partiesAttended = Number.isNaN(n) ? undefined : n;
-    }
-
     setBuddies(
       buddies.map((b) =>
         b.id !== id
@@ -307,7 +297,6 @@ export function BuddiesProvider({ children, userId }: { children: ReactNode; use
               specialty: trimOrUndef(payload.specialty),
               recipesGiven: trimOrUndef(payload.recipesGiven),
               allergies: trimOrUndef(payload.allergies),
-              partiesAttended,
             }
       )
     );

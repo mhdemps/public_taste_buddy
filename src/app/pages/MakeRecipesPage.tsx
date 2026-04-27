@@ -442,7 +442,7 @@ export default function MakeRecipesPage() {
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.45, delay: 0.04 }}
         >
-          Whisk — make it
+          Whip it up
         </motion.h1>
         <motion.p
           className="tb-intro-blurb share-tech-regular"
@@ -450,9 +450,8 @@ export default function MakeRecipesPage() {
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.45, delay: 0.09 }}
         >
-          Check off ingredients first, then each numbered step while you cook. “I made this!” adds to your count and clears
-          checkboxes for next time. Tap the save ribbon on a card to tag it as a recipe you want to make later — those rise to
-          the top of your kitchen list.
+          Check ingredients, then each step. “I made this!” counts the cook and clears the list. Tap a card’s ribbon to save it
+          for later — those stay at the top.
         </motion.p>
 
         <motion.section
@@ -468,7 +467,7 @@ export default function MakeRecipesPage() {
           {listItems.length === 0 ? (
             <InfoBoxFrame variant={1}>
               <p className="share-tech-regular" style={{ fontSize: "20pt", lineHeight: 1.375 }}>
-                No recipes yet — add your own under the chef tab, or save one from the taste wall. Then come back here to cook
+                No recipes yet — add your own under the Recipes tab, or save one from the Buddy Board. Then come back here to cook
                 along!
               </p>
             </InfoBoxFrame>

@@ -102,7 +102,6 @@ export default function ProfilePage() {
   const [specialty, setSpecialty] = useState("");
   const [allergyTagIds, setAllergyTagIds] = useState<AllergenTagId[]>([]);
   const [allergyExtraNotes, setAllergyExtraNotes] = useState("");
-  const [partiesAttended, setPartiesAttended] = useState("");
   const [recipesGiven, setRecipesGiven] = useState("");
 
   const [myRecipes, setMyRecipes] = useState<MyRecipeEntry[]>([]);
@@ -158,7 +157,6 @@ export default function ProfilePage() {
         const dec = decodeProfileAllergiesField(data.allergies ?? "");
         setAllergyTagIds(dec.tagIds);
         setAllergyExtraNotes(dec.extraNotes);
-        setPartiesAttended(data.parties_attended != null ? String(data.parties_attended) : "");
         setRecipesGiven(data.recipes_given ?? "");
       } else {
         setDisplayName(defaultDisplayName());
@@ -186,12 +184,6 @@ export default function ProfilePage() {
   };
 
   const buildProfileUpsertPayload = useCallback((): TasteProfileUpsert => {
-    const partiesRaw = partiesAttended.trim();
-    let partiesNum: number | null = null;
-    if (partiesRaw !== "") {
-      const n = Number.parseInt(partiesRaw, 10);
-      partiesNum = Number.isNaN(n) ? null : n;
-    }
     return {
       id: userId,
       display_name: displayName.trim() || defaultDisplayName(),
@@ -204,7 +196,6 @@ export default function ProfilePage() {
       personality: personality.trim() || null,
       specialty: specialty.trim() || null,
       allergies: encodeProfileAllergiesField(allergyTagIds, allergyExtraNotes).trim() || null,
-      parties_attended: partiesNum,
       recipes_given: recipesGiven.trim() || null,
     };
   }, [
@@ -220,7 +211,6 @@ export default function ProfilePage() {
     specialty,
     allergyTagIds,
     allergyExtraNotes,
-    partiesAttended,
     recipesGiven,
   ]);
 
@@ -236,14 +226,14 @@ export default function ProfilePage() {
     if (!errorMessage) {
       dispatchProfileDisplaySaved(displayName.trim() || defaultDisplayName());
     }
-    setSaveMessage(errorMessage ?? "Saved — you appear on the taste wall.");
+    setSaveMessage(errorMessage ?? "Saved — you appear on the Buddy Board.");
   };
 
   const postRecipe = async (r: MyRecipeEntry) => {
     setRecipeAction(null);
     const { data: existing } = await findPublicRecipeBySourceId(userId, r.id);
     if (existing) {
-      setRecipeAction("Already on the wall.");
+      setRecipeAction("Already on the Buddy Board.");
       return;
     }
     const { error } = await insertPublicRecipe({
@@ -275,7 +265,7 @@ export default function ProfilePage() {
   };
 
   const removeFromWall = async (recipeId: string, recipeName: string) => {
-    if (!confirm(`Are you sure you want to remove "${recipeName}" from your wall?`)) return;
+    if (!confirm(`Are you sure you want to remove "${recipeName}" from your Buddy Board?`)) return;
     setRecipeAction(null);
     const { error } = await deletePublicRecipe(recipeId, userId);
     if (error) {
@@ -308,7 +298,7 @@ export default function ProfilePage() {
       <Navigation />
 
       <div className="tb-main-column">
-        <div className="tb-buddy-profile-back-row">
+        <div className="tb-buddy-profile-back-row tb-buddy-profile-back-row--profile">
           <Link to="/" className="tb-submit-wrap">
             <motion.span initial={{ y: -6, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.35 }}>
               <ChalkPillFrame variant={1} fillClassName="tb-pill-fill-back" innerClassName="tb-pill-inner tb-pill-inner--back">
@@ -316,7 +306,7 @@ export default function ProfilePage() {
                   ‹
                 </span>
                 <span className="share-tech-bold tb-text-coral" style={{ fontSize: "20pt" }}>
-                  Wall
+                  Buddy Board
                 </span>
               </ChalkPillFrame>
             </motion.span>
@@ -326,9 +316,9 @@ export default function ProfilePage() {
         {loading ? (
           <p className="share-tech-regular tb-text-coral">Loading profile…</p>
         ) : (
-          <form className="tb-form-edit-stack" onSubmit={handleSaveProfile}>
+          <form className="tb-form-edit-stack tb-form-edit-stack--profile" onSubmit={handleSaveProfile}>
             <motion.div
-              className="tb-profile-page-buddy-hero"
+              className="tb-profile-page-buddy-hero tb-profile-page-buddy-hero--main"
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.35 }}
@@ -356,7 +346,7 @@ export default function ProfilePage() {
                 <div className="tb-bento-card">
                   <InfoBoxFrame variant={0}>
                     <label htmlFor="profile-name" className="tb-field-label--tight share-tech-regular">
-                      Name on the wall
+                      Name on the Buddy Board
                     </label>
                     <input
                       id="profile-name"
@@ -415,23 +405,6 @@ export default function ProfilePage() {
 
                 <div className="tb-bento-card">
                   <InfoBoxFrame variant={0}>
-                    <label htmlFor="profile-parties" className="tb-field-label--tight share-tech-regular">
-                      Parties attended
-                    </label>
-                    <input
-                      id="profile-parties"
-                      type="number"
-                      min={0}
-                      className="tb-input-plain share-tech-regular"
-                      value={partiesAttended}
-                      onChange={(e) => setPartiesAttended(e.target.value)}
-                      placeholder="Optional"
-                    />
-                  </InfoBoxFrame>
-                </div>
-
-                <div className="tb-bento-card">
-                  <InfoBoxFrame variant={1}>
                     <label htmlFor="profile-recipes-note" className="tb-field-label--tight share-tech-regular">
                       What you share
                     </label>
@@ -446,7 +419,7 @@ export default function ProfilePage() {
                 </div>
 
                 <div className="tb-bento-card tb-bento-card--wide">
-                  <InfoBoxFrame variant={2}>
+                  <InfoBoxFrame variant={1}>
                     <AllergenIconPicker
                       mode="profile"
                       selected={allergyTagIds}
@@ -477,7 +450,7 @@ export default function ProfilePage() {
 
             <motion.button type="submit" className="tb-submit-wrap" whileTap={{ scale: 0.97 }}>
               <ChalkPillFrame variant={0} fillClassName="tb-pill-fill-coral" innerClassName="tb-pill-inner tb-pill-inner--lg">
-                <span className="tb-pill-text-white share-tech-regular">Save profile to wall</span>
+                <span className="tb-pill-text-white share-tech-regular">Save profile to Buddy Board</span>
               </ChalkPillFrame>
             </motion.button>
           </form>
@@ -489,10 +462,10 @@ export default function ProfilePage() {
         <p className="tb-intro-blurb share-tech-regular">
           Recipes live in{" "}
           <Link to="/my-recipes" className="tb-link-wide">
-            My recipes
+            Recipes
           </Link>{" "}
-          first. Tap below to copy one to the wall so other taste profiles can read it. Optional photos you add there show on
-          the wall too.
+          first. Tap below to copy one to the Buddy Board so other taste profiles can read it. Optional photos you add there show on
+          the Buddy Board too.
         </p>
 
         {recipeAction ? (
@@ -505,7 +478,7 @@ export default function ProfilePage() {
           {myRecipes.length === 0 ? (
             <InfoBoxFrame variant={0}>
               <p className="share-tech-regular" style={{ color: PAGE_INTRO_BLURB_TEXT, fontSize: "20pt" }}>
-                No recipes yet. Add some under My recipes, then come back here to share.
+                No recipes yet. Add some under Recipes, then come back here to share.
               </p>
             </InfoBoxFrame>
           ) : (
@@ -524,7 +497,7 @@ export default function ProfilePage() {
                 </p>
                 {sharedIds.has(r.id) ? (
                   <p className="share-tech-regular" style={{ fontSize: "20pt", marginTop: "0.5rem" }}>
-                    On the wall
+                    On the Buddy Board
                   </p>
                 ) : (
                   <motion.button
@@ -535,7 +508,7 @@ export default function ProfilePage() {
                     onClick={() => void postRecipe(r)}
                   >
                     <ChalkPillFrame variant={3} fillClassName="tb-pill-fill-coral--tight" innerClassName="tb-pill-inner tb-pill-inner--sm">
-                      <span className="tb-pill-text-white share-tech-regular">Post to wall</span>
+                      <span className="tb-pill-text-white share-tech-regular">Post to Buddy Board</span>
                     </ChalkPillFrame>
                   </motion.button>
                 )}
@@ -547,7 +520,7 @@ export default function ProfilePage() {
         {wallRecipes.length > 0 && (
           <>
             <h2 className="tb-section-heading share-tech-bold" style={{ marginTop: "2rem" }}>
-              On your wall now
+              On your Buddy Board now
             </h2>
             <div className="tb-detail-stack">
               {wallRecipes.map((r) => {
@@ -576,7 +549,7 @@ export default function ProfilePage() {
                     {needsPhotoSync ? (
                       <>
                         <p className="share-tech-regular tb-muted-hint" style={{ fontSize: "17pt", marginTop: "0.35rem" }}>
-                          Cover is saved in My recipes on this device. Sync it so the taste wall shows it too.
+                          Cover is saved in Recipes on this device. Sync it so the Buddy Board shows it too.
                         </p>
                         <motion.button
                           type="button"
@@ -590,7 +563,7 @@ export default function ProfilePage() {
                             fillClassName="tb-pill-fill-coral--tight"
                             innerClassName="tb-pill-inner tb-pill-inner--sm"
                           >
-                            <span className="tb-pill-text-white share-tech-regular">Sync cover to wall</span>
+                            <span className="tb-pill-text-white share-tech-regular">Sync cover to Buddy Board</span>
                           </ChalkPillFrame>
                         </motion.button>
                       </>
@@ -603,7 +576,7 @@ export default function ProfilePage() {
                       onClick={() => void removeFromWall(r.id, r.recipe_name?.trim() || "Untitled")}
                     >
                       <img alt="" src={imgTrashDelete} draggable={false} className="tb-recipe-x-icon" aria-hidden />
-                      Remove from wall
+                      Remove from Buddy Board
                     </motion.button>
                   </InfoBoxFrame>
                 );

@@ -15,7 +15,6 @@ export type TasteProfileRow = {
   personality: string | null;
   specialty: string | null;
   allergies: string | null;
-  parties_attended: number | null;
   recipes_given: string | null;
   updated_at: string;
 };
@@ -48,7 +47,6 @@ export type TasteProfileUpsert = {
   personality?: string | null;
   specialty?: string | null;
   allergies?: string | null;
-  parties_attended?: number | null;
   recipes_given?: string | null;
 };
 
@@ -129,6 +127,15 @@ export async function fetchCommunityProfiles(): Promise<{ data: TasteProfileRow[
   return { data: filterOutLocallyRemovedProfiles(data ?? []), error };
 }
 
+/** Buddy defaults for POST /profiles — must match `DEFAULT_NEW_PROFILE_BUDDY` in `api/core.mjs`. */
+const NEW_PROFILE_BUDDY_BODY = {
+  buddy_color_index: 2,
+  buddy_body_key: "orange",
+  buddy_eye_key: "open",
+  buddy_hat_key: "chef",
+  buddy_smile_key: "smile",
+} as const;
+
 /** Creates a new profile row (device-local JSON API). */
 export async function createProfile(options?: {
   display_name?: string;
@@ -137,7 +144,7 @@ export async function createProfile(options?: {
   const display_name = typeof raw === "string" ? raw.trim().slice(0, 80) : "";
   return requestJson<TasteProfileRow>("/profiles", {
     method: "POST",
-    body: JSON.stringify({ display_name }),
+    body: JSON.stringify({ display_name, ...NEW_PROFILE_BUDDY_BODY }),
   });
 }
 

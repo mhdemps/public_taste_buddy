@@ -204,7 +204,7 @@ export default function ChooseProfilePage() {
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ duration: 0.4, delay: 0.35 }}
                 >
-                  Hey, chef…
+                  Who&apos;s Cooking
                 </motion.p>
               </div>
             </motion.section>
@@ -228,17 +228,8 @@ export default function ChooseProfilePage() {
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.4, delay: 0.05 }}
         >
-          Who is cooking?
+          Who&apos;s Cooking
         </motion.h1>
-        <motion.p
-          className="tb-intro-blurb share-tech-regular"
-          initial={{ y: 10, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.4, delay: 0.1 }}
-        >
-          Pick a saved taste profile (same buddy and name as on your profile page). You can add more or rename them
-          under profile after you enter.
-        </motion.p>
 
         {loadError && profiles.length === 0 ? (
           <InfoBoxFrame variant={0}>
@@ -256,7 +247,7 @@ export default function ChooseProfilePage() {
         <div className="tb-profile-picker-stack">
           {profiles.length === 0 && !loadError ? (
             <p className="tb-intro-blurb share-tech-regular" style={{ marginTop: "0.5rem" }}>
-              No profiles yet — create one to get a taste tile on the wall.
+              No profiles yet — create one to get a taste tile on the Buddy Board.
             </p>
           ) : null}
 
@@ -309,12 +300,13 @@ export default function ChooseProfilePage() {
                     <motion.button
                       type="button"
                       className="tb-submit-wrap"
+                      aria-label={`Sign in as ${name}`}
                       whileTap={{ scale: rowDeleting || pickerDeletingId ? 1 : 0.97 }}
                       disabled={Boolean(pickerDeletingId)}
                       onClick={() => goToWall(p.id)}
                     >
                       <ChalkPillFrame variant={0} fillClassName="tb-pill-fill-coral" innerClassName="tb-pill-inner tb-pill-inner--md">
-                        <span className="tb-pill-text-white share-tech-regular">Go to taste wall</span>
+                        <span className="tb-pill-text-white share-tech-regular">Sign in</span>
                       </ChalkPillFrame>
                     </motion.button>
                     <motion.button
@@ -364,7 +356,7 @@ export default function ChooseProfilePage() {
               autoComplete="name"
             />
             <p className="share-tech-regular tb-choose-profile-add-hint" style={{ color: PAGE_INTRO_BLURB_TEXT }}>
-              Shows on the taste wall. You can change it later on your profile page.
+              Shows on the Buddy Board. You can change it later on your profile page.
             </p>
           </InfoBoxFrame>
           {createProfileError ? (

@@ -38,7 +38,7 @@ export default function WallBuddyCard({
           type="button"
           aria-label={`${displayName} — open taste profile`}
           onClick={handleClick}
-          className="tb-buddy-circle-btn"
+          className="tb-buddy-circle-btn tb-buddy-circle-btn--wall-disc-hit"
           whileHover={{ scale: 1.015 }}
           whileTap={{ scale: 0.96 }}
         >
@@ -73,7 +73,12 @@ export default function WallBuddyCard({
                     maxHeight: `${BUDDY_IN_CIRCLE_H_PCT}%`,
                   }}
                 >
-                  <img alt="" className="tb-buddy-face-img" src={isClicked ? smilingImage : buddyImage} draggable={false} />
+                  <img
+                    alt=""
+                    className="tb-buddy-face-img"
+                    src={isClicked ? smilingImage : buddyImage}
+                    draggable={false}
+                  />
                 </div>
               </div>
             </>

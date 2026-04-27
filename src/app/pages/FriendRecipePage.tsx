@@ -34,7 +34,7 @@ import {
 import imgRecipeClose from "@project-assets/X.svg";
 import imgTrashDelete from "@project-assets/Trash.svg";
 import imgAddRecipe from "@project-assets/madison-is-pretty.png";
-import imgBuddyRecipeHero from "@project-assets/sunny.png";
+import iconCheck from "@project-assets/check.svg";
 
 export type FriendRecipeEntry = SavedCommunityRecipeEntry;
 
@@ -271,9 +271,9 @@ export default function FriendRecipePage() {
           >
             {isEditView
               ? editingWallRecipe
-                ? "The cook’s name stays as on the taste wall. You can update ingredients, steps, and notes."
+                ? "The cook’s name stays as on the Buddy Board. You can update ingredients, steps, and notes."
                 : "Update who shared it, tags, or steps — then save."
-              : "Credit a saved taste profile — pick them below, then add ingredients, steps, and tags. To copy from the wall, use Save on the taste wall instead."}
+              : "Credit a saved taste profile — pick them below, then add ingredients, steps, and tags. To copy from the Buddy Board, use Save on a recipe there instead."}
           </motion.p>
 
           <motion.form
@@ -285,7 +285,7 @@ export default function FriendRecipePage() {
           >
             {editingWallRecipe ? (
               <InfoBoxFrame variant={0}>
-                <p className="tb-field-label-bold share-tech-bold">From the taste wall</p>
+                <p className="tb-field-label-bold share-tech-bold">From the Buddy Board</p>
                 <p className="share-tech-regular" style={{ fontSize: "20pt", lineHeight: 1.375 }}>
                   {wallAuthorLabel}
                 </p>
@@ -403,12 +403,14 @@ export default function FriendRecipePage() {
       >
         <motion.img
           alt=""
-          src={imgBuddyRecipeHero}
+          src={iconCheck}
           draggable={false}
-          className="tb-hero-decor-party"
+          className="tb-hero-decor-saved-check"
+          style={{ transformOrigin: "50% 80%" }}
           initial={{ scale: 0.88, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: "spring", stiffness: 260, damping: 22, delay: 0.02 }}
+          whileHover={{ rotate: [0, -12, 6, -4, 0], transition: { duration: 0.55 } }}
         />
 
         <motion.h1
@@ -417,7 +419,7 @@ export default function FriendRecipePage() {
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.45, delay: 0.05 }}
         >
-          Saved recipes from the wall
+          Saved recipes from the Buddy Board
         </motion.h1>
         <motion.p
           className="tb-intro-blurb share-tech-regular"
@@ -432,7 +434,7 @@ export default function FriendRecipePage() {
             className="tb-link-wide share-tech-bold"
             style={{ background: "none", border: "none", padding: 0, cursor: "pointer", font: "inherit" }}
           >
-            Taste wall
+            Buddy Board
           </button>{" "}
           and tap <span className="share-tech-bold">Save on a recipe</span> to add it here. Tap a card to read it, or use + to type one by hand and tag a saved profile.
         </motion.p>
@@ -450,7 +452,7 @@ export default function FriendRecipePage() {
           {saved.length === 0 ? (
             <InfoBoxFrame variant={1}>
               <p className="share-tech-regular" style={{ fontSize: "20pt", lineHeight: 1.375 }}>
-                Nothing saved yet — go to the Taste wall, find a recipe under “Fresh on the wall,” and tap Save.{" "}
+                Nothing saved yet — go to the Buddy Board, find a recipe under “Fresh on the Buddy Board,” and tap Save.{" "}
                 {buddies.length > 0
                   ? "Or tap + to add one by hand."
                   : "Add a saved profile under Saved buddies if you want to use + and tag someone by hand."}

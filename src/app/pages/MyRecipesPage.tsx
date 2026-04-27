@@ -267,11 +267,11 @@ export default function MyRecipesPage() {
             src={imgYourRecipesHat}
             draggable={false}
             className="tb-hero-decor-hat"
-            style={{ transformOrigin: "50% 100%" }}
-            whileHover={{ rotate: -10 }}
+            style={{ transformOrigin: "50% 80%" }}
             initial={{ scale: 0.88, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ type: "spring", stiffness: 260, damping: 22, delay: 0.02 }}
+            whileHover={{ rotate: [0, -12, 6, -4, 0], transition: { duration: 0.55 } }}
           />
 
           <motion.h1
@@ -345,7 +345,7 @@ export default function MyRecipesPage() {
             <InfoBoxFrame variant={1}>
               <p className="tb-field-label-bold share-tech-bold">Recipe photo (optional)</p>
               <p className="tb-recipe-lines-hint share-tech-regular">
-                Appears on the taste wall when you post this recipe from your profile. Large images are resized automatically.
+                Appears on the Buddy Board when you post this recipe from your profile. Large images are resized automatically.
               </p>
               {recipePhoto ? (
                 <div className="tb-recipe-photo-preview-wrap">
@@ -434,11 +434,11 @@ export default function MyRecipesPage() {
           src={imgYourRecipesHat}
           draggable={false}
           className="tb-hero-decor-hat"
-          style={{ transformOrigin: "50% 100%" }}
-          whileHover={{ rotate: -10 }}
+          style={{ transformOrigin: "50% 80%" }}
           initial={{ scale: 0.88, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: "spring", stiffness: 260, damping: 22, delay: 0.02 }}
+          whileHover={{ rotate: [0, -12, 6, -4, 0], transition: { duration: 0.55 } }}
         />
 
         <motion.h1

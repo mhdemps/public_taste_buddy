@@ -73,6 +73,49 @@ async function readJsonArray(filePath, seedFileName) {
 const BACKDROP_MIGRATED_V2 = "backdrop_migrated_v2";
 const BUDDY_BACKDROP_MAX_V2 = 20;
 
+/** Allowed keys — keep aligned with `src/app/buddyAppearance.ts` coercers. */
+const ALLOWED_BUDDY_BODY = new Set(["purple", "blue", "yellow", "green", "pink", "orange", "red"]);
+const ALLOWED_BUDDY_EYE = new Set(["none", "open", "heart", "dizzy", "wink", "squint", "up", "down"]);
+const ALLOWED_BUDDY_HAT = new Set(["none", "chef", "sous-chef", "cowboy", "party", "jd", "beret", "jester"]);
+const ALLOWED_BUDDY_SMILE = new Set(["smile", "happy", "grin", "smirk", "buck-teef"]);
+
+/** Brand-new profile buddy — light yellow backdrop + orange + chef + open + smile (see `buddyBackdropSrcTable` index 2). */
+const DEFAULT_NEW_PROFILE_BUDDY = {
+  buddy_color_index: 2,
+  buddy_body_key: "orange",
+  buddy_eye_key: "open",
+  buddy_hat_key: "chef",
+  buddy_smile_key: "smile",
+};
+
+/**
+ * Merge optional buddy fields from POST JSON onto defaults (validated). Client sends these on create so rows stay
+ * correct even if an older API build only read `display_name`.
+ * @param {unknown} body
+ */
+function pickNewProfileBuddyFields(body) {
+  const b = body && typeof body === "object" && !Array.isArray(body) ? body : {};
+  const d = DEFAULT_NEW_PROFILE_BUDDY;
+  let color = d.buddy_color_index;
+  if ("buddy_color_index" in b) {
+    const n = Math.floor(Number(b.buddy_color_index));
+    if (Number.isFinite(n)) color = Math.max(0, Math.min(BUDDY_BACKDROP_MAX_V2, n));
+  }
+  /** @param {string} key @param {Set<string>} allowed @param {string} fall */
+  const pickStr = (key, allowed, fall) => {
+    if (!(key in b)) return fall;
+    const v = b[key];
+    return typeof v === "string" && allowed.has(v) ? v : fall;
+  };
+  return {
+    buddy_color_index: color,
+    buddy_body_key: pickStr("buddy_body_key", ALLOWED_BUDDY_BODY, d.buddy_body_key),
+    buddy_eye_key: pickStr("buddy_eye_key", ALLOWED_BUDDY_EYE, d.buddy_eye_key),
+    buddy_hat_key: pickStr("buddy_hat_key", ALLOWED_BUDDY_HAT, d.buddy_hat_key),
+    buddy_smile_key: pickStr("buddy_smile_key", ALLOWED_BUDDY_SMILE, d.buddy_smile_key),
+  };
+}
+
 function migrateBuddyBackdropIndices(rows) {
   let changed = false;
   const next = rows.map((p) => {
@@ -166,15 +209,12 @@ async function routeProfiles(method, pathname, getBody) {
     const profiles = await readProfilesWithBackdropMigration();
     const id = randomUUID();
     const now = new Date().toISOString();
+    const buddy = pickNewProfileBuddyFields(body);
     const nextProfile = {
       id,
       display_name,
-      buddy_color_index: 0,
+      ...buddy,
       backdrop_migrated_v2: true,
-      buddy_body_key: "purple",
-      buddy_eye_key: "open",
-      buddy_hat_key: "none",
-      buddy_smile_key: "smile",
       favorite_food: null,
       personality: null,
       specialty: null,
@@ -234,12 +274,7 @@ async function routeProfiles(method, pathname, getBody) {
       personality: pick("personality", existing?.personality) ?? null,
       specialty: pick("specialty", existing?.specialty) ?? null,
       allergies: pick("allergies", existing?.allergies) ?? null,
-      parties_attended: (() => {
-        if ("parties_attended" in b) {
-          return b.parties_attended;
-        }
-        return existing?.parties_attended ?? null;
-      })(),
+      parties_attended: null,
       recipes_given: pick("recipes_given", existing?.recipes_given) ?? null,
       updated_at: new Date().toISOString(),
     };

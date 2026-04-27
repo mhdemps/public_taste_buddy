@@ -121,8 +121,8 @@ export default function BuddiesPage() {
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.45, delay: 0.1 }}
         >
-          Profiles you keep for parties and community recipes on this device. The live taste wall with everyone who has an
-          account is on the home tab. Use + to add another buddy to this list.
+          Profiles you keep for parties and community recipes on this device. The live Buddy Board with everyone who has an
+          account is the center tab below. Use + to add another buddy to this list.
         </motion.p>
 
         <div className="tb-buddies-grid-wrap">

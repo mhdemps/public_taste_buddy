@@ -20,25 +20,17 @@ export default function AddBuddyPage() {
   const [favoriteFood, setFavoriteFood] = useState("");
   const [personality, setPersonality] = useState("");
   const [specialty, setSpecialty] = useState("");
-  const [parties, setParties] = useState("");
   const [recipes, setRecipes] = useState("");
   const [allergies, setAllergies] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const partiesRaw = parties.trim();
-    let partiesAttended: number | undefined;
-    if (partiesRaw !== "") {
-      const n = Number.parseInt(partiesRaw, 10);
-      partiesAttended = Number.isNaN(n) ? undefined : n;
-    }
 
     addBuddy({
       name: name.trim(),
       favoriteFood: optStr(favoriteFood),
       personality: optStr(personality),
       specialty: optStr(specialty),
-      partiesAttended,
       recipesGiven: optStr(recipes),
       allergies: optStr(allergies),
     });
@@ -138,21 +130,6 @@ export default function AddBuddyPage() {
           </InfoBoxFrame>
 
           <InfoBoxFrame variant={0}>
-            <label htmlFor="add-buddy-parties" className="tb-field-label share-tech-regular">
-              Gatherings joined
-            </label>
-            <input
-              id="add-buddy-parties"
-              type="number"
-              min={0}
-              value={parties}
-              onChange={(e) => setParties(e.target.value)}
-              className="tb-input-plain share-tech-regular"
-              placeholder="Optional"
-            />
-          </InfoBoxFrame>
-
-          <InfoBoxFrame variant={1}>
             <label htmlFor="add-buddy-recipes" className="tb-field-label share-tech-regular">
               Recipes shared
             </label>
@@ -166,7 +143,7 @@ export default function AddBuddyPage() {
             />
           </InfoBoxFrame>
 
-          <InfoBoxFrame variant={2}>
+          <InfoBoxFrame variant={1}>
             <label htmlFor="add-buddy-allergies" className="tb-field-label share-tech-regular">
               Allergies &amp; restrictions
             </label>

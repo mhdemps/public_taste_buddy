@@ -269,11 +269,15 @@ export function getBuddyBackdropLabel(index: number): string {
   return buddyBackdropLabelTable[i] ?? buddyBackdropLabelTable[0];
 }
 
+/** Backdrop index for brand-new profiles (light yellow). Keep in sync with `api/core.mjs` POST /api/profiles. */
+export const NEW_PROFILE_BUDDY_COLOR_INDEX = 2;
+
+/** Default SVG buddy for new profiles — light yellow + orange body + chef + open eyes + smile. */
 export function getDefaultBuddySvgSelection(): BuddySvgSelection {
   return {
-    bodyKey: "purple",
+    bodyKey: "orange",
     eyeKey: "open",
-    hatKey: "none",
+    hatKey: "chef",
     smileKey: "smile",
   };
 }

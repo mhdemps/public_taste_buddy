@@ -63,7 +63,6 @@ export default function CustomizeBuddyPage() {
   const [personality, setPersonality] = useState("");
   const [specialty, setSpecialty] = useState("");
   const [allergies, setAllergies] = useState("");
-  const [partiesAttended, setPartiesAttended] = useState("");
   const [recipesGiven, setRecipesGiven] = useState("");
 
   useEffect(() => {
@@ -89,7 +88,6 @@ export default function CustomizeBuddyPage() {
         setPersonality(data.personality ?? "");
         setSpecialty(data.specialty ?? "");
         setAllergies(data.allergies ?? "");
-        setPartiesAttended(data.parties_attended != null ? String(data.parties_attended) : "");
         setRecipesGiven(data.recipes_given ?? "");
       } else {
         setDisplayName(defaultDisplayName());
@@ -160,12 +158,6 @@ export default function CustomizeBuddyPage() {
   }, []);
 
   const buildPayload = useCallback((): TasteProfileUpsert => {
-    const partiesRaw = partiesAttended.trim();
-    let partiesNum: number | null = null;
-    if (partiesRaw !== "") {
-      const n = Number.parseInt(partiesRaw, 10);
-      partiesNum = Number.isNaN(n) ? null : n;
-    }
     return {
       id: userId,
       display_name: displayName.trim() || defaultDisplayName(),
@@ -178,7 +170,6 @@ export default function CustomizeBuddyPage() {
       personality: personality.trim() || null,
       specialty: specialty.trim() || null,
       allergies: allergies.trim() || null,
-      parties_attended: partiesNum,
       recipes_given: recipesGiven.trim() || null,
     };
   }, [
@@ -193,7 +184,6 @@ export default function CustomizeBuddyPage() {
     personality,
     specialty,
     allergies,
-    partiesAttended,
     recipesGiven,
   ]);
 
@@ -209,7 +199,7 @@ export default function CustomizeBuddyPage() {
       dispatchProfileDisplaySaved(displayName.trim() || defaultDisplayName());
       navigate("/profile", {
         state: {
-          saveMessage: "Saved — your taste wall tile and public profile now use this buddy. Recipe posts are separate and unchanged.",
+          saveMessage: "Saved — your Buddy Board tile and public profile now use this buddy. Recipe posts are separate and unchanged.",
         },
       });
     } finally {
