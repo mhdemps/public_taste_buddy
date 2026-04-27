@@ -3300,7 +3300,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0;
   width: 100%;
   /* Match `.tb-header-logo` (unsigned header) so the avatar lines up with the wordmark */
   max-width: min(300px, 88vw);
@@ -3318,7 +3318,7 @@
   min-height: 12.5rem;
   aspect-ratio: 1;
   margin-top: clamp(3.5rem, 15vw, 7rem);
-  margin-bottom: -2rem;
+  margin-bottom: -4.25rem;
   margin-left: auto;
   margin-right: auto;
   overflow: visible;
@@ -3358,7 +3358,8 @@
   position: relative;
   z-index: 1;
   margin: 0;
-  padding-top: 0.15rem;
+  margin-top: -1.1rem;
+  padding-top: 0;
   font-size: clamp(1.35rem, 4.2vw, 1.75rem);
   text-align: center;
   letter-spacing: 0.02em;
