@@ -13,7 +13,13 @@ import {
   type BuddyEyeKey,
   type BuddySvgSelection,
 } from "../buddyAppearance";
-import { createProfile, deleteMyProfile, fetchCommunityProfiles, type TasteProfileRow } from "../../lib/communityApi";
+import {
+  applyLocalProfileCacheToRows,
+  createProfile,
+  deleteMyProfile,
+  fetchCommunityProfiles,
+  type TasteProfileRow,
+} from "../../lib/communityApi";
 import imgTrashDelete from "@project-assets/Trash.svg";
 import { purgeProfileFromThisDevice, SIGN_IN_INTRO_SESSION_STORAGE_KEY } from "../userStorage";
 
@@ -78,8 +84,8 @@ export default function ChooseProfilePage() {
       return;
     }
     setLoadError(null);
-    setProfiles(data);
-  }, []);
+    setProfiles(applyLocalProfileCacheToRows(user?.id, data));
+  }, [user?.id]);
 
   useEffect(() => {
     void refresh();

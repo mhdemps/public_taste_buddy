@@ -16,6 +16,7 @@ import {
 } from "../savedCommunityRecipes";
 import { FRIEND_RECIPES_STORAGE_BASE, scopedStorageKey } from "../userStorage";
 import {
+  applyLocalProfileCacheToRows,
   fetchCommunityProfiles,
   fetchWallRecipes,
   type TasteProfileRow,
@@ -50,13 +51,13 @@ export default function CommunityWallPage() {
       else setProfilesLoadError(null);
       if (rRes.error) setRecipesLoadError(rRes.error.message);
       else setRecipesLoadError(null);
-      setProfiles(pRes.data ?? []);
+      setProfiles(applyLocalProfileCacheToRows(user?.id, pRes.data ?? []));
       setRecipes(rRes.data ?? []);
     })();
     return () => {
       cancelled = true;
     };
-  }, [location.key]);
+  }, [location.key, user?.id]);
 
   useEffect(() => {
     setExpandedWallRecipeId(null);

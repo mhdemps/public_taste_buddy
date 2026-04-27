@@ -2,6 +2,12 @@ import {
   filterOutLocallyRemovedProfiles,
   isProfileRemovedLocally,
 } from "../app/userStorage";
+import {
+  clearCachedProfile,
+  pickNewerProfile,
+  readCachedProfile,
+  writeCachedProfile,
+} from "./profileLocalCache";
 
 export type TasteProfileRow = {
   id: string;
@@ -103,6 +109,30 @@ function normalizeProfileIdForLookup(id: string): string {
   return id.trim().toLowerCase();
 }
 
+/**
+ * Merges this device’s cached profile (newest `updated_at` wins) into a list from GET `/api/profiles`.
+ * Use when a signed-in user’s row may be missing or stale (e.g. Vercel serverless + `/tmp`).
+ */
+export function applyLocalProfileCacheToRows(
+  userId: string | null | undefined,
+  rows: TasteProfileRow[]
+): TasteProfileRow[] {
+  const id = userId?.trim();
+  if (!id) return rows;
+  if (isProfileRemovedLocally(id)) return rows;
+  const cached = readCachedProfile(id);
+  if (!cached) return rows;
+  const want = normalizeProfileIdForLookup(id);
+  let found = false;
+  const merged = rows.map((r) => {
+    if (normalizeProfileIdForLookup(r.id) !== want) return r;
+    found = true;
+    return pickNewerProfile(r, cached) as TasteProfileRow;
+  });
+  if (found) return merged;
+  return [...merged, cached as TasteProfileRow];
+}
+
 async function requestJson<T>(path: string, init?: RequestInit): Promise<{ data: T; error: Error | null }> {
   try {
     const headers = new Headers(init?.headers ?? undefined);
@@ -153,10 +183,14 @@ export async function createProfile(options?: {
 }): Promise<{ data: TasteProfileRow | null; error: Error | null }> {
   const raw = options?.display_name;
   const display_name = typeof raw === "string" ? raw.trim().slice(0, 80) : "";
-  return requestJson<TasteProfileRow>("/profiles", {
+  const { data, error } = await requestJson<TasteProfileRow>("/profiles", {
     method: "POST",
     body: JSON.stringify({ display_name, ...NEW_PROFILE_BUDDY_BODY }),
   });
+  if (data && !error) {
+    writeCachedProfile(data.id, data);
+  }
+  return { data: error ? null : data, error };
 }
 
 export async function fetchProfileByUserId(
@@ -165,14 +199,48 @@ export async function fetchProfileByUserId(
   if (isProfileRemovedLocally(userId)) {
     return { data: null, error: null };
   }
+  const cached = readCachedProfile(userId);
+
   const direct = await requestJson<TasteProfileRow | null>(`/profiles/${encodeURIComponent(userId)}`);
-  if (!direct.error) return direct;
-  if (!isRoutingOrHtml404Error(direct.error)) return direct;
+  if (!direct.error) {
+    if (direct.data == null) {
+      if (cached) {
+        return { data: cached as TasteProfileRow, error: null };
+      }
+      return { data: null, error: null };
+    }
+    if (cached) {
+      return { data: pickNewerProfile(direct.data, cached) as TasteProfileRow, error: null };
+    }
+    return { data: direct.data, error: null };
+  }
+
+  if (!isRoutingOrHtml404Error(direct.error)) {
+    if (cached) {
+      return { data: cached as TasteProfileRow, error: null };
+    }
+    return { data: null, error: direct.error };
+  }
+
   const { data, error } = await fetchCommunityProfiles();
-  if (error) return { data: null, error };
+  if (error) {
+    if (cached) {
+      return { data: cached as TasteProfileRow, error: null };
+    }
+    return { data: null, error };
+  }
   const want = normalizeProfileIdForLookup(userId);
   const row = data.find((p) => normalizeProfileIdForLookup(p.id) === want) ?? null;
-  return { data: row, error: null };
+  if (row && cached) {
+    return { data: pickNewerProfile(row, cached) as TasteProfileRow, error: null };
+  }
+  if (row) {
+    return { data: row, error: null };
+  }
+  if (cached) {
+    return { data: cached as TasteProfileRow, error: null };
+  }
+  return { data: null, error: null };
 }
 
 export async function upsertMyProfile(
@@ -183,6 +251,9 @@ export async function upsertMyProfile(
     method: "POST",
     body: JSON.stringify(payload),
   });
+  if (data && !error) {
+    writeCachedProfile(payload.id, data);
+  }
   return { data: error ? null : data, error };
 }
 
@@ -194,6 +265,9 @@ export async function deleteMyProfile(userId: string): Promise<{ error: Error | 
   const { error } = await requestJson<{ ok: boolean }>(`/profiles/${encodeURIComponent(id)}`, {
     method: "DELETE",
   });
+  if (!error) {
+    clearCachedProfile(id);
+  }
   return { error };
 }
 
