@@ -3,7 +3,6 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "rewrites": [
-    { "handle": "filesystem" },
     {
       "source": "/api/(.*)",
       "destination": "/api/$1"
