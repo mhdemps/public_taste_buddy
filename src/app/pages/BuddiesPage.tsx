@@ -53,6 +53,16 @@ function BuddyCard({
             src={backgroundImage}
             draggable={false}
           />
+          <p
+            className="tb-buddy-name share-tech-bold"
+            style={{
+              wordBreak: "break-word",
+              overflowWrap: "anywhere",
+              WebkitTextSizeAdjust: "100%",
+            }}
+          >
+            {name}
+          </p>
           <AnimatePresence mode="wait">
             <motion.div
               key={isClicked ? "smiling" : "normal"}
@@ -77,16 +87,6 @@ function BuddyCard({
           </AnimatePresence>
         </motion.button>
       </div>
-      <p
-        className="tb-buddy-name share-tech-bold"
-        style={{
-          wordBreak: "break-word",
-          overflowWrap: "anywhere",
-          WebkitTextSizeAdjust: "100%",
-        }}
-      >
-        {name}
-      </p>
     </div>
   );
 }

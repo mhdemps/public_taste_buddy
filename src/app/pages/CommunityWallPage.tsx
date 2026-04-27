@@ -156,7 +156,7 @@ export default function CommunityWallPage() {
 
         {recipes.length > 0 && (
           <>
-            <h2 className="tb-section-heading share-tech-bold" style={{ marginTop: "2rem" }}>
+            <h2 className="tb-section-heading tb-buddy-board-fresh-heading share-tech-bold">
               Fresh on the Buddy Board
             </h2>
             <div className="tb-wall-recipe-stack">

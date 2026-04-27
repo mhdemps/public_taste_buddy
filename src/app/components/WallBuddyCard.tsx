@@ -50,6 +50,18 @@ export default function WallBuddyCard({
               className="tb-buddy-avatar-shell"
               innerClassName="tb-buddy-face-inner"
               imgClassName="tb-buddy-face-img"
+              beforeFace={
+                <p
+                  className="tb-buddy-name share-tech-bold"
+                  style={{
+                    wordBreak: "break-word",
+                    overflowWrap: "anywhere",
+                    WebkitTextSizeAdjust: "100%",
+                  }}
+                >
+                  {displayName}
+                </p>
+              }
             />
           ) : (
             <>
@@ -63,6 +75,16 @@ export default function WallBuddyCard({
                 src={circleImage}
                 draggable={false}
               />
+              <p
+                className="tb-buddy-name share-tech-bold"
+                style={{
+                  wordBreak: "break-word",
+                  overflowWrap: "anywhere",
+                  WebkitTextSizeAdjust: "100%",
+                }}
+              >
+                {displayName}
+              </p>
               <div className="tb-buddy-face-layer">
                 <div
                   className="tb-buddy-face-inner"
@@ -85,16 +107,6 @@ export default function WallBuddyCard({
           )}
         </motion.button>
       </div>
-      <p
-        className="tb-buddy-name share-tech-bold"
-        style={{
-          wordBreak: "break-word",
-          overflowWrap: "anywhere",
-          WebkitTextSizeAdjust: "100%",
-        }}
-      >
-        {displayName}
-      </p>
     </div>
   );
 }

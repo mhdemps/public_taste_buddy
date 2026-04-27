@@ -21,23 +21,7 @@ import {
   type TasteProfileRow,
 } from "../../lib/communityApi";
 import imgTrashDelete from "@project-assets/Trash.svg";
-import { purgeProfileFromThisDevice, SIGN_IN_INTRO_SESSION_STORAGE_KEY } from "../userStorage";
-
-function readIntroSkippedThisSession(): boolean {
-  try {
-    return sessionStorage.getItem(SIGN_IN_INTRO_SESSION_STORAGE_KEY) === "1";
-  } catch {
-    return false;
-  }
-}
-
-function markIntroSeenThisSession() {
-  try {
-    sessionStorage.setItem(SIGN_IN_INTRO_SESSION_STORAGE_KEY, "1");
-  } catch {
-    /* ignore */
-  }
-}
+import { purgeProfileFromThisDevice } from "../userStorage";
 
 function introBuddySelection(eyeKey: BuddyEyeKey): BuddySvgSelection {
   return {
@@ -52,15 +36,16 @@ function displayFromProfile(p: TasteProfileRow): string {
   return (p.display_name?.trim() || "Taste buddy").slice(0, 80);
 }
 
+/** Bigger on-screen than the layout box; `transform-origin: bottom` + same flex footprint keeps “Hey buddy” in place. */
+const INTRO_BUDDY_VISUAL_SCALE = 1.95;
+
 export default function ChooseProfilePage() {
   const { user, loading, selectProfile } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const from = (location.state as { from?: string } | null)?.from ?? "/";
 
-  const [introPhase, setIntroPhase] = useState<"intro" | "main">(() =>
-    readIntroSkippedThisSession() ? "main" : "intro"
-  );
+  const [introPhase, setIntroPhase] = useState<"intro" | "main">("intro");
   const [introEyeKey, setIntroEyeKey] = useState<BuddyEyeKey>("open");
 
   const [profiles, setProfiles] = useState<TasteProfileRow[]>([]);
@@ -91,26 +76,24 @@ export default function ChooseProfilePage() {
     void refresh();
   }, [location.key, refresh]);
 
+  /** Every time this screen loads or `location.key` changes: reset eyes, wink, then show the list (single effect so phase updates before timers). */
   useEffect(() => {
     if (loading || user) return;
-    if (introPhase !== "intro") return;
+    setIntroPhase("intro");
+    setIntroEyeKey("open");
     const reduced =
       typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (reduced) {
-      markIntroSeenThisSession();
       setIntroPhase("main");
       return;
     }
-    const ids: number[] = [];
-    ids.push(window.setTimeout(() => setIntroEyeKey("wink"), 480));
-    ids.push(
-      window.setTimeout(() => {
-        markIntroSeenThisSession();
-        setIntroPhase("main");
-      }, 2200)
-    );
-    return () => ids.forEach((id) => window.clearTimeout(id));
-  }, [loading, user, introPhase]);
+    const tWink = window.setTimeout(() => setIntroEyeKey("wink"), 480);
+    const tEnd = window.setTimeout(() => setIntroPhase("main"), 2200);
+    return () => {
+      window.clearTimeout(tWink);
+      window.clearTimeout(tEnd);
+    };
+  }, [location.key, loading, user]);
 
   if (loading) {
     return (
@@ -178,7 +161,7 @@ export default function ChooseProfilePage() {
 
   return (
     <div className={`${PAGE_SHELL_SCROLL} tb-sign-in-page`} data-name="Choose profile">
-      <GrayTasteHeader showSignOut={false} helpContent={whosCookingHelp} />
+      <GrayTasteHeader showSignOut={false} helpContent={showIntro ? undefined : whosCookingHelp} />
 
       <div className="tb-sign-in-page-body">
         <AnimatePresence>
@@ -194,18 +177,26 @@ export default function ChooseProfilePage() {
             >
               <div className="tb-sign-in-intro-inner">
                 <motion.div
-                  initial={{ scale: 0.78, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
+                  className="tb-sign-in-intro-buddy"
+                  initial={{ scale: 0.78 * INTRO_BUDDY_VISUAL_SCALE, opacity: 0 }}
+                  animate={{ scale: INTRO_BUDDY_VISUAL_SCALE, opacity: 1 }}
                   transition={{ type: "spring", stiffness: 260, damping: 22, delay: 0.06 }}
                 >
-                  <BuddyAvatar
-                    selection={introBuddySelection(introEyeKey)}
-                    hideBackdrop
-                    className="tb-buddy-avatar-shell tb-sign-in-intro-buddy tb-buddy-profile-circle--page-hero"
-                    innerClassName="tb-buddy-face-inner"
-                    imgClassName="tb-buddy-face-img"
-                    alt=""
-                  />
+                  <div
+                    className={
+                      introEyeKey === "wink" ? "tb-sign-in-intro-buddy-face tb-sign-in-intro-buddy-face--wink" : "tb-sign-in-intro-buddy-face"
+                    }
+                  >
+                    <BuddyAvatar
+                      key={introEyeKey}
+                      selection={introBuddySelection(introEyeKey)}
+                      hideBackdrop
+                      className="tb-buddy-avatar-shell tb-buddy-profile-circle--page-hero"
+                      innerClassName="tb-buddy-face-inner"
+                      imgClassName="tb-buddy-face-img"
+                      alt=""
+                    />
+                  </div>
                 </motion.div>
                 <motion.p
                   className="tb-sign-in-intro-caption share-tech-bold tb-text-coral"
@@ -213,7 +204,7 @@ export default function ChooseProfilePage() {
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ duration: 0.4, delay: 0.35 }}
                 >
-                  Who&apos;s Cooking
+                  Hey buddy
                 </motion.p>
               </div>
             </motion.section>

@@ -38,7 +38,7 @@ export default function TextInPage() {
       <GrayTasteHeader />
 
       <div
-        className={`${HOME_HERO_STACK_CLASS} tb-welcome-skip tb-hero-stack--pb40`}
+        className={`${HOME_HERO_STACK_CLASS} tb-hero-stack--top tb-welcome-skip tb-hero-stack--pb40`}
         onClick={goHome}
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") {

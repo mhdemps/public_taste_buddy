@@ -1,4 +1,4 @@
-import type { CSSProperties } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import {
   getBuddyBodyAsset,
   getBuddyCircleImage,
@@ -23,6 +23,8 @@ type BuddyAvatarProps = {
   className?: string;
   innerClassName?: string;
   imgClassName?: string;
+  /** Renders after the circle backdrop, before the face (e.g. name on the ring). */
+  beforeFace?: ReactNode;
 };
 
 export default function BuddyAvatar({
@@ -35,6 +37,7 @@ export default function BuddyAvatar({
   className = "",
   innerClassName = "tb-buddy-face-inner",
   imgClassName = "tb-buddy-face-img",
+  beforeFace,
 }: BuddyAvatarProps) {
   const bodySrc = getBuddyBodyAsset(selection.bodyKey);
   const eyeSrc = getBuddyEyeAsset(selection.eyeKey);
@@ -51,6 +54,7 @@ export default function BuddyAvatar({
       {!hideBackdrop ? (
         <img alt="" className="tb-abs-cover" style={{ borderRadius: "50%", ...circleStyle }} src={resolvedCircleImage} draggable={false} />
       ) : null}
+      {beforeFace}
       <div className="tb-buddy-face-layer">
         <div
           className={innerClassName}

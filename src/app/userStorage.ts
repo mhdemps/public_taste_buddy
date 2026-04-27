@@ -1,7 +1,7 @@
 /** Current profile (JSON API row id) — not secret; device-local. */
 export const ACTIVE_PROFILE_ID_STORAGE_KEY = "tasteBuddyActiveProfileId";
 
-/** Cleared on sign-out so the sign-in wink plays again after “Switch profile”. */
+/** Legacy session key; choose profile replays the wink on each visit. Kept for older clients. */
 export const SIGN_IN_INTRO_SESSION_STORAGE_KEY = "tasteBuddySignInIntroSession";
 
 /** Base keys — always scope with {@link scopedStorageKey} and the active profile id. */
