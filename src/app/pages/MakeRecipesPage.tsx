@@ -3,7 +3,7 @@ import { useNavigate, useParams, useLocation } from "react-router";
 import { motion } from "motion/react";
 import confetti from "canvas-confetti";
 import { useAuth } from "../context/AuthContext";
-import { MY_RECIPES_STORAGE_BASE, scopedStorageKey } from "../userStorage";
+import { FRIEND_RECIPES_STORAGE_BASE, MY_RECIPES_STORAGE_BASE, scopedStorageKey } from "../userStorage";
 import {
   loadRecipeMakeProgress,
   parseDirectionSteps,
@@ -14,11 +14,13 @@ import {
   type RecipeCookSource,
   type RecipeMakeProgressRow,
 } from "../recipeMakeProgress";
-import { purgeWallSourcedSavedRecipes, sortSavedCommunityRecipesNewestFirst } from "../savedCommunityRecipes";
+import {
+  loadSavedCommunityRecipes,
+  sortSavedCommunityRecipesNewestFirst,
+} from "../savedCommunityRecipes";
 import { loadWhiskMakeLater, toggleWhiskMakeLater } from "../whiskMakeLater";
 import { loadMyRecipeEntries, sortMyRecipesNewestFirst, type MyRecipeEntry } from "./MyRecipesPage";
-import Navigation from "../components/Navigation";
-import GrayTasteHeader from "../components/GrayTasteHeader";
+import StickyTopChrome from "../components/StickyTopChrome";
 import { InfoBoxFrame } from "../components/InfoBoxFrame";
 import { ChalkPillFrame } from "../components/ChalkPillFrame";
 import { PAGE_INTRO_BLURB_TEXT, PAGE_SHELL_SCROLL } from "../brand";
@@ -61,6 +63,7 @@ export default function MakeRecipesPage() {
   const { user } = useAuth();
   const userId = user!.id;
   const myKey = scopedStorageKey(userId, MY_RECIPES_STORAGE_BASE);
+  const friendKey = scopedStorageKey(userId, FRIEND_RECIPES_STORAGE_BASE);
   const progressKeyFull = recipeCookProgressStorageKey(userId);
 
   const [progressMap, setProgressMap] = useState<Record<string, RecipeMakeProgressRow>>(() =>
@@ -78,8 +81,8 @@ export default function MakeRecipesPage() {
 
   const myRecipes = useMemo(() => sortMyRecipesNewestFirst(loadMyRecipeEntries(myKey)), [myKey]);
   const friendRecipes = useMemo(
-    () => sortSavedCommunityRecipesNewestFirst(purgeWallSourcedSavedRecipes(userId)),
-    [userId]
+    () => sortSavedCommunityRecipesNewestFirst(loadSavedCommunityRecipes(friendKey)),
+    [friendKey, location.pathname]
   );
 
   const listItems: CookListItem[] = useMemo(() => {
@@ -208,8 +211,7 @@ export default function MakeRecipesPage() {
   if (isCookView && activeRecipe && cookSource && recipeId) {
     return (
       <div className={PAGE_SHELL_SCROLL}>
-        <GrayTasteHeader />
-        <Navigation />
+        <StickyTopChrome />
         <motion.div
           className="tb-main-column"
           initial={{ opacity: 0 }}
@@ -416,36 +418,37 @@ export default function MakeRecipesPage() {
 
   return (
     <div className={PAGE_SHELL_SCROLL}>
-      <GrayTasteHeader helpContent='Check ingredients, then each step. “I made this!” counts the cook and clears the list. Tap a card’s ribbon to save it for later — those stay at the top.' />
-      <Navigation />
+      <StickyTopChrome helpContent='Check ingredients, then each step. “I made this!” counts the cook and clears the list. Tap a card’s ribbon to save it for later — those stay at the top.' />
       <motion.div
         className="tb-main-column"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
       >
-        <motion.img
-          alt=""
-          src={iconWhisk}
-          draggable={false}
-          className="tb-hero-decor-whisk"
-          style={{ transformOrigin: "50% 80%" }}
-          whileHover={{ rotate: [0, -12, 6, -4, 0] }}
-          transition={{ duration: 0.55 }}
-          initial={{ scale: 0.88, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-        />
-        <motion.h1
-          className="tb-page-title share-tech-bold tb-text-coral"
-          initial={{ y: 10, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.45, delay: 0.04 }}
-        >
-          Whip it up
-        </motion.h1>
+        <div className="tb-make-hub-intro">
+          <motion.img
+            alt=""
+            src={iconWhisk}
+            draggable={false}
+            className="tb-hero-decor-whisk tb-make-hub-whisk"
+            style={{ transformOrigin: "50% 80%" }}
+            whileHover={{ rotate: [0, -12, 6, -4, 0] }}
+            transition={{ duration: 0.55 }}
+            initial={{ scale: 0.88, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+          />
+          <motion.h1
+            className="tb-page-title tb-make-hub-title share-tech-bold tb-text-coral"
+            initial={{ y: 10, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.45, delay: 0.04 }}
+          >
+            Whip it up
+          </motion.h1>
+        </div>
 
         <motion.section
-          className="tb-section-narrow"
+          className="tb-section-narrow tb-make-hub-section"
           aria-labelledby="whisk-recipe-list-heading"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -483,18 +486,8 @@ export default function MakeRecipesPage() {
                                 <h3 className="tb-recipe-h3 share-tech-bold">{r.recipeName}</h3>
                                 <span className="tb-make-badge share-tech-bold">{pr.timesMade}× made</span>
                               </div>
-                              <p
-                                className="share-tech-regular tb-make-card-sub"
-                                style={{ color: PAGE_INTRO_BLURB_TEXT, opacity: 0.85 }}
-                              >
-                                {subtitle}
-                              </p>
-                              <p
-                                className="share-tech-regular"
-                                style={{ fontSize: "18pt", lineHeight: 1.375, color: PAGE_INTRO_BLURB_TEXT, opacity: 0.75 }}
-                              >
-                                Tap to cook along →
-                              </p>
+                              <p className="share-tech-regular tb-make-card-sub">{subtitle}</p>
+                              <p className="share-tech-regular tb-recipe-card-hint">Tap to cook along →</p>
                             </button>
                             <motion.button
                               type="button"

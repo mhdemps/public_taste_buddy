@@ -7,15 +7,13 @@ import { FRIEND_RECIPES_STORAGE_BASE, scopedStorageKey } from "../userStorage";
 import {
   loadSavedCommunityRecipes,
   persistSavedCommunityRecipes,
-  purgeWallSourcedSavedRecipes,
   sortSavedCommunityRecipesNewestFirst,
   type SavedCommunityRecipeEntry,
 } from "../savedCommunityRecipes";
-import Navigation from "../components/Navigation";
-import GrayTasteHeader from "../components/GrayTasteHeader";
+import StickyTopChrome from "../components/StickyTopChrome";
 import { InfoBoxFrame } from "../components/InfoBoxFrame";
 import { ChalkPillFrame } from "../components/ChalkPillFrame";
-import { PAGE_INTRO_BLURB_TEXT, PAGE_SHELL_SCROLL } from "../brand";
+import { PAGE_SHELL_SCROLL } from "../brand";
 import {
   formatAllergenCsv,
   parseAllergenCsv,
@@ -35,7 +33,7 @@ import {
 import imgRecipeClose from "@project-assets/X.svg";
 import imgTrashDelete from "@project-assets/Trash.svg";
 import imgAddRecipe from "@project-assets/madison-is-pretty.png";
-import iconCheck from "@project-assets/check.svg";
+import iconCheck from "@project-assets/checked box.svg";
 
 export type FriendRecipeEntry = SavedCommunityRecipeEntry;
 
@@ -58,13 +56,12 @@ export default function FriendRecipePage() {
   const recipesStorageKey = scopedStorageKey(user!.id, FRIEND_RECIPES_STORAGE_BASE);
   const { buddies } = useBuddies();
   const [saved, setSaved] = useState<FriendRecipeEntry[]>(() =>
-    sortSavedCommunityRecipesNewestFirst(purgeWallSourcedSavedRecipes(user!.id))
+    sortSavedCommunityRecipesNewestFirst(loadSavedCommunityRecipes(recipesStorageKey))
   );
 
   useEffect(() => {
-    const list = purgeWallSourcedSavedRecipes(user!.id);
-    setSaved(sortSavedCommunityRecipesNewestFirst(list));
-  }, [recipesStorageKey, user?.id]);
+    setSaved(sortSavedCommunityRecipesNewestFirst(loadSavedCommunityRecipes(recipesStorageKey)));
+  }, [recipesStorageKey, location.pathname]);
 
   const [expandedRecipeId, setExpandedRecipeId] = useState<string | null>(null);
 
@@ -210,8 +207,7 @@ export default function FriendRecipePage() {
 
     return (
       <div className={PAGE_SHELL_SCROLL}>
-        <GrayTasteHeader helpContent={formHelp} />
-        <Navigation />
+        <StickyTopChrome helpContent={formHelp} />
 
         <motion.div
           className="tb-main-column"
@@ -337,12 +333,11 @@ export default function FriendRecipePage() {
   }
 
   const savedListHelp =
-    "Tap a card to open a recipe, or use + to add one by hand and tag a saved buddy profile.";
+    "Tap a card to open a recipe. Board saves show who posted — use + to add your own and tag a buddy profile.";
 
   return (
     <div className={PAGE_SHELL_SCROLL}>
-      <GrayTasteHeader helpContent={savedListHelp} />
-      <Navigation />
+      <StickyTopChrome helpContent={savedListHelp} />
 
       <motion.div
         className="tb-main-column"
@@ -384,7 +379,7 @@ export default function FriendRecipePage() {
           {saved.length === 0 ? (
             <InfoBoxFrame variant={1}>
               <p className="share-tech-regular" style={{ fontSize: "20pt", lineHeight: 1.375 }}>
-                Nothing saved yet —{" "}
+                Nothing saved yet — open the Buddy Board and tap the check on a recipe, or{" "}
                 {buddies.length > 0
                   ? "tap + to add a recipe and tag a buddy profile."
                   : "add a buddy under Saved buddies, then tap + to save a recipe for them."}
@@ -456,20 +451,22 @@ export default function FriendRecipePage() {
                               </div>
                             ) : null}
                             <div className="tb-recipe-actions">
-                              <motion.button
-                                type="button"
-                                className="tb-submit-wrap"
-                                onClick={() => navigate(`/friend-recipe/edit/${r.id}`)}
-                                whileTap={{ scale: 0.97 }}
-                              >
-                                <ChalkPillFrame
-                                  variant={(i + 1) % 4}
-                                  fillClassName="tb-pill-fill-coral"
-                                  innerClassName="tb-pill-inner tb-pill-inner--md"
+                              {!r.wallRecipeId ? (
+                                <motion.button
+                                  type="button"
+                                  className="tb-submit-wrap"
+                                  onClick={() => navigate(`/friend-recipe/edit/${r.id}`)}
+                                  whileTap={{ scale: 0.97 }}
                                 >
-                                  <span className="tb-pill-text-white--sm share-tech-regular">Edit</span>
-                                </ChalkPillFrame>
-                              </motion.button>
+                                  <ChalkPillFrame
+                                    variant={(i + 1) % 4}
+                                    fillClassName="tb-pill-fill-coral"
+                                    innerClassName="tb-pill-inner tb-pill-inner--md"
+                                  >
+                                    <span className="tb-pill-text-white--sm share-tech-regular">Edit</span>
+                                  </ChalkPillFrame>
+                                </motion.button>
+                              ) : null}
                               <motion.button
                                 type="button"
                                 onClick={() => handleRemove(r)}
@@ -489,7 +486,7 @@ export default function FriendRecipePage() {
                             aria-expanded={false}
                             onClick={() => setExpandedRecipeId(r.id)}
                           >
-                            <h3 className="tb-recipe-h3 share-tech-bold">{r.recipeName}</h3>
+                            <h3 className="tb-recipe-h3 tb-recipe-h3--pad share-tech-bold">{r.recipeName}</h3>
                             {accIds.length > 0 ? (
                               <AllergenBadgeRow
                                 mode="accommodates"
@@ -510,12 +507,7 @@ export default function FriendRecipePage() {
                               <span className="share-tech-bold tb-text-panel">From · </span>
                               <span className="share-tech-regular tb-opacity-90">{r.friendName}</span>
                             </p>
-                            <p
-                              className="share-tech-regular"
-                              style={{ fontSize: "20pt", lineHeight: 1.375, color: PAGE_INTRO_BLURB_TEXT, opacity: 0.75 }}
-                            >
-                              Tap to open recipe
-                            </p>
+                            <p className="share-tech-regular tb-recipe-card-hint">Tap to open recipe</p>
                           </button>
                         )}
                       </InfoBoxFrame>
@@ -530,7 +522,22 @@ export default function FriendRecipePage() {
                         >
                           <img alt="" src={imgRecipeClose} draggable={false} className="tb-recipe-x-icon" aria-hidden />
                         </motion.button>
-                      ) : null}
+                      ) : (
+                        <motion.button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleRemove(r);
+                          }}
+                          className="tb-chevron-btn"
+                          aria-label={`Remove ${r.recipeName} from saved`}
+                          whileHover={{ scale: 1.06, opacity: 0.88 }}
+                          whileTap={{ scale: 0.94 }}
+                        >
+                          <img alt="" src={imgTrashDelete} draggable={false} className="tb-recipe-x-icon" aria-hidden />
+                        </motion.button>
+                      )}
                     </div>
                   </li>
                 );

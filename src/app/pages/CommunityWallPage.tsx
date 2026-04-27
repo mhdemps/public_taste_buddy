@@ -1,14 +1,20 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation } from "react-router";
 import { motion } from "motion/react";
-import Navigation from "../components/Navigation";
-import GrayTasteHeader from "../components/GrayTasteHeader";
+import StickyTopChrome from "../components/StickyTopChrome";
 import WallBuddyCard from "../components/WallBuddyCard";
 import { InfoBoxFrame } from "../components/InfoBoxFrame";
 import { coerceBuddySvgSelection } from "../buddyAppearance";
 import { PAGE_SHELL_SCROLL } from "../brand";
 import { parseAllergenCsv } from "../allergyTagConfig";
 import { AllergenBadgeRow } from "../components/AllergenBadgeRow";
+import { useAuth } from "../context/AuthContext";
+import {
+  loadSavedCommunityRecipes,
+  removeWallRecipeFromSaved,
+  upsertWallRecipeInSaved,
+} from "../savedCommunityRecipes";
+import { FRIEND_RECIPES_STORAGE_BASE, scopedStorageKey } from "../userStorage";
 import {
   fetchCommunityProfiles,
   fetchWallRecipes,
@@ -16,6 +22,8 @@ import {
   type PublicRecipeRow,
 } from "../../lib/communityApi";
 import imgRecipeClose from "@project-assets/X.svg";
+import imgCheckedOn from "@project-assets/checked box.svg";
+import imgCheckedOff from "@project-assets/checked off.svg";
 
 function displayFromProfile(p: TasteProfileRow): string {
   return (p.display_name?.trim() || "Taste buddy").slice(0, 80);
@@ -23,6 +31,9 @@ function displayFromProfile(p: TasteProfileRow): string {
 
 export default function CommunityWallPage() {
   const location = useLocation();
+  const { user } = useAuth();
+  const friendStorageKey = user ? scopedStorageKey(user.id, FRIEND_RECIPES_STORAGE_BASE) : "";
+  const [savedWallTick, setSavedWallTick] = useState(0);
   const [profiles, setProfiles] = useState<TasteProfileRow[]>([]);
   const [recipes, setRecipes] = useState<PublicRecipeRow[]>([]);
   const [profilesLoadError, setProfilesLoadError] = useState<string | null>(null);
@@ -59,13 +70,31 @@ export default function CommunityWallPage() {
     return m;
   }, [profiles]);
 
+  const savedWallIds = useMemo(() => {
+    const set = new Set<string>();
+    if (!friendStorageKey) return set;
+    for (const e of loadSavedCommunityRecipes(friendStorageKey)) {
+      if (e.wallRecipeId) set.add(e.wallRecipeId);
+    }
+    return set;
+  }, [friendStorageKey, savedWallTick, location.key]);
+
+  const toggleWallRecipeSaved = (recipe: PublicRecipeRow, authorDisplayName: string) => {
+    if (!user) return;
+    if (savedWallIds.has(recipe.id)) {
+      removeWallRecipeFromSaved(user.id, recipe.id);
+    } else {
+      upsertWallRecipeInSaved(user.id, recipe, authorDisplayName);
+    }
+    setSavedWallTick((t) => t + 1);
+  };
+
   const buddyBoardHelp =
-    "Tap a buddy tile to open their public profile. Under Fresh on the Buddy Board, tap a recipe card to read the full recipe.";
+    "Tap a buddy tile to open their public profile. Under Fresh on the Buddy Board, tap a recipe to read it — use the check to save it to Saved recipes and Make.";
 
   return (
     <div className={PAGE_SHELL_SCROLL} data-name="Buddy board">
-      <GrayTasteHeader helpContent={buddyBoardHelp} />
-      <Navigation />
+      <StickyTopChrome helpContent={buddyBoardHelp} />
 
       <motion.div
         className="tb-main-column tb-buddy-board-page"
@@ -146,6 +175,31 @@ export default function CommunityWallPage() {
                         <>
                           <div className="tb-wall-recipe-expanded-top">
                             <div className="tb-wall-recipe-close-row">
+                              {user ? (
+                                <motion.button
+                                  type="button"
+                                  className="tb-wall-recipe-save-inline"
+                                  aria-label={
+                                    savedWallIds.has(r.id)
+                                      ? `Remove ${r.recipe_name} from saved recipes`
+                                      : `Save ${r.recipe_name} to your recipes`
+                                  }
+                                  aria-pressed={savedWallIds.has(r.id)}
+                                  onClick={() => toggleWallRecipeSaved(r, author)}
+                                  whileHover={{ opacity: 0.82 }}
+                                  whileTap={{ scale: 0.94 }}
+                                >
+                                  <img
+                                    alt=""
+                                    src={savedWallIds.has(r.id) ? imgCheckedOff : imgCheckedOn}
+                                    draggable={false}
+                                    className="tb-wall-recipe-save-icon"
+                                    aria-hidden
+                                  />
+                                </motion.button>
+                              ) : (
+                                <span className="tb-wall-recipe-close-row-spacer" aria-hidden />
+                              )}
                               <motion.button
                                 type="button"
                                 onClick={() => setExpandedWallRecipeId(null)}
@@ -210,37 +264,66 @@ export default function CommunityWallPage() {
                           ) : null}
                         </>
                       ) : (
-                        <motion.button
-                          type="button"
-                          className="tb-wall-recipe-collapsed"
-                          aria-expanded={false}
-                          onClick={() => setExpandedWallRecipeId(r.id)}
-                          whileTap={{ scale: 0.99 }}
-                        >
-                          <div className="tb-wall-recipe-media-wrap">
-                            {hasPhoto ? (
+                        <div className="tb-wall-recipe-collapsed-wrap">
+                          <motion.button
+                            type="button"
+                            className="tb-wall-recipe-collapsed"
+                            aria-expanded={false}
+                            onClick={() => setExpandedWallRecipeId(r.id)}
+                            whileTap={{ scale: 0.99 }}
+                          >
+                            <div className="tb-wall-recipe-media-wrap">
+                              {hasPhoto ? (
+                                <img
+                                  src={r.photo_data_url!}
+                                  alt=""
+                                  className="tb-wall-recipe-photo--hero"
+                                  draggable={false}
+                                />
+                              ) : (
+                                <div className="tb-wall-recipe-placeholder" aria-hidden>
+                                  <span className="tb-wall-recipe-placeholder-letter share-tech-bold">
+                                    {r.recipe_name.trim().charAt(0).toUpperCase() || "?"}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                            <p className="share-tech-bold tb-text-coral tb-wall-recipe-title tb-wall-recipe-title--below-media">
+                              {r.recipe_name}
+                            </p>
+                            <p className="share-tech-regular tb-muted-hint tb-wall-recipe-author tb-wall-recipe-author--collapsed">
+                              {author}
+                            </p>
+                            <p className="share-tech-regular tb-wall-recipe-expand-hint">Tap to open recipe →</p>
+                          </motion.button>
+                          {user ? (
+                            <motion.button
+                              type="button"
+                              className="tb-wall-recipe-save-fab"
+                              aria-label={
+                                savedWallIds.has(r.id)
+                                  ? `Remove ${r.recipe_name} from saved recipes`
+                                  : `Save ${r.recipe_name} to your recipes`
+                              }
+                              aria-pressed={savedWallIds.has(r.id)}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                toggleWallRecipeSaved(r, author);
+                              }}
+                              whileHover={{ opacity: 0.88 }}
+                              whileTap={{ scale: 0.92 }}
+                            >
                               <img
-                                src={r.photo_data_url!}
                                 alt=""
-                                className="tb-wall-recipe-photo--hero"
+                                src={savedWallIds.has(r.id) ? imgCheckedOff : imgCheckedOn}
                                 draggable={false}
+                                className="tb-wall-recipe-save-icon"
+                                aria-hidden
                               />
-                            ) : (
-                              <div className="tb-wall-recipe-placeholder" aria-hidden>
-                                <span className="tb-wall-recipe-placeholder-letter share-tech-bold">
-                                  {r.recipe_name.trim().charAt(0).toUpperCase() || "?"}
-                                </span>
-                              </div>
-                            )}
-                          </div>
-                          <p className="share-tech-bold tb-text-coral tb-wall-recipe-title tb-wall-recipe-title--below-media">
-                            {r.recipe_name}
-                          </p>
-                          <p className="share-tech-regular tb-muted-hint tb-wall-recipe-author tb-wall-recipe-author--collapsed">
-                            {author}
-                          </p>
-                          <p className="share-tech-regular tb-wall-recipe-expand-hint">Tap to open recipe →</p>
-                        </motion.button>
+                            </motion.button>
+                          ) : null}
+                        </div>
                       )}
                     </InfoBoxFrame>
                 );

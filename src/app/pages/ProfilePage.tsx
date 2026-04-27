@@ -3,8 +3,7 @@ import { flushSync } from "react-dom";
 import { Link, useLocation, useNavigate } from "react-router";
 import { motion } from "motion/react";
 import { useAuth } from "../context/AuthContext";
-import Navigation from "../components/Navigation";
-import GrayTasteHeader from "../components/GrayTasteHeader";
+import StickyTopChrome from "../components/StickyTopChrome";
 import BuddyAvatar from "../components/BuddyAvatar";
 import { InfoBoxFrame } from "../components/InfoBoxFrame";
 import { ChalkPillFrame } from "../components/ChalkPillFrame";
@@ -23,6 +22,7 @@ import {
   type BuddySmileKey,
 } from "../buddyAppearance";
 import type { MyRecipeEntry } from "./MyRecipesPage";
+import { isRecipeDisplayId, recipeCoverImageSrc, resolveRecipeCoverDataUrl } from "../recipeDisplayAssets";
 import { decodeProfileAllergiesField, encodeProfileAllergiesField, type AllergenTagId } from "../allergyTagConfig";
 import { AllergenIconPicker } from "../components/AllergenIconPicker";
 import {
@@ -62,15 +62,20 @@ function loadMyRecipesFromDisk(storageKey: string): MyRecipeEntry[] {
           !!row && typeof row === "object" && typeof (row as MyRecipeEntry).id === "string"
       )
       .map((row) => {
-        const m = row as MyRecipeEntry & { recipe_photo?: unknown };
+        const m = row as MyRecipeEntry & { recipe_photo?: unknown; recipe_display_id?: unknown };
         const recipe_photo =
           typeof m.recipe_photo === "string" && m.recipe_photo.startsWith("data:image/") ? m.recipe_photo : undefined;
-        const { recipe_photo: _drop, ...rest } = m;
+        const recipe_display_id =
+          typeof m.recipe_display_id === "string" && isRecipeDisplayId(m.recipe_display_id)
+            ? m.recipe_display_id
+            : undefined;
+        const { recipe_photo: _drop, recipe_display_id: _dd, ...rest } = m;
         return {
           ...rest,
           allergies: typeof row.allergies === "string" ? row.allergies : "",
           accommodates: typeof row.accommodates === "string" ? row.accommodates : "",
           ...(recipe_photo ? { recipe_photo } : {}),
+          ...(recipe_display_id ? { recipe_display_id } : {}),
         };
       });
   } catch {
@@ -106,6 +111,7 @@ export default function ProfilePage() {
   const [recipesGiven, setRecipesGiven] = useState("");
 
   const [myRecipes, setMyRecipes] = useState<MyRecipeEntry[]>([]);
+  const [resolvedRecipeCovers, setResolvedRecipeCovers] = useState<Record<string, string | null>>({});
   const [sharedIds, setSharedIds] = useState<Set<string>>(new Set());
   const [wallRecipes, setWallRecipes] = useState<PublicRecipeRow[]>([]);
   const [recipeAction, setRecipeAction] = useState<string | null>(null);
@@ -158,6 +164,20 @@ export default function ProfilePage() {
   useEffect(() => {
     refreshLocalRecipes();
   }, [refreshLocalRecipes]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const pairs = await Promise.all(
+        myRecipes.map(async (r) => [r.id, await resolveRecipeCoverDataUrl(r)] as const)
+      );
+      if (cancelled) return;
+      setResolvedRecipeCovers(Object.fromEntries(pairs));
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [myRecipes]);
 
   useEffect(() => {
     let cancelled = false;
@@ -253,6 +273,7 @@ export default function ProfilePage() {
       setRecipeAction("Already on the Buddy Board.");
       return;
     }
+    const photo_data_url = (await resolveRecipeCoverDataUrl(r)) ?? "";
     const { error } = await insertPublicRecipe({
       user_id: userId,
       source_local_id: r.id,
@@ -262,7 +283,7 @@ export default function ProfilePage() {
       ingredients: r.ingredients,
       directions: r.directions,
       notes: r.notes,
-      photo_data_url: r.recipe_photo && r.recipe_photo.startsWith("data:image/") ? r.recipe_photo : "",
+      photo_data_url,
     });
     if (error) {
       setRecipeAction(error.message);
@@ -324,10 +345,9 @@ export default function ProfilePage() {
 
   return (
     <div className={PAGE_SHELL_SCROLL} data-name="Profile">
-      <GrayTasteHeader helpContent={profileHelp} />
-      <Navigation />
+      <StickyTopChrome helpContent={profileHelp} />
 
-      <div className="tb-main-column">
+      <div className="tb-main-column tb-profile-page">
         <div className="tb-buddy-profile-back-row tb-buddy-profile-back-row--profile">
           <Link to="/" className="tb-submit-wrap">
             <motion.span initial={{ y: -6, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.35 }}>
@@ -347,11 +367,19 @@ export default function ProfilePage() {
           <p className="share-tech-regular tb-text-coral">Loading profile…</p>
         ) : (
           <form className="tb-form-edit-stack tb-form-edit-stack--profile" onSubmit={handleSaveProfile}>
+            <motion.h1
+              className="tb-buddies-title tb-profile-page-title share-tech-bold"
+              initial={{ y: 12, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.4, delay: 0.04 }}
+            >
+              Hey there, {displayName.trim() || defaultDisplayName()}
+            </motion.h1>
             <motion.div
               className="tb-profile-page-buddy-hero tb-profile-page-buddy-hero--main"
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.35 }}
+              transition={{ duration: 0.35, delay: 0.06 }}
             >
               <div className="tb-profile-page-buddy-hero-avatar">
                 <BuddyAvatar
@@ -512,15 +540,15 @@ export default function ProfilePage() {
               const wallRow = wallRecipes.find((w) => w.source_local_id === r.id);
               const wallPh =
                 wallRow?.photo_data_url?.startsWith("data:image/") ? wallRow.photo_data_url : null;
-              const localPh =
-                r.recipe_photo?.startsWith("data:image/") ? r.recipe_photo : null;
+              const localResolved = resolvedRecipeCovers[r.id] ?? null;
               const showSyncCoverToWall =
-                sharedIds.has(r.id) && Boolean(wallRow && localPh && localPh !== wallPh);
+                sharedIds.has(r.id) && Boolean(wallRow && localResolved && localResolved !== wallPh);
+              const coverSrc = recipeCoverImageSrc(r);
               return (
                 <InfoBoxFrame key={r.id} variant={0}>
-                  {r.recipe_photo && r.recipe_photo.startsWith("data:image/") ? (
+                  {coverSrc ? (
                     <img
-                      src={r.recipe_photo}
+                      src={coverSrc}
                       alt=""
                       className="tb-wall-recipe-photo tb-wall-recipe-photo--in-card"
                       draggable={false}
@@ -534,7 +562,7 @@ export default function ProfilePage() {
                       <p className="share-tech-regular" style={{ fontSize: "20pt", marginTop: "0.5rem" }}>
                         On the Buddy Board
                       </p>
-                      {showSyncCoverToWall && wallRow && localPh ? (
+                      {showSyncCoverToWall && wallRow && localResolved ? (
                         <>
                           <p
                             className="share-tech-regular tb-muted-hint"
@@ -549,7 +577,7 @@ export default function ProfilePage() {
                             className="tb-submit-wrap"
                             style={{ marginTop: "0.5rem" }}
                             whileTap={{ scale: 0.97 }}
-                            onClick={() => void syncWallPhoto(wallRow, localPh)}
+                            onClick={() => void syncWallPhoto(wallRow, localResolved)}
                           >
                             <ChalkPillFrame
                               variant={2}
@@ -589,14 +617,11 @@ export default function ProfilePage() {
             <div className="tb-detail-stack">
               {wallRecipes.map((r) => {
                 const localMatch = myRecipes.find((m) => m.id === (r.source_local_id ?? ""));
-                const localPhoto =
-                  localMatch?.recipe_photo && localMatch.recipe_photo.startsWith("data:image/")
-                    ? localMatch.recipe_photo
-                    : null;
+                const localResolved = localMatch ? resolvedRecipeCovers[localMatch.id] ?? null : null;
                 const wallPhoto =
                   r.photo_data_url && r.photo_data_url.startsWith("data:image/") ? r.photo_data_url : null;
-                const coverSrc = wallPhoto ?? localPhoto;
-                const needsPhotoSync = Boolean(localPhoto && localPhoto !== wallPhoto);
+                const coverSrc = wallPhoto ?? (localMatch ? recipeCoverImageSrc(localMatch) : undefined);
+                const needsPhotoSync = Boolean(localResolved && localResolved !== wallPhoto);
                 return (
                   <InfoBoxFrame key={r.id} variant={1}>
                     {coverSrc ? (
@@ -622,7 +647,7 @@ export default function ProfilePage() {
                           className="tb-submit-wrap"
                           style={{ marginTop: "0.5rem" }}
                           whileTap={{ scale: 0.97 }}
-                          onClick={() => localPhoto && void syncWallPhoto(r, localPhoto)}
+                          onClick={() => localResolved && void syncWallPhoto(r, localResolved)}
                         >
                           <ChalkPillFrame
                             variant={2}

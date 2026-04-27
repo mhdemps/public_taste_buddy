@@ -3,11 +3,21 @@
 :root {
   /* Max line length for headings & body copy outside InfoBoxFrame */
   --tb-copy-max: min(calc(100vw - 2.5rem), 30rem);
+  /*
+   * Light blue mat behind recipe illustrations (picker, wall cards, thumbs) — high contrast on warm shell.
+   */
+  --tb-recipe-cover-wash: #d5eaf7;
+  --tb-recipe-cover-inset: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  --tb-recipe-cover-ring: 0 0 0 1px rgba(70, 130, 175, 0.28);
+  /* Recipe cover icon grid: fills panel width but caps tile size */
+  --tb-recipe-picker-cell-max: 3.2rem;
+  --tb-recipe-picker-gap-col: 0.26rem;
 }
 
 @media (min-width: 640px) {
   :root {
     --tb-copy-max: min(calc(100vw - 3rem), 40rem);
+    --tb-recipe-picker-cell-max: 3.4rem;
   }
 }
 
@@ -38,6 +48,33 @@
 .tb-shell--scroll {
   overflow-x: hidden;
   overflow-y: auto;
+}
+
+/* Header + nav stay at top while `.tb-shell--scroll` scrolls — no separate panel; shell gradient shows through */
+.tb-sticky-top-chrome {
+  /* Shared with `.tb-header-line-track` + nav so line logo width matches outer icon edges */
+  --tb-nav-dock-pad-x: 0.65rem;
+  --tb-nav-inner-pad-x: 1.05rem;
+  --tb-nav-icon-w: clamp(1.8rem, 7vw, 2.4rem);
+  --tb-nav-bar-max: min(680px, calc(100vw - 20px));
+
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  flex-shrink: 0;
+  align-self: stretch;
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  background: transparent;
+}
+
+@media (min-width: 640px) {
+  .tb-sticky-top-chrome {
+    --tb-nav-dock-pad-x: 1.15rem;
+    --tb-nav-inner-pad-x: 1.35rem;
+  }
 }
 
 .tb-main-column {
@@ -409,8 +446,9 @@
 }
 
 .tb-allergen-chip--selected .tb-allergen-chip-circle {
-  border-color: #ff3a00;
-  box-shadow: 0 0 0 2px rgba(255, 58, 0, 0.22);
+  border-color: rgba(255, 107, 74, 0.55);
+  background: #ff8e7a;
+  box-shadow: 0 0 0 2px rgba(255, 58, 0, 0.12);
 }
 
 .tb-allergen-chip-circle {
@@ -687,7 +725,8 @@
   aspect-ratio: 4 / 3;
   overflow: hidden;
   border-radius: 12px;
-  background: linear-gradient(145deg, #fff5e6, #ffd4bc);
+  background: var(--tb-recipe-cover-wash);
+  box-shadow: var(--tb-recipe-cover-inset), var(--tb-recipe-cover-ring);
 }
 
 .tb-wall-recipe-media-wrap--expanded {
@@ -697,10 +736,12 @@
 .tb-wall-recipe-photo--hero {
   position: absolute;
   inset: 0;
+  box-sizing: border-box;
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  padding: clamp(0.45rem, 2.5vw, 0.85rem);
+  object-fit: contain;
 }
 
 .tb-wall-recipe-placeholder {
@@ -709,7 +750,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(145deg, #fff5e6, #ffd4bc);
+  background: transparent;
 }
 
 .tb-wall-recipe-placeholder-letter {
@@ -741,9 +782,71 @@
   min-width: 0;
 }
 
+.tb-wall-recipe-collapsed-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.tb-wall-recipe-save-fab {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.65rem;
+  height: 2.65rem;
+  border: 0;
+  padding: 0;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+  cursor: pointer;
+}
+
+.tb-wall-recipe-save-fab:focus-visible {
+  outline: 2px solid rgba(255, 58, 0, 0.45);
+  outline-offset: 2px;
+}
+
+.tb-wall-recipe-save-inline {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.65rem;
+  height: 2.65rem;
+  margin: -0.65rem 0 0 -0.35rem;
+  border: 0;
+  padding: 0;
+  border-radius: 12px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.tb-wall-recipe-save-inline:focus-visible {
+  outline: 2px solid rgba(255, 58, 0, 0.4);
+  outline-offset: 2px;
+  border-radius: 0.375rem;
+}
+
+.tb-wall-recipe-save-icon {
+  width: 2.25rem;
+  height: 2.25rem;
+  display: block;
+  object-fit: contain;
+}
+
+.tb-wall-recipe-close-row-spacer {
+  flex: 1;
+  min-width: 0;
+  pointer-events: none;
+}
+
 .tb-wall-recipe-close-row {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
   align-items: flex-start;
   margin: -0.65rem -0.45rem 0.35rem 0;
 }
@@ -760,6 +863,7 @@
   margin-bottom: 0.5rem;
   font-size: clamp(28pt, 4.6vw, 40pt);
   line-height: 1.1;
+  color: #ff3a00;
 }
 
 .tb-wall-recipe-author {
@@ -906,7 +1010,7 @@
   object-fit: contain;
 }
 
-/* Saved recipes hero — check.svg, hover tilt like whisk */
+/* Saved recipes hero — checked box.svg, hover tilt like whisk */
 .tb-hero-decor-saved-check {
   margin-bottom: 0.75rem;
   height: auto;
@@ -1306,7 +1410,13 @@
 }
 
 .tb-buddy-profile-back-row--profile {
-  margin-bottom: 0;
+  margin-bottom: 2.25rem;
+}
+
+@media (min-width: 640px) {
+  .tb-buddy-profile-back-row--profile {
+    margin-bottom: 2.75rem;
+  }
 }
 
 .tb-buddy-profile-stage {
@@ -1522,7 +1632,7 @@
   padding: 0.35rem 1.1rem 1.5rem;
   border: none;
   border-radius: 0 0 1.35rem 1.35rem;
-  background: linear-gradient(180deg, #fffefb 0%, #fff5f0 55%, #fff8f4 100%);
+  background: #ffffff;
   box-shadow: 0 20px 50px rgba(45, 45, 45, 0.22);
   outline: none;
 }
@@ -1647,7 +1757,26 @@
 .tb-profile-page-buddy-hero--main {
   gap: 0;
   padding-top: 0;
-  margin-top: -0.45rem;
+  margin-top: 0;
+}
+
+/* Profile: same type scale as Buddy Board; pull buddy up tight under the greeting */
+.tb-profile-page-title {
+  margin-top: 0;
+  margin-bottom: -0.65rem;
+  line-height: 1;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+.tb-profile-page .tb-profile-page-buddy-hero--main {
+  margin-top: -2.85rem;
+}
+
+@media (min-width: 640px) {
+  .tb-profile-page .tb-profile-page-buddy-hero--main {
+    margin-top: -3.35rem;
+  }
 }
 
 .tb-profile-page-buddy-hero-avatar {
@@ -1678,8 +1807,12 @@
   width: 100%;
   max-width: var(--tb-copy-max);
   flex-direction: column;
-  gap: 0.75rem;
-  margin-top: 0.5rem;
+  gap: 0.45rem;
+  margin-top: 0.35rem;
+}
+
+.tb-profile-picker-card .tb-infobox-inner {
+  padding: 0.5rem 1rem;
 }
 
 .tb-profile-picker-row {
@@ -1690,8 +1823,8 @@
   display: flex;
   width: 100%;
   align-items: center;
-  gap: 0.85rem;
-  padding: 0.15rem 0.25rem;
+  gap: 0.65rem;
+  padding: 0.05rem 0.15rem;
   border: none;
   background: transparent;
   cursor: pointer;
@@ -1701,44 +1834,100 @@
 }
 
 .tb-profile-picker-avatar--sm {
-  position: relative;
-  width: 4.25rem;
-  min-width: 4.25rem;
-  max-width: 4.25rem;
+  width: 3.65rem;
+  min-width: 3.65rem;
+  max-width: 3.65rem;
   flex-shrink: 0;
+}
+
+.tb-profile-picker-avatar--sm.tb-buddy-avatar-shell {
+  position: relative;
+  inset: auto;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: 50%;
 }
 
 .tb-profile-picker-name {
   flex: 1;
-  font-size: 1.2rem;
-  color: #2d2d2d;
+  font-size: 1.05rem;
+  line-height: 1.2;
+  color: #ff3a00;
 }
 
 .tb-profile-picker-chevron {
   flex-shrink: 0;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   line-height: 1;
   opacity: 0.75;
 }
 
 .tb-profile-picker-expand {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.9rem;
-  margin-top: 0.5rem;
-  padding: 0.6rem 0.35rem 0.1rem;
+  margin-top: 0.3rem;
+  padding: 0.4rem 0.15rem 0.25rem;
   border-top: 1px solid rgba(255, 58, 0, 0.12);
   overflow: hidden;
 }
 
-.tb-profile-picker-expand .tb-profile-page-buddy-hero-avatar {
-  max-width: 20.5rem;
+.tb-profile-picker-expand-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.65rem;
+  width: 100%;
+}
+
+/* Medium preview — not full page-hero height */
+.tb-profile-picker-expand-avatar.tb-buddy-avatar-shell {
+  position: relative;
+  inset: auto;
+  width: 5.5rem;
+  min-width: 5.5rem;
+  max-width: 5.5rem;
+  aspect-ratio: 1;
+  flex-shrink: 0;
+  overflow: hidden;
+  border-radius: 50%;
+}
+
+.tb-profile-picker-expand-cta {
+  flex: 1;
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.3rem;
+}
+
+.tb-profile-picker-signin-btn {
+  width: 100%;
+  max-width: 11.5rem;
+  align-self: flex-start;
 }
 
 .tb-profile-picker-delete-btn {
-  margin-top: 0.15rem;
+  margin-top: 0;
+  align-self: flex-start;
+  font-size: 16pt;
+  line-height: 1.25;
   color: var(--tb-coral, #ff3a00);
+}
+
+@media (min-width: 520px) {
+  .tb-profile-picker-expand-cta {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 0.75rem;
+  }
+
+  .tb-profile-picker-signin-btn {
+    width: auto;
+  }
+
+  .tb-profile-picker-delete-btn {
+    margin-left: auto;
+  }
 }
 
 .tb-choose-profile-picker-delete-error {
@@ -2243,7 +2432,54 @@
   padding: 1rem 1.75rem;
 }
 
-.tb-infobox-inner :is(h3, input, p) {
+/* Default body copy in chalk cards; heads (titles, section labels) overridden below */
+.tb-infobox-inner p {
+  color: #5a5a5a;
+}
+
+.tb-infobox-inner h3.tb-recipe-h3,
+.tb-infobox-inner .tb-panel-heading,
+.tb-infobox-inner .tb-panel-heading--spaced,
+.tb-infobox-inner .tb-recipe-block-label,
+.tb-infobox-inner .tb-field-label-bold,
+.tb-infobox-inner .tb-field-label,
+.tb-infobox-inner .tb-text-coral {
+  color: #ff3a00;
+}
+
+/* Bold lead-in before body copy, e.g. “Contains / notes:” */
+.tb-infobox-inner .tb-pre-wrap .share-tech-bold {
+  color: #ff3a00;
+}
+
+.tb-infobox-inner .tb-pre-wrap {
+  color: #5a5a5a;
+}
+
+.tb-infobox-inner .tb-from-row,
+.tb-infobox-inner .tb-from-row--collapsed {
+  color: #5a5a5a;
+}
+
+.tb-infobox-inner .tb-from-row .tb-text-panel,
+.tb-infobox-inner .tb-from-row--collapsed .tb-text-panel,
+.tb-infobox-inner .tb-from-row--collapsed .tb-opacity-90 {
+  color: inherit;
+  opacity: 1;
+}
+
+.tb-infobox-inner .tb-recipe-card-hint {
+  margin: 0;
+  font-size: 20pt;
+  line-height: 1.375;
+  color: #5a5a5a;
+}
+
+.tb-make-card-hit .tb-recipe-card-hint {
+  font-size: 18pt;
+}
+
+.tb-infobox-inner :is(input, textarea) {
   color: var(--tb-input-fill, #2d2d2d);
 }
 
@@ -2259,6 +2495,7 @@
   border: none;
   background: transparent;
   outline: none;
+  color: var(--tb-input-fill, #2d2d2d);
 }
 
 .tb-infobox-inner textarea {
@@ -2321,9 +2558,9 @@
   position: absolute;
   inset: 0;
   display: block;
-  border: 1px solid rgba(255, 107, 74, 0.35);
-  background: #ff8e7a;
-  box-shadow: none;
+  border: 1px solid rgba(255, 58, 0, 0.18);
+  background: #ffffff;
+  box-shadow: 0 1px 12px rgba(45, 36, 32, 0.06);
 }
 
 .tb-pill-tilt-0 {
@@ -2471,12 +2708,8 @@
   transform: translateX(-2px);
 }
 
-.tb-nav-svg-hidden {
-  position: absolute;
-  overflow: hidden;
-  pointer-events: none;
-  width: 0;
-  height: 0;
+.tb-sticky-top-chrome .tb-nav-dock {
+  flex-shrink: 0;
 }
 
 .tb-nav-dock {
@@ -2486,17 +2719,15 @@
   flex-shrink: 0;
   justify-content: center;
   width: 100%;
-  margin-top: 0.12rem;
+  margin-top: 0.3rem;
   margin-bottom: 0.35rem;
-  padding-left: 0.5rem;
-  padding-right: 0.5rem;
+  padding-left: var(--tb-nav-dock-pad-x, 0.65rem);
+  padding-right: var(--tb-nav-dock-pad-x, 0.65rem);
 }
 
 @media (min-width: 640px) {
   .tb-nav-dock {
     margin-bottom: 0.5rem;
-    padding-left: 1rem;
-    padding-right: 1rem;
   }
 }
 
@@ -2504,17 +2735,9 @@
   position: relative;
   isolation: isolate;
   display: flex;
-  width: 100%;
-  max-width: min(640px, calc(100vw - 16px));
-}
-
-.tb-nav-chalk-bg {
-  position: absolute;
-  inset: 0;
-  border-radius: 9999px;
-  border: 1px solid rgba(255, 107, 74, 0.35);
-  background: #ff8e7a;
-  box-shadow: 0 3px 14px rgba(45, 36, 32, 0.14);
+  box-sizing: border-box;
+  /* `min(100%, …)` lets `.tb-nav-dock`’s `justify-content: center` truly center the bar when the viewport is wider than the cap */
+  width: min(100%, var(--tb-nav-bar-max, min(680px, calc(100vw - 20px))));
 }
 
 .tb-nav-inner {
@@ -2522,53 +2745,23 @@
   z-index: 10;
   display: grid;
   width: 100%;
-  grid-template-columns: minmax(0, 3fr) minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   align-items: start;
-  column-gap: 0.2rem;
+  justify-items: center;
+  column-gap: 0;
   row-gap: 0;
-  padding: 0.35rem 0.45rem 0.5rem;
+  padding: 0.13rem var(--tb-nav-inner-pad-x, 1.05rem) 0.58rem;
 }
 
 @media (min-width: 640px) {
   .tb-nav-inner {
-    padding: 0.4rem 0.85rem 0.55rem;
-    column-gap: 0.28rem;
+    padding: 0.14rem var(--tb-nav-inner-pad-x, 1.35rem) 0.62rem;
   }
-}
-
-.tb-nav-trio {
-  display: grid;
-  min-width: 0;
-  align-items: start;
-  grid-template-columns: 1fr auto 1fr;
-  column-gap: 0.2rem;
-}
-
-@media (min-width: 640px) {
-  .tb-nav-trio {
-    column-gap: 0.28rem;
-  }
-}
-
-.tb-nav-trio > .tb-nav-slot:nth-child(1) {
-  justify-content: flex-end;
-}
-
-.tb-nav-trio > .tb-nav-slot:nth-child(2) {
-  justify-content: center;
-}
-
-.tb-nav-trio > .tb-nav-slot:nth-child(3) {
-  justify-content: flex-start;
-}
-
-.tb-nav-trio > .tb-nav-slot:nth-child(2) .tb-nav-item {
-  width: max-content;
-  max-width: 100%;
 }
 
 .tb-nav-slot {
   display: flex;
+  width: 100%;
   min-width: 0;
   justify-content: center;
 }
@@ -2576,17 +2769,17 @@
 .tb-nav-item {
   position: relative;
   display: flex;
-  width: 100%;
+  width: max-content;
   max-width: 100%;
   min-width: 0;
   cursor: pointer;
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  gap: 0.18rem;
+  gap: 0.07rem;
   border: 0;
   background: transparent;
-  padding: 0.08rem 0.05rem 0;
+  padding: 0.06rem 0.04rem 0;
   outline: none;
   transition: transform 200ms ease;
 }
@@ -2612,7 +2805,7 @@
   position: relative;
   display: flex;
   height: clamp(1.6rem, 6.2vw, 2.05rem);
-  width: clamp(1.8rem, 7vw, 2.4rem);
+  width: var(--tb-nav-icon-w, clamp(1.8rem, 7vw, 2.4rem));
   flex-shrink: 0;
   align-items: center;
   justify-content: center;
@@ -2649,31 +2842,44 @@
   max-height: none;
   object-fit: contain;
   object-position: center;
-  transition: filter 160ms ease;
+  transition: filter 160ms ease, opacity 160ms ease;
+  filter: brightness(0) saturate(100%);
+  opacity: 0.92;
 }
 
 .tb-nav-item:hover .tb-nav-icon-frame .tb-nav-icon-img,
 .tb-nav-item--active .tb-nav-icon-frame .tb-nav-icon-img {
   filter: brightness(0) saturate(100%) invert(32%) sepia(93%) saturate(4200%) hue-rotate(347deg) brightness(101%)
     contrast(104%);
+  opacity: 1;
 }
 
 .tb-nav-label {
   width: 100%;
-  padding: 0 0.05rem;
+  max-width: 100%;
+  padding: 0 0.04rem;
   text-align: center;
-  font-size: clamp(0.56rem, 2.35vw, 0.72rem);
-  line-height: 1.12;
-  letter-spacing: 0.01em;
-  color: rgba(45, 36, 32, 0.88);
-  word-break: break-word;
-  hyphens: auto;
+  font-size: clamp(0.54rem, 2.2vw, 0.7rem);
+  line-height: 1.15;
+  letter-spacing: 0.02em;
+  color: #1a1a1a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   transition: color 160ms ease;
+}
+
+@media (max-width: 360px) {
+  .tb-nav-label {
+    white-space: normal;
+    line-height: 1.1;
+    text-overflow: clip;
+  }
 }
 
 @media (min-width: 640px) {
   .tb-nav-label {
-    font-size: clamp(0.62rem, 1.85vw, 0.78rem);
+    font-size: clamp(0.6rem, 1.75vw, 0.76rem);
   }
 }
 
@@ -2686,24 +2892,78 @@
   --tb-header-corner-hit-h: calc(var(--tb-header-corner-py) * 2 + var(--tb-header-corner-line-box));
 
   position: relative;
-  display: flex;
+  /* Above `.tb-nav-dock` so the ? help panel isn’t covered when it overlaps the tab bar */
+  z-index: 20;
+  display: grid;
   width: 100%;
   flex-shrink: 0;
-  justify-content: center;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  column-gap: 0.25rem;
   padding-top: max(1.25rem, env(safe-area-inset-top, 0px));
-  padding-bottom: 0.15rem;
+  padding-bottom: 0;
+  padding-inline: max(0.35rem, env(safe-area-inset-left, 0px)) max(0.35rem, env(safe-area-inset-right, 0px));
 }
 
-.tb-header--signed-in .tb-header-brand-block {
-  padding-left: min(4.75rem, 20vw);
-  padding-right: min(4.75rem, 20vw);
+/* Signed-in: ? + Sign out on the top row (under safe-area); full-width line logo centered below */
+.tb-header--signed-in {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  align-items: start;
+  row-gap: 0;
+}
+
+.tb-header-line-bleed {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.tb-header-slot--actions.tb-header-slot--start {
+  grid-row: 1;
+  grid-column: 1;
+  justify-self: start;
+}
+
+.tb-header-slot--actions.tb-header-slot--end {
+  grid-row: 1;
+  grid-column: 2;
+  justify-self: end;
+}
+
+.tb-header-slot--start {
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-start;
+  min-width: 0;
+}
+
+.tb-header-slot--center {
+  display: flex;
+  min-width: 0;
+  width: 100%;
+  /* Match `.tb-nav-bar` usable width (centered in dock with `--tb-nav-dock-pad-x`) */
+  max-width: min(
+    var(--tb-nav-bar-max, min(680px, calc(100vw - 20px))),
+    calc(100vw - 2 * var(--tb-nav-dock-pad-x, 0.65rem))
+  );
+  flex-direction: column;
+  /* Stretch so `.tb-header-line-track` is full nav-inner width — logo center = Buddies (middle) icon */
+  align-items: stretch;
+  justify-self: stretch;
   box-sizing: border-box;
 }
 
-/* Room for ? help (top-left) when signed out — e.g. Who’s Cooking */
-.tb-header--has-help:not(.tb-header--signed-in) .tb-header-brand-block {
-  padding-left: min(4.75rem, 20vw);
-  box-sizing: border-box;
+.tb-header-slot--end {
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-start;
+  min-width: 0;
 }
 
 .tb-header-brand-block {
@@ -2713,47 +2973,8 @@
   align-items: center;
 }
 
-.tb-header-welcome {
-  margin: 0.95rem 0 0;
-  max-width: min(100%, 22rem);
-  text-align: center;
-  font-size: clamp(0.95rem, 3.2vw, 1.15rem);
-  line-height: 1.35;
-  color: #ff3a00;
-}
-
-@keyframes tb-header-welcome-fade-in {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.tb-header-welcome--fade-in {
-  animation: tb-header-welcome-fade-in 0.65s ease-out forwards;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .tb-header-welcome--fade-in {
-    animation: none;
-    opacity: 1;
-    transform: none;
-  }
-}
-
-.tb-header-welcome-name {
-  word-break: break-word;
-  color: inherit;
-}
-
 .tb-header-sign-out {
-  position: absolute;
-  top: max(0.65rem, env(safe-area-inset-top, 0px));
-  right: 0;
+  position: relative;
   z-index: 2;
   max-width: min(11rem, 42vw);
   border: 0;
@@ -2776,10 +2997,8 @@
 }
 
 .tb-header-help-wrap {
-  position: absolute;
-  top: max(0.65rem, env(safe-area-inset-top, 0px));
-  left: 0;
-  z-index: 25;
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -2813,6 +3032,10 @@
 }
 
 .tb-header-help-panel {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 2;
   margin-top: 0.2rem;
   box-sizing: border-box;
   width: min(22rem, calc(100vw - 1.25rem));
@@ -2840,14 +3063,46 @@
   width: min(300px, 88vw);
   max-width: 100%;
   object-fit: contain;
+  margin-top: clamp(-2.35rem, -11vw, -1.25rem);
 }
 
-/* Horizontal wordmark when signed in (assets/Line Logo.svg) */
+/* Same width as `.tb-nav-bar` in `.tb-nav-dock` — inner padding matches `.tb-nav-inner` */
+.tb-header-line-track {
+  box-sizing: border-box;
+  width: 100%;
+  flex: 0 0 auto;
+  align-self: stretch;
+  max-width: min(
+    var(--tb-nav-bar-max, min(680px, calc(100vw - 20px))),
+    calc(100vw - 2 * var(--tb-nav-dock-pad-x, 0.65rem))
+  );
+  margin-inline: auto;
+  padding-inline: var(--tb-nav-inner-pad-x, 1.05rem);
+}
+
+/* Centered under `.tb-header-line-bleed` flex parent — no reliance on 3-column grid */
+.tb-header-line-bleed .tb-header-line-track {
+  align-self: center;
+  width: min(
+    100%,
+    var(--tb-nav-bar-max, min(680px, calc(100vw - 20px))),
+    calc(100vw - 2 * var(--tb-nav-dock-pad-x, 0.65rem))
+  );
+}
+
+/*
+ * Line logo: width = outer edge of Profile icon → outer edge of Make icon (80%·C + icon in
+ * `.tb-nav-inner` content width C), centered so Buddies stays the midpoint; matches nav bar span.
+ */
 .tb-header-logo--line {
-  width: min(420px, 92vw);
-  max-height: min(3.1rem, 9vw);
+  display: block;
+  width: calc(80% + var(--tb-nav-icon-w, clamp(1.8rem, 7vw, 2.4rem)));
+  max-width: none;
+  height: auto;
+  max-height: min(11.25rem, 58vw);
+  margin-inline: auto;
   object-fit: contain;
-  object-position: center;
+  object-position: center center;
 }
 
 /* Sign-in — winking Taste Buddy before “Who’s Cooking” */
@@ -2902,8 +3157,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.75rem;
-  margin-top: 1.5rem;
+  gap: 0.55rem;
+  margin-top: 1rem;
   width: 100%;
   max-width: var(--tb-copy-max);
 }
@@ -2912,10 +3167,14 @@
   width: 100%;
 }
 
+.tb-choose-profile-add-card .tb-infobox-inner {
+  padding: 0.7rem 1.1rem;
+}
+
 .tb-choose-profile-add-hint {
-  margin: 0.5rem 0 0;
-  font-size: 15pt;
-  line-height: 1.35;
+  margin: 0.35rem 0 0;
+  font-size: 14pt;
+  line-height: 1.3;
 }
 
 .tb-choose-profile-add-error {
@@ -2949,7 +3208,7 @@
   overflow: auto;
   padding: 1.25rem 1.35rem 1.35rem;
   border-radius: 18px;
-  background: linear-gradient(165deg, #fff9f4 0%, #ffe8d8 100%);
+  background: #ffffff;
   box-shadow: 0 20px 50px rgba(45, 45, 45, 0.22);
 }
 
@@ -3040,6 +3299,34 @@
   max-width: 100%;
   user-select: none;
   object-fit: contain;
+}
+
+/* Make hub landing: large centered whisk, title tucked close underneath */
+.tb-make-hub-intro {
+  display: flex;
+  width: 100%;
+  max-width: var(--tb-copy-max);
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  margin-bottom: 0.5rem;
+  text-align: center;
+}
+
+/* Same scale as Saved recipes hero checked box (`.tb-hero-decor-saved-check`) */
+.tb-make-hub-whisk {
+  width: min(112px, 30vw);
+  max-width: 100%;
+  margin-bottom: 0;
+}
+
+.tb-make-hub-title {
+  margin-top: 0;
+  margin-bottom: 0.65rem;
+}
+
+.tb-make-hub-section {
+  margin-top: -0.2rem;
 }
 
 .tb-make-cook-header {
@@ -3215,8 +3502,8 @@
 .tb-make-badge {
   flex-shrink: 0;
   font-size: 14pt;
-  color: #ff3a00;
-  background: rgba(255, 58, 0, 0.1);
+  color: #5a5a5a;
+  background: rgba(90, 90, 90, 0.1);
   padding: 0.2rem 0.55rem;
   border-radius: 999px;
 }
@@ -3225,6 +3512,7 @@
   margin-top: 0.25rem;
   margin-bottom: 0.35rem;
   font-size: 17pt;
+  color: #5a5a5a;
 }
 
 .tb-make-card-hit {
@@ -3382,6 +3670,97 @@
   cursor: pointer;
 }
 
+/* Recipe illustration picker — add / edit recipe */
+.tb-recipe-cover-picker-heading {
+  margin: 0 0 0.28rem;
+}
+
+.tb-recipe-display-picker-panel {
+  margin: -0.15rem -0.25rem 0;
+  padding: 0.45rem 0.45rem 0.42rem;
+  border-radius: 12px;
+  background: var(--tb-recipe-cover-wash);
+  box-shadow: var(--tb-recipe-cover-inset), var(--tb-recipe-cover-ring);
+}
+
+/* Horizontal flow, wraps to a second (and further) row — no sideways scroll */
+.tb-recipe-display-grid {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 0.28rem var(--tb-recipe-picker-gap-col);
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding-bottom: 0;
+  overflow: visible;
+}
+
+.tb-recipe-display-option {
+  display: grid;
+  place-items: stretch;
+  flex: 0 0 auto;
+  width: var(--tb-recipe-picker-cell-max);
+  min-width: var(--tb-recipe-picker-cell-max);
+  aspect-ratio: 1;
+  margin: 0;
+  padding: clamp(0.14rem, 1.5vw, 0.22rem);
+  box-sizing: border-box;
+  border: 1.5px solid rgba(255, 58, 0, 0.22);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.72);
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.tb-recipe-display-option:hover {
+  border-color: rgba(255, 58, 0, 0.45);
+  background: #fff;
+}
+
+.tb-recipe-display-option--selected {
+  border-color: #ff3a00;
+  background: #fff;
+  box-shadow: 0 0 0 1px rgba(255, 58, 0, 0.28);
+}
+
+.tb-recipe-display-option-frame {
+  display: flex;
+  min-height: 0;
+  align-items: center;
+  justify-content: center;
+}
+
+.tb-recipe-display-option-img {
+  display: block;
+  width: 92%;
+  height: 92%;
+  object-fit: contain;
+}
+
+.tb-recipe-display-picker-panel .tb-recipe-photo-remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 0.32rem;
+  margin-inline: auto;
+  width: 2.6rem;
+  height: 2.6rem;
+  padding: 0;
+  border-radius: 10px;
+}
+
+.tb-recipe-display-clear-icon {
+  display: block;
+  width: 1.35rem;
+  height: 1.35rem;
+  object-fit: contain;
+}
+
 /* Recipe photo — editor preview & taste wall cards */
 .tb-recipe-photo-preview-wrap {
   margin-bottom: 0.65rem;
@@ -3426,7 +3805,11 @@
   width: 100%;
   max-height: 260px;
   border-radius: 12px;
-  object-fit: cover;
+  box-sizing: border-box;
+  padding: 0.5rem;
+  object-fit: contain;
+  background: var(--tb-recipe-cover-wash);
+  box-shadow: var(--tb-recipe-cover-inset), var(--tb-recipe-cover-ring);
 }
 
 .tb-wall-recipe-photo--in-card {
@@ -3445,7 +3828,11 @@
   height: 3.25rem;
   flex-shrink: 0;
   border-radius: 10px;
-  object-fit: cover;
+  box-sizing: border-box;
+  padding: 0.2rem;
+  object-fit: contain;
+  background: var(--tb-recipe-cover-wash);
+  box-shadow: var(--tb-recipe-cover-inset), var(--tb-recipe-cover-ring);
 }
 
 .tb-recipe-collapsed-title-row .tb-recipe-h3 {

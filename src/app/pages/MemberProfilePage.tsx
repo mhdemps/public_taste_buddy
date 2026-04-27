@@ -2,8 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { motion } from "motion/react";
 import { useAuth } from "../context/AuthContext";
-import Navigation from "../components/Navigation";
-import GrayTasteHeader from "../components/GrayTasteHeader";
+import StickyTopChrome from "../components/StickyTopChrome";
 import { InfoBoxFrame } from "../components/InfoBoxFrame";
 import { ChalkPillFrame } from "../components/ChalkPillFrame";
 import { PAGE_SHELL, PAGE_SHELL_SCROLL } from "../brand";
@@ -61,8 +60,7 @@ export default function MemberProfilePage() {
   if (!loading && !profile && !error) {
     return (
       <div className={PAGE_SHELL}>
-        <GrayTasteHeader />
-        <Navigation />
+        <StickyTopChrome />
         <div className="tb-not-found-stack">
           <p className="share-tech-bold tb-text-coral">Profile not found</p>
           <motion.button type="button" onClick={() => navigate("/")} className="tb-submit-wrap" whileTap={{ scale: 0.98 }}>
@@ -89,8 +87,7 @@ export default function MemberProfilePage() {
 
   return (
     <div className={PAGE_SHELL_SCROLL} data-name="Member profile">
-      <GrayTasteHeader helpContent="Public taste profile on the Buddy Board — how this person chose to show up for the community. Use Edit my profile when it’s you." />
-      <Navigation />
+      <StickyTopChrome helpContent="Public taste profile on the Buddy Board — how this person chose to show up for the community. Use Edit my profile when it’s you." />
 
       <div className="tb-main-column">
         <div className="tb-buddy-profile-back-row">
@@ -243,7 +240,7 @@ export default function MemberProfilePage() {
                       </p>
                       {accIds.length > 0 ? (
                         <div style={{ marginBottom: "0.5rem" }}>
-                          <p className="share-tech-bold" style={{ fontSize: "18pt", marginBottom: "0.25rem" }}>
+                          <p className="tb-panel-heading share-tech-bold" style={{ marginBottom: "0.25rem" }}>
                             Free from
                           </p>
                           <AllergenBadgeRow mode="accommodates" ids={accIds} ariaLabel="Recipe is free from" />

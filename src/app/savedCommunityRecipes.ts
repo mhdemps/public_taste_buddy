@@ -1,3 +1,4 @@
+import type { PublicRecipeRow } from "../lib/communityApi";
 import { FRIEND_RECIPES_STORAGE_BASE, scopedStorageKey } from "./userStorage";
 
 const LEGACY_FRIEND_RECIPES_KEY = "tasteBuddyFriendRecipes";
@@ -63,13 +64,47 @@ export function persistSavedCommunityRecipes(storageKey: string, list: SavedComm
   localStorage.setItem(storageKey, JSON.stringify(list));
 }
 
-/** Removes legacy rows copied from the Buddy Board (wall); persists if anything was dropped. */
-export function purgeWallSourcedSavedRecipes(userId: string): SavedCommunityRecipeEntry[] {
-  const key = scopedStorageKey(userId, FRIEND_RECIPES_STORAGE_BASE);
-  const list = loadSavedCommunityRecipes(key);
-  const filtered = list.filter((r) => !r.wallRecipeId);
-  if (filtered.length !== list.length) {
-    persistSavedCommunityRecipes(key, filtered);
+export function savedWallRecipeLocalId(wallRecipeId: string): string {
+  return `wall-saved-${wallRecipeId}`;
+}
+
+export function upsertWallRecipeInSaved(
+  userId: string,
+  recipe: PublicRecipeRow,
+  authorDisplayName: string
+): SavedCommunityRecipeEntry {
+  const storageKey = scopedStorageKey(userId, FRIEND_RECIPES_STORAGE_BASE);
+  const list = loadSavedCommunityRecipes(storageKey);
+  const id = savedWallRecipeLocalId(recipe.id);
+  const photo =
+    recipe.photo_data_url?.startsWith("data:image/") ? recipe.photo_data_url : undefined;
+  const entry: SavedCommunityRecipeEntry = {
+    id,
+    wallRecipeId: recipe.id,
+    friendName: authorDisplayName,
+    recipeName: recipe.recipe_name.trim(),
+    allergies: recipe.allergies.trim(),
+    accommodates: recipe.accommodates?.trim() ?? "",
+    ingredients: recipe.ingredients.trim(),
+    directions: recipe.directions.trim(),
+    notes: recipe.notes.trim(),
+    recipe_photo: photo,
+    savedAt: new Date().toISOString(),
+  };
+  const idx = list.findIndex((r) => r.id === id || r.wallRecipeId === recipe.id);
+  if (idx >= 0) {
+    list[idx] = { ...list[idx], ...entry, savedAt: new Date().toISOString() };
+  } else {
+    list.push(entry);
   }
-  return filtered;
+  persistSavedCommunityRecipes(storageKey, list);
+  return entry;
+}
+
+export function removeWallRecipeFromSaved(userId: string, wallRecipeId: string): void {
+  const storageKey = scopedStorageKey(userId, FRIEND_RECIPES_STORAGE_BASE);
+  const list = loadSavedCommunityRecipes(storageKey).filter(
+    (r) => r.wallRecipeId !== wallRecipeId && r.id !== savedWallRecipeLocalId(wallRecipeId)
+  );
+  persistSavedCommunityRecipes(storageKey, list);
 }

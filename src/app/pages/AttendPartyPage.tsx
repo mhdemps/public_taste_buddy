@@ -4,8 +4,7 @@ import { motion } from "motion/react";
 import { useAuth } from "../context/AuthContext";
 import { useBuddies } from "../context/BuddiesContext";
 import { PARTY_PLANS_STORAGE_BASE, scopedStorageKey } from "../userStorage";
-import Navigation from "../components/Navigation";
-import GrayTasteHeader from "../components/GrayTasteHeader";
+import StickyTopChrome from "../components/StickyTopChrome";
 import { InfoBoxFrame } from "../components/InfoBoxFrame";
 import { ChalkPillFrame } from "../components/ChalkPillFrame";
 import {
@@ -264,8 +263,7 @@ export default function AttendPartyPage() {
 
     return (
       <div className={PAGE_SHELL_SCROLL}>
-        <GrayTasteHeader helpContent={partyFormHelp} />
-        <Navigation />
+        <StickyTopChrome helpContent={partyFormHelp} />
 
         <motion.div
           className="tb-main-column"
@@ -425,8 +423,7 @@ export default function AttendPartyPage() {
 
   return (
     <div className={PAGE_SHELL_SCROLL}>
-      <GrayTasteHeader helpContent="Plan get-togethers and see who’s hosting — tied to profiles in Saved buddies." />
-      <Navigation />
+      <StickyTopChrome helpContent="Plan get-togethers and see who’s hosting — tied to profiles in Saved buddies." />
 
       <motion.div
         className="tb-main-column"

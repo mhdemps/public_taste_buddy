@@ -2,12 +2,11 @@ import { useState, useCallback, useEffect } from "react";
 import { useLocation, useNavigate, useParams } from "react-router";
 import { motion } from "motion/react";
 import { useAuth } from "../context/AuthContext";
-import Navigation from "../components/Navigation";
 import { MY_RECIPES_STORAGE_BASE, scopedStorageKey } from "../userStorage";
-import GrayTasteHeader from "../components/GrayTasteHeader";
+import StickyTopChrome from "../components/StickyTopChrome";
 import { InfoBoxFrame } from "../components/InfoBoxFrame";
 import { ChalkPillFrame } from "../components/ChalkPillFrame";
-import { PAGE_INTRO_BLURB_TEXT, PAGE_SHELL_SCROLL } from "../brand";
+import { PAGE_SHELL_SCROLL } from "../brand";
 import {
   formatAllergenCsv,
   parseAllergenCsv,
@@ -24,7 +23,11 @@ import {
   newIngredientRow,
   type IngredientRow,
 } from "../recipeLineEditorUtils";
-import { compressImageFileToDataUrl } from "../recipePhoto";
+import {
+  isRecipeDisplayId,
+  RECIPE_DISPLAY_OPTIONS,
+  recipeCoverImageSrc,
+} from "../recipeDisplayAssets";
 import imgRecipeClose from "@project-assets/X.svg";
 import imgTrashDelete from "@project-assets/Trash.svg";
 import imgAddRecipe from "@project-assets/madison-is-pretty.png";
@@ -41,8 +44,10 @@ export type MyRecipeEntry = {
   ingredients: string;
   directions: string;
   notes: string;
-  /** Compressed JPEG data URL; included when you post the recipe to the taste wall. */
+  /** Compressed JPEG data URL (legacy uploads); optional if `recipe_display_id` is set. */
   recipe_photo?: string;
+  /** Bundled food illustration key for the Buddy Board cover. */
+  recipe_display_id?: string;
   savedAt: string;
 };
 
@@ -75,15 +80,20 @@ function loadRecipes(storageKey: string): MyRecipeEntry[] {
           typeof (row as MyRecipeEntry).id === "string"
       )
       .map((row) => {
-        const m = row as MyRecipeEntry & { recipe_photo?: unknown };
+        const m = row as MyRecipeEntry & { recipe_photo?: unknown; recipe_display_id?: unknown };
         const recipe_photo =
           typeof m.recipe_photo === "string" && m.recipe_photo.startsWith("data:image/") ? m.recipe_photo : undefined;
-        const { recipe_photo: _drop, ...rest } = m;
+        const recipe_display_id =
+          typeof m.recipe_display_id === "string" && isRecipeDisplayId(m.recipe_display_id)
+            ? m.recipe_display_id
+            : undefined;
+        const { recipe_photo: _drop, recipe_display_id: _dd, ...rest } = m;
         return {
           ...rest,
           allergies: typeof row.allergies === "string" ? row.allergies : "",
           accommodates: typeof (row as MyRecipeEntry).accommodates === "string" ? (row as MyRecipeEntry).accommodates : "",
           ...(recipe_photo ? { recipe_photo } : {}),
+          ...(recipe_display_id ? { recipe_display_id } : {}),
         };
       });
   } catch {
@@ -100,9 +110,7 @@ function persistRecipes(storageKey: string, list: MyRecipeEntry[]) {
     localStorage.setItem(storageKey, JSON.stringify(list));
   } catch (e) {
     if (e instanceof DOMException && e.name === "QuotaExceededError") {
-      window.alert(
-        "Could not save — browser storage is full. Try a smaller photo, or remove old recipes from this device."
-      );
+      window.alert("Could not save — browser storage is full. Try removing old recipes from this device.");
       throw e;
     }
     throw e;
@@ -136,7 +144,9 @@ export default function MyRecipesPage() {
   const [ingredientRows, setIngredientRows] = useState<IngredientRow[]>(() => [newIngredientRow()]);
   const [directionRows, setDirectionRows] = useState<string[]>(() => [""]);
   const [notes, setNotes] = useState("");
+  /** Legacy uploaded cover only; new recipes use `recipeDisplayId`. */
   const [recipePhoto, setRecipePhoto] = useState<string | null>(null);
+  const [recipeDisplayId, setRecipeDisplayId] = useState<string | null>(null);
 
   const refresh = useCallback(() => {
     setSaved(sortNewestFirst(loadRecipes(myRecipesStorageKey)));
@@ -151,6 +161,7 @@ export default function MyRecipesPage() {
       setDirectionRows([""]);
       setNotes("");
       setRecipePhoto(null);
+      setRecipeDisplayId(null);
       return;
     }
     if (!editRecipeId) return;
@@ -165,9 +176,16 @@ export default function MyRecipesPage() {
     setIngredientRows(ingredientRowsFromString(found.ingredients));
     setDirectionRows(directionRowsFromString(found.directions));
     setNotes(found.notes);
-    setRecipePhoto(
-      found.recipe_photo && found.recipe_photo.startsWith("data:image/") ? found.recipe_photo : null
-    );
+    if (found.recipe_display_id && isRecipeDisplayId(found.recipe_display_id)) {
+      setRecipeDisplayId(found.recipe_display_id);
+      setRecipePhoto(null);
+    } else if (found.recipe_photo?.startsWith("data:image/")) {
+      setRecipePhoto(found.recipe_photo);
+      setRecipeDisplayId(null);
+    } else {
+      setRecipePhoto(null);
+      setRecipeDisplayId(null);
+    }
   }, [isAddView, editRecipeId, navigate, myRecipesStorageKey]);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -195,8 +213,16 @@ export default function MyRecipesPage() {
         notes: notes.trim(),
         savedAt: new Date().toISOString(),
       };
-      if (recipePhoto && recipePhoto.startsWith("data:image/")) updated.recipe_photo = recipePhoto;
-      else delete updated.recipe_photo;
+      if (recipeDisplayId && isRecipeDisplayId(recipeDisplayId)) {
+        updated.recipe_display_id = recipeDisplayId;
+        delete updated.recipe_photo;
+      } else if (recipePhoto?.startsWith("data:image/")) {
+        updated.recipe_photo = recipePhoto;
+        delete updated.recipe_display_id;
+      } else {
+        delete updated.recipe_photo;
+        delete updated.recipe_display_id;
+      }
       try {
         persistRecipes(myRecipesStorageKey, list.map((r) => (r.id === editRecipeId ? updated : r)));
       } catch {
@@ -210,6 +236,7 @@ export default function MyRecipesPage() {
       setDirectionRows([""]);
       setNotes("");
       setRecipePhoto(null);
+      setRecipeDisplayId(null);
       navigate("/my-recipes");
       return;
     }
@@ -224,7 +251,11 @@ export default function MyRecipesPage() {
       notes: notes.trim(),
       savedAt: new Date().toISOString(),
     };
-    if (recipePhoto && recipePhoto.startsWith("data:image/")) row.recipe_photo = recipePhoto;
+    if (recipeDisplayId && isRecipeDisplayId(recipeDisplayId)) {
+      row.recipe_display_id = recipeDisplayId;
+    } else if (recipePhoto?.startsWith("data:image/")) {
+      row.recipe_photo = recipePhoto;
+    }
     list.push(row);
     try {
       persistRecipes(myRecipesStorageKey, list);
@@ -240,6 +271,7 @@ export default function MyRecipesPage() {
     setDirectionRows([""]);
     setNotes("");
     setRecipePhoto(null);
+    setRecipeDisplayId(null);
     navigate("/my-recipes");
   };
 
@@ -257,8 +289,7 @@ export default function MyRecipesPage() {
 
     return (
       <div className={PAGE_SHELL_SCROLL}>
-        <GrayTasteHeader helpContent={formHelp} />
-        <Navigation />
+        <StickyTopChrome helpContent={formHelp} />
 
         <motion.div
           className="tb-main-column"
@@ -350,42 +381,59 @@ export default function MyRecipesPage() {
             />
 
             <InfoBoxFrame variant={1}>
-              <p className="tb-field-label-bold share-tech-bold">Recipe photo (optional)</p>
-              <p className="tb-recipe-lines-hint share-tech-regular">
-                Appears on the Buddy Board when you post this recipe from your profile. Large photos are resized automatically.
+              <p
+                id="my-recipe-cover-picker-label"
+                className="tb-field-label-bold share-tech-bold tb-recipe-cover-picker-heading"
+              >
+                Recipe cover illustration
               </p>
-              {recipePhoto ? (
-                <div className="tb-recipe-photo-preview-wrap">
-                  <img src={recipePhoto} alt="" className="tb-recipe-photo-preview" draggable={false} />
+              <div
+                className="tb-recipe-display-picker-panel"
+                role="group"
+                aria-labelledby="my-recipe-cover-picker-label"
+              >
+                {recipePhoto ? (
+                  <div className="tb-recipe-photo-preview-wrap">
+                    <img src={recipePhoto} alt="" className="tb-recipe-photo-preview" draggable={false} />
+                  </div>
+                ) : null}
+                <div className="tb-recipe-display-grid">
+                  {RECIPE_DISPLAY_OPTIONS.map((opt) => {
+                    const selected = recipeDisplayId === opt.id;
+                    return (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        className={`tb-recipe-display-option${selected ? " tb-recipe-display-option--selected" : ""}`}
+                        onClick={() => {
+                          setRecipeDisplayId(opt.id);
+                          setRecipePhoto(null);
+                        }}
+                        aria-pressed={selected}
+                        aria-label={opt.label}
+                      >
+                        <span className="tb-recipe-display-option-frame">
+                          <img src={opt.src} alt="" className="tb-recipe-display-option-img" draggable={false} />
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+                {recipeDisplayId || recipePhoto ? (
                   <motion.button
                     type="button"
-                    className="tb-recipe-photo-remove share-tech-bold"
-                    onClick={() => setRecipePhoto(null)}
+                    className="tb-recipe-photo-remove"
+                    onClick={() => {
+                      setRecipeDisplayId(null);
+                      setRecipePhoto(null);
+                    }}
                     whileTap={{ scale: 0.97 }}
+                    aria-label="Clear recipe picture"
                   >
-                    Remove photo
+                    <img alt="" src={imgRecipeClose} draggable={false} className="tb-recipe-display-clear-icon" aria-hidden />
                   </motion.button>
-                </div>
-              ) : null}
-              <label className="tb-recipe-photo-file-label share-tech-bold">
-                <span className="tb-recipe-photo-file-btn share-tech-regular">Choose image</span>
-                <input
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp,image/gif"
-                  className="tb-visually-hidden"
-                  onChange={async (e) => {
-                    const f = e.target.files?.[0];
-                    e.target.value = "";
-                    if (!f) return;
-                    const url = await compressImageFileToDataUrl(f);
-                    if (!url) {
-                      window.alert("Could not use that image. Try a JPG or PNG under 12 MB.");
-                      return;
-                    }
-                    setRecipePhoto(url);
-                  }}
-                />
-              </label>
+                ) : null}
+              </div>
             </InfoBoxFrame>
 
             <InfoBoxFrame variant={0}>
@@ -427,8 +475,7 @@ export default function MyRecipesPage() {
 
   return (
     <div className={PAGE_SHELL_SCROLL}>
-      <GrayTasteHeader helpContent="Tap a recipe to open it, or + to add a new one." />
-      <Navigation />
+      <StickyTopChrome helpContent="Tap a recipe to open it, or + to add a new one." />
 
       <motion.div
         className="tb-main-column"
@@ -479,15 +526,16 @@ export default function MyRecipesPage() {
                 const isExpanded = expandedRecipeId === r.id;
                 const allergyList = parseAllergyTags(r.allergies);
                 const accIds = parseAllergenCsv(r.accommodates ?? "");
+                const coverSrc = recipeCoverImageSrc(r);
                 return (
                   <li key={r.id} className="tb-li-relative">
                     <div className="tb-card-relative">
                       <InfoBoxFrame variant={i % 4}>
                         {isExpanded ? (
                           <>
-                            {r.recipe_photo && r.recipe_photo.startsWith("data:image/") ? (
+                            {coverSrc ? (
                               <img
-                                src={r.recipe_photo}
+                                src={coverSrc}
                                 alt=""
                                 className="tb-wall-recipe-photo tb-wall-recipe-photo--in-card"
                                 draggable={false}
@@ -569,9 +617,9 @@ export default function MyRecipesPage() {
                             onClick={() => setExpandedRecipeId(r.id)}
                           >
                             <div className="tb-recipe-collapsed-title-row">
-                              {r.recipe_photo && r.recipe_photo.startsWith("data:image/") ? (
+                              {coverSrc ? (
                                 <img
-                                  src={r.recipe_photo}
+                                  src={coverSrc}
                                   alt=""
                                   className="tb-recipe-thumb-collapsed"
                                   draggable={false}
@@ -595,12 +643,7 @@ export default function MyRecipesPage() {
                                 ))}
                               </ul>
                             ) : null}
-                            <p
-                              className="share-tech-regular"
-                              style={{ fontSize: "20pt", lineHeight: 1.375, color: PAGE_INTRO_BLURB_TEXT, opacity: 0.75 }}
-                            >
-                              Tap to open recipe
-                            </p>
+                            <p className="share-tech-regular tb-recipe-card-hint">Tap to open recipe</p>
                           </button>
                         )}
                       </InfoBoxFrame>

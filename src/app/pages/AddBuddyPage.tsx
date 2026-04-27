@@ -2,8 +2,7 @@ import { useNavigate } from "react-router";
 import { useState } from "react";
 import { motion } from "motion/react";
 import { useBuddies } from "../context/BuddiesContext";
-import Navigation from "../components/Navigation";
-import GrayTasteHeader from "../components/GrayTasteHeader";
+import StickyTopChrome from "../components/StickyTopChrome";
 import { PAGE_SHELL_SCROLL } from "../brand";
 import { InfoBoxFrame } from "../components/InfoBoxFrame";
 import { ChalkPillFrame } from "../components/ChalkPillFrame";
@@ -39,8 +38,7 @@ export default function AddBuddyPage() {
 
   return (
     <div className={PAGE_SHELL_SCROLL}>
-      <GrayTasteHeader helpContent="This info can show up on their public profile — favorite flavors, what they bring to the table, and dietary notes others should know." />
-      <Navigation />
+      <StickyTopChrome helpContent="This info can show up on their public profile — favorite flavors, what they bring to the table, and dietary notes others should know." />
 
       <motion.div
         className="tb-main-column"

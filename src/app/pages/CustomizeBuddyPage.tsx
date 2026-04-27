@@ -2,8 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { motion } from "motion/react";
 import { useAuth } from "../context/AuthContext";
-import Navigation from "../components/Navigation";
-import GrayTasteHeader from "../components/GrayTasteHeader";
+import StickyTopChrome from "../components/StickyTopChrome";
 import BuddyAvatar from "../components/BuddyAvatar";
 import BuddySvgPickerStrip from "../components/BuddySvgPickerStrip";
 import { ChalkPillFrame } from "../components/ChalkPillFrame";
@@ -209,8 +208,7 @@ export default function CustomizeBuddyPage() {
 
   return (
     <div className={PAGE_SHELL_SCROLL} data-name="Customize buddy">
-      <GrayTasteHeader helpContent="Change your buddy’s backdrop, body, eyes, hat, and expression. Save returns you to Profile with this look on your Buddy Board tile and public profile." />
-      <Navigation />
+      <StickyTopChrome helpContent="Change your buddy’s backdrop, body, eyes, hat, and expression. Save returns you to Profile with this look on your Buddy Board tile and public profile." />
 
       <div className="tb-main-column">
         <div className="tb-buddy-profile-back-row">

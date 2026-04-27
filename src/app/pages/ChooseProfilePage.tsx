@@ -261,7 +261,7 @@ export default function ChooseProfilePage() {
             const open = expandedId === p.id;
             const rowDeleting = pickerDeletingId === p.id;
             return (
-              <InfoBoxFrame key={p.id} variant={0}>
+              <InfoBoxFrame key={p.id} variant={0} className="tb-profile-picker-card">
                 <div className="tb-profile-picker-row">
                   <button
                     type="button"
@@ -292,37 +292,41 @@ export default function ChooseProfilePage() {
                     animate={{ opacity: 1, height: "auto" }}
                     transition={{ duration: 0.25 }}
                   >
-                    <BuddyAvatar
-                      selection={selection}
-                      circleBackgroundIndex={circle}
-                      className="tb-buddy-avatar-shell tb-profile-page-buddy-hero-avatar tb-buddy-profile-circle--page-hero"
-                      innerClassName="tb-buddy-face-inner"
-                      imgClassName="tb-buddy-face-img"
-                      alt={name}
-                    />
-                    <motion.button
-                      type="button"
-                      className="tb-submit-wrap"
-                      aria-label={`Sign in as ${name}`}
-                      whileTap={{ scale: rowDeleting || pickerDeletingId ? 1 : 0.97 }}
-                      disabled={Boolean(pickerDeletingId)}
-                      onClick={() => goToWall(p.id)}
-                    >
-                      <ChalkPillFrame variant={0} fillClassName="tb-pill-fill-coral" innerClassName="tb-pill-inner tb-pill-inner--md">
-                        <span className="tb-pill-text-white share-tech-regular">Sign in</span>
-                      </ChalkPillFrame>
-                    </motion.button>
-                    <motion.button
-                      type="button"
-                      className="tb-link-text share-tech-regular tb-profile-picker-delete-btn"
-                      style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem" }}
-                      whileTap={{ scale: rowDeleting ? 1 : 0.98 }}
-                      disabled={Boolean(pickerDeletingId)}
-                      onClick={() => void handleDeleteProfileFromPicker(p)}
-                    >
-                      <img alt="" src={imgTrashDelete} draggable={false} className="tb-recipe-x-icon" aria-hidden />
-                      {rowDeleting ? "Deleting…" : "Delete this profile"}
-                    </motion.button>
+                    <div className="tb-profile-picker-expand-row">
+                      <BuddyAvatar
+                        selection={selection}
+                        circleBackgroundIndex={circle}
+                        className="tb-buddy-avatar-shell tb-profile-picker-expand-avatar"
+                        innerClassName="tb-buddy-face-inner"
+                        imgClassName="tb-buddy-face-img"
+                        alt={name}
+                      />
+                      <div className="tb-profile-picker-expand-cta">
+                        <motion.button
+                          type="button"
+                          className="tb-submit-wrap tb-profile-picker-signin-btn"
+                          aria-label={`Sign in as ${name}`}
+                          whileTap={{ scale: rowDeleting || pickerDeletingId ? 1 : 0.97 }}
+                          disabled={Boolean(pickerDeletingId)}
+                          onClick={() => goToWall(p.id)}
+                        >
+                          <ChalkPillFrame variant={0} fillClassName="tb-pill-fill-coral" innerClassName="tb-pill-inner tb-pill-inner--md">
+                            <span className="tb-pill-text-white share-tech-regular">Sign in</span>
+                          </ChalkPillFrame>
+                        </motion.button>
+                        <motion.button
+                          type="button"
+                          className="tb-link-text share-tech-regular tb-profile-picker-delete-btn"
+                          style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem" }}
+                          whileTap={{ scale: rowDeleting ? 1 : 0.98 }}
+                          disabled={Boolean(pickerDeletingId)}
+                          onClick={() => void handleDeleteProfileFromPicker(p)}
+                        >
+                          <img alt="" src={imgTrashDelete} draggable={false} className="tb-recipe-x-icon" aria-hidden />
+                          {rowDeleting ? "Deleting…" : "Delete profile"}
+                        </motion.button>
+                      </div>
+                    </div>
                   </motion.div>
                 ) : null}
               </InfoBoxFrame>
@@ -339,7 +343,7 @@ export default function ChooseProfilePage() {
             void handleAddProfile(name);
           }}
         >
-          <InfoBoxFrame variant={2} className="tb-choose-profile-add-fields">
+          <InfoBoxFrame variant={2} className="tb-choose-profile-add-fields tb-choose-profile-add-card">
             <label htmlFor="choose-profile-new-name" className="tb-field-label-bold share-tech-bold">
               Display name
             </label>

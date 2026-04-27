@@ -2,8 +2,7 @@ import { useNavigate } from "react-router";
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { useBuddies, circleForBuddyColor, getBuddyColorIndex } from "../context/BuddiesContext";
-import Navigation from "../components/Navigation";
-import GrayTasteHeader from "../components/GrayTasteHeader";
+import StickyTopChrome from "../components/StickyTopChrome";
 import { PAGE_SHELL_SCROLL } from "../brand";
 import { BUDDY_IN_CIRCLE_H_PCT, BUDDY_IN_CIRCLE_W_PCT } from "../buddyLayout";
 import imgAddBuddy from "@project-assets/madison-is-pretty.png";
@@ -98,8 +97,7 @@ export default function BuddiesPage() {
 
   return (
     <div className={PAGE_SHELL_SCROLL} data-name="Saved buddies">
-      <GrayTasteHeader helpContent="Profiles you keep for parties and community recipes on this device. The live Buddy Board with everyone who has an account is the center tab below. Use + to add another buddy to this list." />
-      <Navigation />
+      <StickyTopChrome helpContent="Profiles you keep for parties and community recipes on this device. The live Buddy Board with everyone who has an account is the center tab below. Use + to add another buddy to this list." />
 
       <motion.div
         className="tb-main-column"

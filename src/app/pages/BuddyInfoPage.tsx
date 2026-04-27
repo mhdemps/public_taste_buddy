@@ -7,10 +7,9 @@ import {
   getBuddyColorIndex,
   type BuddyEditablePayload,
 } from "../context/BuddiesContext";
-import Navigation from "../components/Navigation";
 import { InfoBoxFrame } from "../components/InfoBoxFrame";
 import { ChalkPillFrame } from "../components/ChalkPillFrame";
-import GrayTasteHeader from "../components/GrayTasteHeader";
+import StickyTopChrome from "../components/StickyTopChrome";
 import { PAGE_SHELL, PAGE_SHELL_SCROLL } from "../brand";
 import { BUDDY_IN_CIRCLE_H_PCT, BUDDY_IN_CIRCLE_W_PCT, BUDDY_PROFILE_CIRCLE_MAX } from "../buddyLayout";
 
@@ -62,8 +61,7 @@ export default function BuddyInfoPage() {
   if (!buddy) {
     return (
       <div className={PAGE_SHELL}>
-        <GrayTasteHeader />
-        <Navigation />
+        <StickyTopChrome />
         <div className="tb-not-found-stack">
           <p className="share-tech-bold tb-text-coral">Profile not found</p>
           <motion.button
@@ -116,8 +114,7 @@ export default function BuddyInfoPage() {
 
   return (
     <div className={PAGE_SHELL_SCROLL}>
-      <GrayTasteHeader helpContent={buddyInfoHelp} />
-      <Navigation />
+      <StickyTopChrome helpContent={buddyInfoHelp} />
 
       <div className="tb-main-column">
         <div className="tb-buddy-profile-back-row">

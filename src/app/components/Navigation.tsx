@@ -1,8 +1,8 @@
 import { useLocation, useNavigate } from "react-router";
 import iconChef from "@project-assets/gray chef.png";
 import iconWhisk from "@project-assets/whisk.svg";
-import iconHome from "@project-assets/gray home.png";
-import iconSave from "@project-assets/save.svg";
+import iconHome from "@project-assets/bud button.svg";
+import iconSave from "@project-assets/checked off.svg";
 import iconProfile from "@project-assets/gray buddy.png";
 
 const ICON_TILT_CLASS = [
@@ -45,7 +45,7 @@ const navItems: readonly NavItemDef[] = [
     id: "home",
     icon: iconHome,
     path: "/",
-    label: "Buddy Board",
+    label: "Buddies",
     description: "Buddy board — see buddies and recipes",
   },
   {
@@ -59,8 +59,8 @@ const navItems: readonly NavItemDef[] = [
     id: "whisk",
     icon: iconWhisk,
     path: "/whisk",
-    label: "Cook",
-    description: "Cook along step-by-step with a recipe",
+    label: "Make",
+    description: "Make a recipe step-by-step — ingredients and directions",
   },
 ];
 
@@ -99,38 +99,14 @@ export default function Navigation() {
   const { pathname } = useLocation();
 
   return (
-    <>
-      <svg width={0} height={0} className="tb-nav-svg-hidden" aria-hidden>
-        <defs>
-          <filter id="tb-nav-chalk-edge" x="-22%" y="-22%" width="144%" height="144%">
-            <feTurbulence
-              type="fractalNoise"
-              baseFrequency="0.072"
-              numOctaves={3}
-              seed="11"
-              stitchTiles="stitch"
-              result="chalkNoise"
-            />
-            <feDisplacementMap in="SourceGraphic" in2="chalkNoise" scale={2.5} xChannelSelector="R" yChannelSelector="G" />
-          </filter>
-        </defs>
-      </svg>
-
-      <div className="tb-nav-dock">
-        <nav aria-label="Main" className="tb-nav-bar">
-          <span aria-hidden className="tb-nav-chalk-bg" style={{ filter: "url(#tb-nav-chalk-edge)" }} />
-          <div className="tb-nav-inner">
-            <div className="tb-nav-trio">
-              {navItems.slice(0, 3).map((item, index) => (
-                <NavSlot key={item.id} {...item} index={index} pathname={pathname} navigate={navigate} />
-              ))}
-            </div>
-            {navItems.slice(3).map((item, i) => (
-              <NavSlot key={item.id} {...item} index={i + 3} pathname={pathname} navigate={navigate} />
-            ))}
-          </div>
-        </nav>
-      </div>
-    </>
+    <div className="tb-nav-dock">
+      <nav aria-label="Main" className="tb-nav-bar">
+        <div className="tb-nav-inner">
+          {navItems.map((item, index) => (
+            <NavSlot key={item.id} {...item} index={index} pathname={pathname} navigate={navigate} />
+          ))}
+        </div>
+      </nav>
+    </div>
   );
 }
