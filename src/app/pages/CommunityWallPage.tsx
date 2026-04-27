@@ -29,20 +29,24 @@ export default function CommunityWallPage() {
   const { user } = useAuth();
   const [profiles, setProfiles] = useState<TasteProfileRow[]>([]);
   const [recipes, setRecipes] = useState<PublicRecipeRow[]>([]);
-  const [loadError, setLoadError] = useState<string | null>(null);
+  const [profilesLoadError, setProfilesLoadError] = useState<string | null>(null);
+  const [recipesLoadError, setRecipesLoadError] = useState<string | null>(null);
   const [savedWallIds, setSavedWallIds] = useState<Set<string>>(() => new Set());
   const [saveHint, setSaveHint] = useState<{ recipeId: string; message: string } | null>(null);
   const [expandedWallRecipeId, setExpandedWallRecipeId] = useState<string | null>(null);
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      setLoadError(null);
+      setProfilesLoadError(null);
+      setRecipesLoadError(null);
       const [pRes, rRes] = await Promise.all([fetchCommunityProfiles(), fetchWallRecipes(40)]);
       if (cancelled) return;
-      if (pRes.error) setLoadError(pRes.error.message);
-      else if (rRes.error) setLoadError(rRes.error.message);
-      setProfiles(pRes.data);
-      setRecipes(rRes.data);
+      if (pRes.error) setProfilesLoadError(pRes.error.message);
+      else setProfilesLoadError(null);
+      if (rRes.error) setRecipesLoadError(rRes.error.message);
+      else setRecipesLoadError(null);
+      setProfiles(pRes.data ?? []);
+      setRecipes(rRes.data ?? []);
     })();
     return () => {
       cancelled = true;
@@ -108,11 +112,11 @@ export default function CommunityWallPage() {
           Taste wall
         </motion.h1>
 
-        {loadError && (
+        {profilesLoadError && profiles.length === 0 ? (
           <p className="tb-intro-blurb share-tech-regular" style={{ marginBottom: "1rem" }}>
-            Could not load the wall: {loadError}. Make sure the local JSON API is running with <code className="share-tech-regular">npm run dev</code>.
+            Could not load profiles: {profilesLoadError}. For local dev run <code className="share-tech-regular">npm run dev</code>. On Vercel, check <code className="share-tech-regular">/api/health</code> returns JSON.
           </p>
-        )}
+        ) : null}
 
         <div className="tb-buddies-grid-wrap">
           <motion.div
@@ -134,7 +138,7 @@ export default function CommunityWallPage() {
           </motion.div>
         </div>
 
-        {profiles.length === 0 && !loadError && (
+        {profiles.length === 0 && !profilesLoadError && (
           <p className="tb-intro-blurb share-tech-regular" style={{ marginTop: "0.5rem" }}>
             No profiles yet. Be the first — open{" "}
             <Link to="/profile" className="tb-link-wide">
@@ -143,6 +147,12 @@ export default function CommunityWallPage() {
             and save.
           </p>
         )}
+
+        {recipesLoadError && profiles.length > 0 ? (
+          <p className="tb-intro-blurb share-tech-regular tb-muted-hint" style={{ marginTop: "1rem" }}>
+            Recipes could not load ({recipesLoadError}). Buddy tiles above are fine — try refreshing.
+          </p>
+        ) : null}
 
         {recipes.length > 0 && (
           <>

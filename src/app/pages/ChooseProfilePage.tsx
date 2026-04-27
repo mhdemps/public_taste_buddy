@@ -13,13 +13,7 @@ import {
   type BuddyEyeKey,
   type BuddySvgSelection,
 } from "../buddyAppearance";
-import {
-  createProfile,
-  deleteMyProfile,
-  fetchCommunityProfiles,
-  upsertMyProfile,
-  type TasteProfileRow,
-} from "../../lib/communityApi";
+import { createProfile, deleteMyProfile, fetchCommunityProfiles, type TasteProfileRow } from "../../lib/communityApi";
 import imgTrashDelete from "@project-assets/Trash.svg";
 import { purgeProfileFromThisDevice, SIGN_IN_INTRO_SESSION_STORAGE_KEY } from "../userStorage";
 
@@ -70,7 +64,6 @@ export default function ChooseProfilePage() {
   const [newProfileName, setNewProfileName] = useState("");
   const [createProfileError, setCreateProfileError] = useState<string | null>(null);
   const [pickerDeletingId, setPickerDeletingId] = useState<string | null>(null);
-  const [pickerDeleteError, setPickerDeleteError] = useState<string | null>(null);
 
   /** Ignore stale responses when refresh() runs twice (e.g. React Strict Mode) or location.key flaps. */
   const profilesLoadGen = useRef(0);
@@ -84,6 +77,7 @@ export default function ChooseProfilePage() {
       setLoadError(error.message);
       return;
     }
+    setLoadError(null);
     setProfiles(data);
   }, []);
 
@@ -146,30 +140,10 @@ export default function ChooseProfilePage() {
       }
       if (!data) return;
 
-      if (trimmed) {
-        const { error: syncError } = await upsertMyProfile({
-          id: data.id,
-          display_name: trimmed,
-          buddy_color_index: data.buddy_color_index ?? 0,
-          buddy_body_key: data.buddy_body_key,
-          buddy_eye_key: data.buddy_eye_key,
-          buddy_hat_key: data.buddy_hat_key,
-          buddy_smile_key: data.buddy_smile_key,
-          favorite_food: data.favorite_food,
-          personality: data.personality,
-          specialty: data.specialty,
-          allergies: data.allergies,
-          parties_attended: data.parties_attended,
-          recipes_given: data.recipes_given,
-        });
-        if (syncError) {
-          setCreateProfileError(syncError.message);
-          return;
-        }
-      }
-
+      /** POST already persists `display_name`; a follow-up PUT was redundant and could fail routing while the row existed. */
       const merged: TasteProfileRow = trimmed ? { ...data, display_name: trimmed } : data;
       setProfiles((prev) => [merged, ...prev.filter((p) => p.id !== merged.id)]);
+      void refresh();
       setExpandedId(merged.id);
       setNewProfileName("");
     } finally {
@@ -180,12 +154,10 @@ export default function ChooseProfilePage() {
   const handleDeleteProfileFromPicker = async (row: TasteProfileRow) => {
     const id = row.id.trim();
     if (!id || pickerDeletingId) return;
-    setPickerDeleteError(null);
     setPickerDeletingId(id);
     try {
       purgeProfileFromThisDevice(id);
-      const { error } = await deleteMyProfile(id);
-      if (error) setPickerDeleteError(error.message);
+      await deleteMyProfile(id);
       await refresh();
       setExpandedId((cur) => (cur && cur.trim().toLowerCase() === id.toLowerCase() ? null : cur));
     } finally {
@@ -268,13 +240,7 @@ export default function ChooseProfilePage() {
           under profile after you enter.
         </motion.p>
 
-        {pickerDeleteError ? (
-          <p className="share-tech-regular tb-text-coral tb-choose-profile-picker-delete-error" role="alert">
-            {pickerDeleteError}
-          </p>
-        ) : null}
-
-        {loadError ? (
+        {loadError && profiles.length === 0 ? (
           <InfoBoxFrame variant={0}>
             <p className="share-tech-regular" style={{ fontSize: "16pt", lineHeight: 1.4, color: "#2d2d2d" }}>
               Could not load profiles: {loadError}
