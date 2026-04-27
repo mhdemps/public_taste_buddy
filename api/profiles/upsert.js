@@ -1,6 +1,6 @@
 import { handleApiFetch } from "../core.mjs";
 
-/** GET/POST `/api/profiles` — `index.js` + `[id].js` + static `upsert.js` (client saves use POST `/api/profiles/upsert`). */
+/** POST `/api/profiles/upsert` — static route so Vercel reliably invokes Node (avoids 405 on dynamic `[id]` + SPA). */
 export default {
   async fetch(request) {
     return handleApiFetch(request);

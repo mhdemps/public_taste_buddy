@@ -70,8 +70,9 @@ async function parseJsonResponse<T>(response: Response): Promise<T> {
     const status = response.status;
     const vercelHints =
       status === 405 || status === 401
-        ? " On Vercel: redeploy with latest `vercel.json` (rewrites must route `/api/*` to serverless, not `index.html`). " +
-          "If previews use Deployment Protection / Vercel Authentication, disable it or allow `/api` — it often breaks POST and shows 401/405 with an empty body. " +
+        ? " On Vercel: redeploy with latest `vercel.json` and `api/profiles/upsert.js` (saves use POST `/api/profiles/upsert` so routing is not tied to dynamic `[id]`). " +
+          "Rewrites must send `/api/*` to serverless, not `index.html`. " +
+          "Deployment Protection can still return empty 401/405 — try disabling for previews. " +
           "Locally use `npm run dev` so `/api` proxies to port 3001."
         : "";
     throw new Error(`Empty API response (HTTP ${status}).${vercelHints}`);
@@ -177,8 +178,8 @@ export async function fetchProfileByUserId(
 export async function upsertMyProfile(
   payload: TasteProfileUpsert
 ): Promise<{ data: TasteProfileRow | null; error: Error | null }> {
-  // POST matches server `PUT || POST` handler — survives hosts that return 405 on PUT (e.g. SPA fallback).
-  const { data, error } = await requestJson<TasteProfileRow>(`/profiles/${encodeURIComponent(payload.id)}`, {
+  // Static `/profiles/upsert` (not `/profiles/:id`) — Vercel often returns 405 on POST to `api/profiles/[id].js` with SPA output.
+  const { data, error } = await requestJson<TasteProfileRow>("/profiles/upsert", {
     method: "POST",
     body: JSON.stringify(payload),
   });

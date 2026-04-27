@@ -205,6 +205,60 @@ function normalizeProfilePayload(row) {
 }
 
 /**
+ * Shared profile upsert (PUT/POST by id, or POST /api/profiles/upsert with id in body).
+ * @param {string} profileId decoded profile id from URL or body
+ * @param {Record<string, unknown>} b parsed JSON body
+ */
+async function upsertProfileWithBody(profileId, b) {
+  /** @param {string} k @param {unknown} fromExisting */
+  const pick = (k, fromExisting) => (k in b ? b[k] : fromExisting);
+  const profiles = await readProfilesWithBackdropMigration();
+  const existing = findProfileRowByUrlId(profiles, profileId);
+  const canonicalId = existing?.id ?? profileId;
+  const nextProfile = {
+    id: canonicalId,
+    display_name: pick("display_name", existing?.display_name) ?? null,
+    buddy_color_index: (() => {
+      if ("buddy_color_index" in b) {
+        const n = Math.floor(Number(b.buddy_color_index));
+        return Number.isFinite(n) ? n : 0;
+      }
+      return existing?.buddy_color_index ?? 0;
+    })(),
+    backdrop_migrated_v2: true,
+    buddy_body_key: pick("buddy_body_key", existing?.buddy_body_key) ?? null,
+    buddy_eye_key: (() => {
+      if ("buddy_eye_key" in b) {
+        return b.buddy_eye_key == null || b.buddy_eye_key === "" ? null : String(b.buddy_eye_key);
+      }
+      if (existing?.buddy_eye_key != null && existing.buddy_eye_key !== "") {
+        return String(existing.buddy_eye_key);
+      }
+      return "open";
+    })(),
+    buddy_hat_key: pick("buddy_hat_key", existing?.buddy_hat_key) ?? null,
+    buddy_smile_key: pick("buddy_smile_key", existing?.buddy_smile_key) ?? null,
+    favorite_food: pick("favorite_food", existing?.favorite_food) ?? null,
+    personality: pick("personality", existing?.personality) ?? null,
+    specialty: pick("specialty", existing?.specialty) ?? null,
+    allergies: pick("allergies", existing?.allergies) ?? null,
+    parties_attended: null,
+    recipes_given: (() => {
+      const raw =
+        "recipes_given" in b ? b.recipes_given : "recipesGiven" in b ? b.recipesGiven : existing?.recipes_given;
+      if (raw == null || raw === "") return null;
+      return String(raw).trim().slice(0, 500) || null;
+    })(),
+    updated_at: new Date().toISOString(),
+  };
+  const wantNorm = normalizeProfileId(canonicalId);
+  const nextProfiles = profiles.filter((row) => normalizeProfileId(row.id) !== wantNorm);
+  nextProfiles.push(nextProfile);
+  await writeJsonArray(profilesPath, nextProfiles);
+  return { status: 200, payload: normalizeProfilePayload(nextProfile) };
+}
+
+/**
  * @param {() => Promise<Record<string, unknown>>} getBody lazy; only called for routes that need JSON body
  * @returns {Promise<{ status: number, payload: unknown } | null>}
  */
@@ -246,6 +300,24 @@ async function routeProfiles(method, pathname, getBody) {
     return { status: 201, payload: normalizeProfilePayload(nextProfile) };
   }
 
+  /**
+   * Static path for saves — Vercel can return 405 on POST to `api/profiles/[id].js` when combined with SPA output;
+   * `api/profiles/upsert.js` is a fixed segment and routes reliably.
+   */
+  if (method === "POST" && pathname === "/api/profiles/upsert") {
+    const body = await getBody();
+    const b = body && typeof body === "object" && !Array.isArray(body) ? body : {};
+    const rawId = b.id;
+    if (typeof rawId !== "string" || !String(rawId).trim()) {
+      return {
+        status: 400,
+        payload: { error: 'Request body must include a string "id" for the profile to update.' },
+      };
+    }
+    const profileId = decodeURIComponent(String(rawId).trim());
+    return upsertProfileWithBody(profileId, b);
+  }
+
   const profileByIdMatch = pathname.match(/^\/api\/profiles\/([^/]+)$/);
   if (!profileByIdMatch) return null;
 
@@ -260,53 +332,7 @@ async function routeProfiles(method, pathname, getBody) {
   if (method === "PUT" || method === "POST") {
     const body = await getBody();
     const b = body && typeof body === "object" && !Array.isArray(body) ? body : {};
-    const profiles = await readProfilesWithBackdropMigration();
-    const existing = findProfileRowByUrlId(profiles, profileId);
-    /** @param {string} k @param {unknown} fromExisting */
-    const pick = (k, fromExisting) => (k in b ? b[k] : fromExisting);
-    const canonicalId = existing?.id ?? profileId;
-    const nextProfile = {
-      id: canonicalId,
-      display_name: pick("display_name", existing?.display_name) ?? null,
-      buddy_color_index: (() => {
-        if ("buddy_color_index" in b) {
-          const n = Math.floor(Number(b.buddy_color_index));
-          return Number.isFinite(n) ? n : 0;
-        }
-        return existing?.buddy_color_index ?? 0;
-      })(),
-      backdrop_migrated_v2: true,
-      buddy_body_key: pick("buddy_body_key", existing?.buddy_body_key) ?? null,
-      // If the client omits the key (e.g. JSON.stringify dropped undefined), keep stored value; default to "open".
-      buddy_eye_key: (() => {
-        if ("buddy_eye_key" in b) {
-          return b.buddy_eye_key == null || b.buddy_eye_key === "" ? null : String(b.buddy_eye_key);
-        }
-        if (existing?.buddy_eye_key != null && existing.buddy_eye_key !== "") {
-          return String(existing.buddy_eye_key);
-        }
-        return "open";
-      })(),
-      buddy_hat_key: pick("buddy_hat_key", existing?.buddy_hat_key) ?? null,
-      buddy_smile_key: pick("buddy_smile_key", existing?.buddy_smile_key) ?? null,
-      favorite_food: pick("favorite_food", existing?.favorite_food) ?? null,
-      personality: pick("personality", existing?.personality) ?? null,
-      specialty: pick("specialty", existing?.specialty) ?? null,
-      allergies: pick("allergies", existing?.allergies) ?? null,
-      parties_attended: null,
-      recipes_given: (() => {
-        const raw =
-          "recipes_given" in b ? b.recipes_given : "recipesGiven" in b ? b.recipesGiven : existing?.recipes_given;
-        if (raw == null || raw === "") return null;
-        return String(raw).trim().slice(0, 500) || null;
-      })(),
-      updated_at: new Date().toISOString(),
-    };
-    const wantNorm = normalizeProfileId(canonicalId);
-    const nextProfiles = profiles.filter((row) => normalizeProfileId(row.id) !== wantNorm);
-    nextProfiles.push(nextProfile);
-    await writeJsonArray(profilesPath, nextProfiles);
-    return { status: 200, payload: normalizeProfilePayload(nextProfile) };
+    return upsertProfileWithBody(profileId, b);
   }
 
   if (method === "DELETE") {
