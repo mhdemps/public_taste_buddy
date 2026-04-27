@@ -80,10 +80,16 @@ export default function MemberProfilePage() {
   const selection = profile ? coerceBuddySvgSelection(profile) : null;
   const name = profile ? displayFromProfile(profile) : "…";
   const profileAllergyDecode = profile?.allergies ? decodeProfileAllergiesField(profile.allergies) : { tagIds: [], extraNotes: "" };
+  const hasFavorite = Boolean(profile?.favorite_food?.trim());
+  const hasPersonality = Boolean(profile?.personality?.trim());
+  const hasSpecialty = Boolean(profile?.specialty?.trim());
+  /** On a 2-col grid, avoid a half-empty row when specialty is alone (3rd of 3) or the only detail card. */
+  const specialtyBentoWide =
+    hasSpecialty && ((hasFavorite && hasPersonality) || (!hasFavorite && !hasPersonality));
 
   return (
     <div className={PAGE_SHELL_SCROLL} data-name="Member profile">
-      <GrayTasteHeader />
+      <GrayTasteHeader helpContent="Public taste profile on the Buddy Board — how this person chose to show up for the community. Use Edit my profile when it’s you." />
       <Navigation />
 
       <div className="tb-main-column">
@@ -140,14 +146,27 @@ export default function MemberProfilePage() {
             >
               {name}
             </motion.h1>
-            <motion.p
-              className="tb-buddy-profile-kicker share-tech-regular"
-              initial={{ y: 12, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ duration: 0.4, delay: 0.12 }}
-            >
-              Public taste profile on the Buddy Board
-            </motion.p>
+
+            {profile.recipes_given?.trim() ? (
+              <motion.figure
+                className="tb-taste-mood-quote"
+                initial={{ y: 10, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.4, delay: 0.12 }}
+                aria-label="Taste mood"
+              >
+                <figcaption className="tb-taste-mood-quote__label share-tech-bold">Taste mood</figcaption>
+                <blockquote className="tb-taste-mood-quote__body share-tech-regular">
+                  <span className="tb-taste-mood-quote__mark tb-taste-mood-quote__mark--open" aria-hidden>
+                    “
+                  </span>
+                  <span className="tb-taste-mood-quote__text">{profile.recipes_given.trim()}</span>
+                  <span className="tb-taste-mood-quote__mark tb-taste-mood-quote__mark--close" aria-hidden>
+                    ”
+                  </span>
+                </blockquote>
+              </motion.figure>
+            ) : null}
 
             {isOwn && (
               <motion.div className="tb-detail-actions" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }}>
@@ -173,15 +192,12 @@ export default function MemberProfilePage() {
                 </InfoBoxFrame>
               )}
               {profile?.specialty && (
-                <InfoBoxFrame variant={2} className="tb-bento-card">
-                  <h3 className="tb-detail-h3 share-tech-bold">Kitchen specialty</h3>
+                <InfoBoxFrame
+                  variant={2}
+                  className={`tb-bento-card${specialtyBentoWide ? " tb-bento-card--wide" : ""}`.trim()}
+                >
+                  <h3 className="tb-detail-h3 share-tech-bold">Specialties</h3>
                   <p className="tb-detail-p share-tech-regular">{profile.specialty}</p>
-                </InfoBoxFrame>
-              )}
-              {profile?.recipes_given && (
-                <InfoBoxFrame variant={0} className="tb-bento-card">
-                  <h3 className="tb-detail-h3 share-tech-bold">What you share</h3>
-                  <p className="tb-detail-p share-tech-regular">{profile.recipes_given}</p>
                 </InfoBoxFrame>
               )}
               {(profileAllergyDecode.tagIds.length > 0 || profileAllergyDecode.extraNotes) && (

@@ -1,15 +1,12 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation } from "react-router";
 import { motion } from "motion/react";
 import Navigation from "../components/Navigation";
 import GrayTasteHeader from "../components/GrayTasteHeader";
 import WallBuddyCard from "../components/WallBuddyCard";
 import { InfoBoxFrame } from "../components/InfoBoxFrame";
-import { ChalkPillFrame } from "../components/ChalkPillFrame";
 import { coerceBuddySvgSelection } from "../buddyAppearance";
 import { PAGE_SHELL_SCROLL } from "../brand";
-import { useAuth } from "../context/AuthContext";
-import { appendWallRecipeToSaved, savedWallRecipeIdsForUser } from "../savedCommunityRecipes";
 import { parseAllergenCsv } from "../allergyTagConfig";
 import { AllergenBadgeRow } from "../components/AllergenBadgeRow";
 import {
@@ -26,13 +23,10 @@ function displayFromProfile(p: TasteProfileRow): string {
 
 export default function CommunityWallPage() {
   const location = useLocation();
-  const { user } = useAuth();
   const [profiles, setProfiles] = useState<TasteProfileRow[]>([]);
   const [recipes, setRecipes] = useState<PublicRecipeRow[]>([]);
   const [profilesLoadError, setProfilesLoadError] = useState<string | null>(null);
   const [recipesLoadError, setRecipesLoadError] = useState<string | null>(null);
-  const [savedWallIds, setSavedWallIds] = useState<Set<string>>(() => new Set());
-  const [saveHint, setSaveHint] = useState<{ recipeId: string; message: string } | null>(null);
   const [expandedWallRecipeId, setExpandedWallRecipeId] = useState<string | null>(null);
   useEffect(() => {
     let cancelled = false;
@@ -57,11 +51,6 @@ export default function CommunityWallPage() {
     setExpandedWallRecipeId(null);
   }, [location.key]);
 
-  useEffect(() => {
-    if (!user) return;
-    setSavedWallIds(savedWallRecipeIdsForUser(user.id));
-  }, [user, location.key]);
-
   const nameByUserId = useMemo(() => {
     const m = new Map<string, string>();
     for (const p of profiles) {
@@ -70,31 +59,12 @@ export default function CommunityWallPage() {
     return m;
   }, [profiles]);
 
-  const handleSaveWallRecipe = useCallback(
-    (r: PublicRecipeRow) => {
-      if (!user) return;
-      const author = nameByUserId.get(r.user_id) ?? "Community member";
-      const result = appendWallRecipeToSaved(user.id, r, author);
-      if (result === "saved") {
-        setSavedWallIds((prev) => new Set(prev).add(r.id));
-      }
-      setSaveHint({
-        recipeId: r.id,
-        message:
-          result === "duplicate"
-            ? "Already in your saved list."
-            : "Saved — tap Saved in the bar above.",
-      });
-      window.setTimeout(() => {
-        setSaveHint((h) => (h?.recipeId === r.id ? null : h));
-      }, 4500);
-    },
-    [user, nameByUserId]
-  );
+  const buddyBoardHelp =
+    "Tap a buddy tile to open their public profile. Under Fresh on the Buddy Board, tap a recipe card to read the full recipe.";
 
   return (
     <div className={PAGE_SHELL_SCROLL} data-name="Buddy board">
-      <GrayTasteHeader />
+      <GrayTasteHeader helpContent={buddyBoardHelp} />
       <Navigation />
 
       <motion.div
@@ -159,10 +129,6 @@ export default function CommunityWallPage() {
             <h2 className="tb-section-heading share-tech-bold" style={{ marginTop: "2rem" }}>
               Fresh on the Buddy Board
             </h2>
-            <p className="tb-intro-blurb share-tech-regular" style={{ marginTop: "0.35rem", marginBottom: "0.25rem" }}>
-              Tap a card to open the full recipe. Use <span className="share-tech-bold">Save to my list</span> to copy it to
-              your saved recipes (navigation bar above).
-            </p>
             <div className="tb-wall-recipe-stack">
               {recipes.map((r) => {
                 const wallAcc = parseAllergenCsv(r.accommodates ?? "");
@@ -178,63 +144,40 @@ export default function CommunityWallPage() {
                     >
                       {isExpanded ? (
                         <>
-                          <motion.button
-                            type="button"
-                            onClick={() => setExpandedWallRecipeId(null)}
-                            className="tb-chevron-btn tb-wall-recipe-close"
-                            aria-label="Close recipe"
-                            whileHover={{ opacity: 0.75 }}
-                            whileTap={{ scale: 0.94 }}
-                          >
-                            <img alt="" src={imgRecipeClose} draggable={false} className="tb-recipe-x-icon" aria-hidden />
-                          </motion.button>
-                          <div className="tb-wall-recipe-media-wrap tb-wall-recipe-media-wrap--expanded">
-                            {hasPhoto ? (
-                              <img
-                                src={r.photo_data_url!}
-                                alt=""
-                                className="tb-wall-recipe-photo--hero"
-                                draggable={false}
-                              />
-                            ) : (
-                              <div className="tb-wall-recipe-placeholder" aria-hidden>
-                                <span className="tb-wall-recipe-placeholder-letter share-tech-bold">
-                                  {r.recipe_name.trim().charAt(0).toUpperCase() || "?"}
-                                </span>
-                              </div>
-                            )}
+                          <div className="tb-wall-recipe-expanded-top">
+                            <div className="tb-wall-recipe-close-row">
+                              <motion.button
+                                type="button"
+                                onClick={() => setExpandedWallRecipeId(null)}
+                                className="tb-chevron-btn tb-wall-recipe-close-inline"
+                                aria-label="Close recipe"
+                                whileHover={{ opacity: 0.75 }}
+                                whileTap={{ scale: 0.94 }}
+                              >
+                                <img alt="" src={imgRecipeClose} draggable={false} className="tb-recipe-x-icon" aria-hidden />
+                              </motion.button>
+                            </div>
+                            <div className="tb-wall-recipe-media-wrap tb-wall-recipe-media-wrap--expanded">
+                              {hasPhoto ? (
+                                <img
+                                  src={r.photo_data_url!}
+                                  alt=""
+                                  className="tb-wall-recipe-photo--hero"
+                                  draggable={false}
+                                />
+                              ) : (
+                                <div className="tb-wall-recipe-placeholder" aria-hidden>
+                                  <span className="tb-wall-recipe-placeholder-letter share-tech-bold">
+                                    {r.recipe_name.trim().charAt(0).toUpperCase() || "?"}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
                           </div>
                           <p className="share-tech-bold tb-text-coral tb-wall-recipe-title tb-wall-recipe-title--below-media">
                             {r.recipe_name}
                           </p>
                           <p className="share-tech-regular tb-muted-hint tb-wall-recipe-author">{author}</p>
-                          <div className="tb-wall-recipe-actions">
-                            {savedWallIds.has(r.id) ? (
-                              <p className="share-tech-regular tb-muted-hint" style={{ margin: 0 }}>
-                                In your saved list
-                              </p>
-                            ) : (
-                              <motion.button
-                                type="button"
-                                className="tb-submit-wrap"
-                                whileTap={{ scale: 0.97 }}
-                                onClick={() => handleSaveWallRecipe(r)}
-                              >
-                                <ChalkPillFrame
-                                  variant={2}
-                                  fillClassName="tb-pill-fill-coral--tight"
-                                  innerClassName="tb-pill-inner tb-pill-inner--sm"
-                                >
-                                  <span className="tb-pill-text-white share-tech-regular">Save to my list</span>
-                                </ChalkPillFrame>
-                              </motion.button>
-                            )}
-                            {saveHint?.recipeId === r.id ? (
-                              <p className="share-tech-regular tb-wall-recipe-save-hint" role="status">
-                                {saveHint.message}
-                              </p>
-                            ) : null}
-                          </div>
                           {wallAcc.length > 0 ? (
                             <div className="tb-wall-recipe-section">
                               <p className="share-tech-bold tb-wall-recipe-label">Free from</p>

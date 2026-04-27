@@ -7,6 +7,7 @@ import { FRIEND_RECIPES_STORAGE_BASE, scopedStorageKey } from "../userStorage";
 import {
   loadSavedCommunityRecipes,
   persistSavedCommunityRecipes,
+  purgeWallSourcedSavedRecipes,
   sortSavedCommunityRecipesNewestFirst,
   type SavedCommunityRecipeEntry,
 } from "../savedCommunityRecipes";
@@ -57,12 +58,13 @@ export default function FriendRecipePage() {
   const recipesStorageKey = scopedStorageKey(user!.id, FRIEND_RECIPES_STORAGE_BASE);
   const { buddies } = useBuddies();
   const [saved, setSaved] = useState<FriendRecipeEntry[]>(() =>
-    sortSavedCommunityRecipesNewestFirst(loadSavedCommunityRecipes(recipesStorageKey))
+    sortSavedCommunityRecipesNewestFirst(purgeWallSourcedSavedRecipes(user!.id))
   );
 
   useEffect(() => {
-    setSaved(sortSavedCommunityRecipesNewestFirst(loadSavedCommunityRecipes(recipesStorageKey)));
-  }, [recipesStorageKey]);
+    const list = purgeWallSourcedSavedRecipes(user!.id);
+    setSaved(sortSavedCommunityRecipesNewestFirst(list));
+  }, [recipesStorageKey, user?.id]);
 
   const [expandedRecipeId, setExpandedRecipeId] = useState<string | null>(null);
 
@@ -73,18 +75,13 @@ export default function FriendRecipePage() {
   const [ingredientRows, setIngredientRows] = useState<IngredientRow[]>(() => [newIngredientRow()]);
   const [directionRows, setDirectionRows] = useState<string[]>(() => [""]);
   const [notes, setNotes] = useState("");
-  const [wallAuthorLabel, setWallAuthorLabel] = useState("");
 
   useEffect(() => {
-    if (isEditView && editRecipeId) {
-      const found = loadSavedCommunityRecipes(recipesStorageKey).find((r) => r.id === editRecipeId);
-      if (found?.wallRecipeId && !found.buddyId) return;
-    }
     if (buddies.length === 0) return;
     if (!buddyId || !buddies.some((b) => b.id === buddyId)) {
       setBuddyId(buddies[0]!.id);
     }
-  }, [buddies, buddyId, isEditView, editRecipeId, recipesStorageKey]);
+  }, [buddies, buddyId]);
 
   useEffect(() => {
     if (isAddView && buddies.length === 0) {
@@ -100,17 +97,15 @@ export default function FriendRecipePage() {
       setIngredientRows([newIngredientRow()]);
       setDirectionRows([""]);
       setNotes("");
-      setWallAuthorLabel("");
       return;
     }
     if (!editRecipeId) return;
     const found = loadSavedCommunityRecipes(recipesStorageKey).find((r) => r.id === editRecipeId);
-    if (!found) {
+    if (!found || found.wallRecipeId) {
       navigate("/friend-recipe", { replace: true });
       return;
     }
-    setBuddyId(found.wallRecipeId && !found.buddyId ? "" : (found.buddyId ?? (buddies[0]?.id ?? "")));
-    setWallAuthorLabel(found.wallRecipeId ? found.friendName : "");
+    setBuddyId(found.buddyId ?? buddies[0]?.id ?? "");
     setRecipeName(found.recipeName);
     setAllergies(found.allergies);
     setAccommodateIds(parseAllergenCsv(found.accommodates ?? ""));
@@ -125,17 +120,11 @@ export default function FriendRecipePage() {
     setSaved(sortSavedCommunityRecipesNewestFirst(loadSavedCommunityRecipes(recipesStorageKey)));
   }, [recipesStorageKey]);
 
-  const editingWallRecipe = useMemo(() => {
-    if (!isEditView || !editRecipeId) return false;
-    const found = loadSavedCommunityRecipes(recipesStorageKey).find((r) => r.id === editRecipeId);
-    return Boolean(found?.wallRecipeId);
-  }, [isEditView, editRecipeId, recipesStorageKey]);
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const ingredients = ingredientsStringFromRows(ingredientRows);
     const directions = directionsStringFromRows(directionRows);
-    if (!editingWallRecipe && (!ingredients.trim() || !directions.trim())) {
+    if (!ingredients.trim() || !directions.trim()) {
       window.alert("Add at least one ingredient line and one direction step.");
       return;
     }
@@ -144,31 +133,6 @@ export default function FriendRecipePage() {
       const list = loadSavedCommunityRecipes(recipesStorageKey);
       const existing = list.find((r) => r.id === editRecipeId);
       if (!existing) {
-        navigate("/friend-recipe");
-        return;
-      }
-      if (existing.wallRecipeId) {
-        const updated: FriendRecipeEntry = {
-          ...existing,
-          recipeName: recipeName.trim(),
-          allergies: allergies.trim(),
-          accommodates: formatAllergenCsv(accommodateIds),
-          ingredients,
-          directions,
-          notes: notes.trim(),
-          savedAt: new Date().toISOString(),
-        };
-        persistSavedCommunityRecipes(
-          recipesStorageKey,
-          list.map((r) => (r.id === editRecipeId ? updated : r))
-        );
-        refresh();
-        setRecipeName("");
-        setAllergies("");
-        setAccommodateIds([]);
-        setIngredientRows([newIngredientRow()]);
-        setDirectionRows([""]);
-        setNotes("");
         navigate("/friend-recipe");
         return;
       }
@@ -240,9 +204,13 @@ export default function FriendRecipePage() {
   if (isFormView) {
     if (isAddView && buddies.length === 0) return null;
 
+    const formHelp = isEditView
+      ? "Update who shared it, tags, or steps — then save."
+      : "Credit a saved taste profile — pick them below, then add ingredients, steps, and tags.";
+
     return (
       <div className={PAGE_SHELL_SCROLL}>
-        <GrayTasteHeader />
+        <GrayTasteHeader helpContent={formHelp} />
         <Navigation />
 
         <motion.div
@@ -257,24 +225,8 @@ export default function FriendRecipePage() {
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.45, delay: 0.05 }}
           >
-            {isEditView
-              ? editingWallRecipe
-                ? "Edit saved wall recipe"
-                : "Edit saved recipe"
-              : "Add a recipe by hand"}
+            {isEditView ? "Edit saved recipe" : "Add a recipe by hand"}
           </motion.h1>
-          <motion.p
-            className="tb-intro-blurb share-tech-regular"
-            initial={{ y: 12, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.45, delay: 0.1 }}
-          >
-            {isEditView
-              ? editingWallRecipe
-                ? "The cook’s name stays as on the Buddy Board. You can update ingredients, steps, and notes."
-                : "Update who shared it, tags, or steps — then save."
-              : "Credit a saved taste profile — pick them below, then add ingredients, steps, and tags. To copy from the Buddy Board, use Save on a recipe there instead."}
-          </motion.p>
 
           <motion.form
             onSubmit={handleSubmit}
@@ -283,33 +235,24 @@ export default function FriendRecipePage() {
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.5, delay: 0.12 }}
           >
-            {editingWallRecipe ? (
-              <InfoBoxFrame variant={0}>
-                <p className="tb-field-label-bold share-tech-bold">From the Buddy Board</p>
-                <p className="share-tech-regular" style={{ fontSize: "20pt", lineHeight: 1.375 }}>
-                  {wallAuthorLabel}
-                </p>
-              </InfoBoxFrame>
-            ) : (
-              <InfoBoxFrame variant={0}>
-                <label htmlFor="recipe-buddy" className="tb-field-label-bold share-tech-bold">
-                  From this profile
-                </label>
-                <select
-                  id="recipe-buddy"
-                  value={buddyId}
-                  onChange={(e) => setBuddyId(e.target.value)}
-                  className="tb-select-plain share-tech-regular"
-                  required
-                >
-                  {buddies.map((b) => (
-                    <option key={b.id} value={b.id} className="tb-option-dark">
-                      {b.name}
-                    </option>
-                  ))}
-                </select>
-              </InfoBoxFrame>
-            )}
+            <InfoBoxFrame variant={0}>
+              <label htmlFor="recipe-buddy" className="tb-field-label-bold share-tech-bold">
+                From this profile
+              </label>
+              <select
+                id="recipe-buddy"
+                value={buddyId}
+                onChange={(e) => setBuddyId(e.target.value)}
+                className="tb-select-plain share-tech-regular"
+                required
+              >
+                {buddies.map((b) => (
+                  <option key={b.id} value={b.id} className="tb-option-dark">
+                    {b.name}
+                  </option>
+                ))}
+              </select>
+            </InfoBoxFrame>
 
             <InfoBoxFrame variant={1}>
               <label htmlFor="recipe-title" className="tb-field-label-bold share-tech-bold">
@@ -333,16 +276,19 @@ export default function FriendRecipePage() {
                 onChange={setAccommodateIds}
                 groupLabel="Free from (recipe accommodates)"
               />
+            </InfoBoxFrame>
+
+            <InfoBoxFrame variant={3}>
               <label htmlFor="recipe-allergies" className="tb-field-label-bold share-tech-bold">
                 Contains / may contain (optional notes)
               </label>
-              <input
+              <textarea
                 id="recipe-allergies"
-                type="text"
                 value={allergies}
                 onChange={(e) => setAllergies(e.target.value)}
-                className="tb-input-plain share-tech-regular"
+                className="tb-textarea-plain share-tech-regular tb-may-contain-input"
                 placeholder="e.g. traces of nuts"
+                rows={3}
               />
             </InfoBoxFrame>
 
@@ -390,9 +336,12 @@ export default function FriendRecipePage() {
     );
   }
 
+  const savedListHelp =
+    "Tap a card to open a recipe, or use + to add one by hand and tag a saved buddy profile.";
+
   return (
     <div className={PAGE_SHELL_SCROLL}>
-      <GrayTasteHeader />
+      <GrayTasteHeader helpContent={savedListHelp} />
       <Navigation />
 
       <motion.div
@@ -419,25 +368,8 @@ export default function FriendRecipePage() {
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.45, delay: 0.05 }}
         >
-          Saved recipes from the Buddy Board
+          Saved from the board
         </motion.h1>
-        <motion.p
-          className="tb-intro-blurb share-tech-regular"
-          initial={{ y: 12, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.45, delay: 0.12 }}
-        >
-          Open the{" "}
-          <button
-            type="button"
-            onClick={() => navigate("/")}
-            className="tb-link-wide share-tech-bold"
-            style={{ background: "none", border: "none", padding: 0, cursor: "pointer", font: "inherit" }}
-          >
-            Buddy Board
-          </button>{" "}
-          and tap <span className="share-tech-bold">Save on a recipe</span> to add it here. Tap a card to read it, or use + to type one by hand and tag a saved profile.
-        </motion.p>
 
         <motion.section
           className="tb-section-narrow"
@@ -452,10 +384,10 @@ export default function FriendRecipePage() {
           {saved.length === 0 ? (
             <InfoBoxFrame variant={1}>
               <p className="share-tech-regular" style={{ fontSize: "20pt", lineHeight: 1.375 }}>
-                Nothing saved yet — go to the Buddy Board, find a recipe under “Fresh on the Buddy Board,” and tap Save.{" "}
+                Nothing saved yet —{" "}
                 {buddies.length > 0
-                  ? "Or tap + to add one by hand."
-                  : "Add a saved profile under Saved buddies if you want to use + and tag someone by hand."}
+                  ? "tap + to add a recipe and tag a buddy profile."
+                  : "add a buddy under Saved buddies, then tap + to save a recipe for them."}
               </p>
             </InfoBoxFrame>
           ) : (

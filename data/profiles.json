@@ -1,22 +1,5 @@
 [
   {
-    "id": "a3d20269-4e4d-433d-a7d0-b3cd5c3f4912",
-    "display_name": "STEAK",
-    "buddy_color_index": 9,
-    "backdrop_migrated_v2": true,
-    "buddy_body_key": "yellow",
-    "buddy_eye_key": "open",
-    "buddy_hat_key": "chef",
-    "buddy_smile_key": "buck-teef",
-    "favorite_food": "STEAK",
-    "personality": "BEES",
-    "specialty": "making the best damn pizza",
-    "allergies": "allergic to inauthenticity",
-    "parties_attended": 1,
-    "recipes_given": "the art of pizza",
-    "updated_at": "2026-04-26T19:43:51.417Z"
-  },
-  {
     "id": "6035b084-0219-4c1a-8ba1-8cdb4d749319",
     "display_name": "New profile",
     "buddy_color_index": 0,
@@ -202,5 +185,22 @@
     "parties_attended": null,
     "recipes_given": null,
     "updated_at": "2026-04-27T04:54:56.929Z"
+  },
+  {
+    "id": "a3d20269-4e4d-433d-a7d0-b3cd5c3f4912",
+    "display_name": "STEAK",
+    "buddy_color_index": 9,
+    "backdrop_migrated_v2": true,
+    "buddy_body_key": "yellow",
+    "buddy_eye_key": "open",
+    "buddy_hat_key": "chef",
+    "buddy_smile_key": "buck-teef",
+    "favorite_food": "STEAK",
+    "personality": "BEES",
+    "specialty": "making the best damn pizza",
+    "allergies": "allergic to inauthenticity",
+    "parties_attended": 1,
+    "recipes_given": "the art of making pizza",
+    "updated_at": "2026-04-27T06:51:11.750Z"
   }
 ]

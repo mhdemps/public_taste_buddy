@@ -46,6 +46,15 @@ export default defineConfig({
       },
     },
   },
+  /** Same proxy for `vite preview` so `/api` hits the JSON server when it’s running on 3001. */
+  preview: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+      },
+    },
+  },
 
   // File types to support raw imports. Never add .css, .tsx, or .ts files to this.
   assetsInclude: ['**/*.svg', '**/*.csv'],

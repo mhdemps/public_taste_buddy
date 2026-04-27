@@ -39,7 +39,7 @@ export default function AddBuddyPage() {
 
   return (
     <div className={PAGE_SHELL_SCROLL}>
-      <GrayTasteHeader />
+      <GrayTasteHeader helpContent="This info can show up on their public profile — favorite flavors, what they bring to the table, and dietary notes others should know." />
       <Navigation />
 
       <motion.div
@@ -56,14 +56,6 @@ export default function AddBuddyPage() {
         >
           Add a taste profile
         </motion.h1>
-        <motion.p
-          className="tb-intro-blurb share-tech-regular"
-          initial={{ y: 12, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.45, delay: 0.1 }}
-        >
-          This info can show up on their public profile — favorite flavors, what they bring to the table, and dietary notes others should know.
-        </motion.p>
 
         <motion.form
           onSubmit={handleSubmit}
@@ -117,7 +109,7 @@ export default function AddBuddyPage() {
 
           <InfoBoxFrame variant={3}>
             <label htmlFor="add-buddy-specialty" className="tb-field-label share-tech-regular">
-              Specialty
+              Specialties
             </label>
             <input
               id="add-buddy-specialty"

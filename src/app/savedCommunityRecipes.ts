@@ -1,4 +1,3 @@
-import type { PublicRecipeRow } from "../lib/communityApi";
 import { FRIEND_RECIPES_STORAGE_BASE, scopedStorageKey } from "./userStorage";
 
 const LEGACY_FRIEND_RECIPES_KEY = "tasteBuddyFriendRecipes";
@@ -64,36 +63,13 @@ export function persistSavedCommunityRecipes(storageKey: string, list: SavedComm
   localStorage.setItem(storageKey, JSON.stringify(list));
 }
 
-export function appendWallRecipeToSaved(
-  userId: string,
-  row: PublicRecipeRow,
-  authorDisplayName: string
-): "saved" | "duplicate" {
+/** Removes legacy rows copied from the Buddy Board (wall); persists if anything was dropped. */
+export function purgeWallSourcedSavedRecipes(userId: string): SavedCommunityRecipeEntry[] {
   const key = scopedStorageKey(userId, FRIEND_RECIPES_STORAGE_BASE);
   const list = loadSavedCommunityRecipes(key);
-  if (list.some((r) => r.wallRecipeId === row.id)) return "duplicate";
-  const entry: SavedCommunityRecipeEntry = {
-    id: `recipe-${Date.now()}`,
-    wallRecipeId: row.id,
-    friendName: authorDisplayName.trim() || "Community member",
-    recipeName: row.recipe_name,
-    allergies: row.allergies,
-    accommodates: row.accommodates ?? "",
-    ingredients: row.ingredients,
-    directions: row.directions,
-    notes: row.notes,
-    recipe_photo: row.photo_data_url && row.photo_data_url.startsWith("data:image/") ? row.photo_data_url : undefined,
-    savedAt: new Date().toISOString(),
-  };
-  list.push(entry);
-  persistSavedCommunityRecipes(key, list);
-  return "saved";
-}
-
-export function savedWallRecipeIdsForUser(userId: string): Set<string> {
-  const key = scopedStorageKey(userId, FRIEND_RECIPES_STORAGE_BASE);
-  const list = loadSavedCommunityRecipes(key);
-  return new Set(
-    list.map((r) => r.wallRecipeId).filter((id): id is string => typeof id === "string" && id.length > 0)
-  );
+  const filtered = list.filter((r) => !r.wallRecipeId);
+  if (filtered.length !== list.length) {
+    persistSavedCommunityRecipes(key, filtered);
+  }
+  return filtered;
 }

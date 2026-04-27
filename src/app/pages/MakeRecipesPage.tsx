@@ -3,7 +3,7 @@ import { useNavigate, useParams, useLocation } from "react-router";
 import { motion } from "motion/react";
 import confetti from "canvas-confetti";
 import { useAuth } from "../context/AuthContext";
-import { FRIEND_RECIPES_STORAGE_BASE, MY_RECIPES_STORAGE_BASE, scopedStorageKey } from "../userStorage";
+import { MY_RECIPES_STORAGE_BASE, scopedStorageKey } from "../userStorage";
 import {
   loadRecipeMakeProgress,
   parseDirectionSteps,
@@ -14,7 +14,7 @@ import {
   type RecipeCookSource,
   type RecipeMakeProgressRow,
 } from "../recipeMakeProgress";
-import { loadSavedCommunityRecipes, sortSavedCommunityRecipesNewestFirst } from "../savedCommunityRecipes";
+import { purgeWallSourcedSavedRecipes, sortSavedCommunityRecipesNewestFirst } from "../savedCommunityRecipes";
 import { loadWhiskMakeLater, toggleWhiskMakeLater } from "../whiskMakeLater";
 import { loadMyRecipeEntries, sortMyRecipesNewestFirst, type MyRecipeEntry } from "./MyRecipesPage";
 import Navigation from "../components/Navigation";
@@ -61,7 +61,6 @@ export default function MakeRecipesPage() {
   const { user } = useAuth();
   const userId = user!.id;
   const myKey = scopedStorageKey(userId, MY_RECIPES_STORAGE_BASE);
-  const friendKey = scopedStorageKey(userId, FRIEND_RECIPES_STORAGE_BASE);
   const progressKeyFull = recipeCookProgressStorageKey(userId);
 
   const [progressMap, setProgressMap] = useState<Record<string, RecipeMakeProgressRow>>(() =>
@@ -79,8 +78,8 @@ export default function MakeRecipesPage() {
 
   const myRecipes = useMemo(() => sortMyRecipesNewestFirst(loadMyRecipeEntries(myKey)), [myKey]);
   const friendRecipes = useMemo(
-    () => sortSavedCommunityRecipesNewestFirst(loadSavedCommunityRecipes(friendKey)),
-    [friendKey]
+    () => sortSavedCommunityRecipesNewestFirst(purgeWallSourcedSavedRecipes(userId)),
+    [userId]
   );
 
   const listItems: CookListItem[] = useMemo(() => {
@@ -417,7 +416,7 @@ export default function MakeRecipesPage() {
 
   return (
     <div className={PAGE_SHELL_SCROLL}>
-      <GrayTasteHeader />
+      <GrayTasteHeader helpContent='Check ingredients, then each step. “I made this!” counts the cook and clears the list. Tap a card’s ribbon to save it for later — those stay at the top.' />
       <Navigation />
       <motion.div
         className="tb-main-column"
@@ -444,15 +443,6 @@ export default function MakeRecipesPage() {
         >
           Whip it up
         </motion.h1>
-        <motion.p
-          className="tb-intro-blurb share-tech-regular"
-          initial={{ y: 10, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.45, delay: 0.09 }}
-        >
-          Check ingredients, then each step. “I made this!” counts the cook and clears the list. Tap a card’s ribbon to save it
-          for later — those stay at the top.
-        </motion.p>
 
         <motion.section
           className="tb-section-narrow"
@@ -467,8 +457,8 @@ export default function MakeRecipesPage() {
           {listItems.length === 0 ? (
             <InfoBoxFrame variant={1}>
               <p className="share-tech-regular" style={{ fontSize: "20pt", lineHeight: 1.375 }}>
-                No recipes yet — add your own under the Recipes tab, or save one from the Buddy Board. Then come back here to cook
-                along!
+                No recipes yet — add your own under the Recipes tab, or save a recipe for a buddy under Saved. Then come back here to
+                cook along!
               </p>
             </InfoBoxFrame>
           ) : (

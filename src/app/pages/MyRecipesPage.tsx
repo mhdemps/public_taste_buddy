@@ -251,9 +251,13 @@ export default function MyRecipesPage() {
   };
 
   if (isFormView) {
+    const formHelp = isEditView
+      ? "Update lines (one ingredient per row, numbered steps) — then save."
+      : "List ingredients with checkboxes, then numbered steps — Whisk will use them for cook mode.";
+
     return (
       <div className={PAGE_SHELL_SCROLL}>
-        <GrayTasteHeader />
+        <GrayTasteHeader helpContent={formHelp} />
         <Navigation />
 
         <motion.div
@@ -322,16 +326,19 @@ export default function MyRecipesPage() {
                 onChange={setAccommodateIds}
                 groupLabel="Free from (recipe accommodates)"
               />
+            </InfoBoxFrame>
+
+            <InfoBoxFrame variant={2}>
               <label htmlFor="my-recipe-allergies" className="tb-field-label-bold share-tech-bold">
                 Contains / may contain (optional notes)
               </label>
-              <input
+              <textarea
                 id="my-recipe-allergies"
-                type="text"
                 value={allergies}
                 onChange={(e) => setAllergies(e.target.value)}
-                className="tb-input-plain share-tech-regular"
+                className="tb-textarea-plain share-tech-regular tb-may-contain-input"
                 placeholder="e.g. traces of nuts — for label warnings"
+                rows={3}
               />
             </InfoBoxFrame>
 
@@ -345,7 +352,7 @@ export default function MyRecipesPage() {
             <InfoBoxFrame variant={1}>
               <p className="tb-field-label-bold share-tech-bold">Recipe photo (optional)</p>
               <p className="tb-recipe-lines-hint share-tech-regular">
-                Appears on the Buddy Board when you post this recipe from your profile. Large images are resized automatically.
+                Appears on the Buddy Board when you post this recipe from your profile. Large photos are resized automatically.
               </p>
               {recipePhoto ? (
                 <div className="tb-recipe-photo-preview-wrap">
@@ -420,7 +427,7 @@ export default function MyRecipesPage() {
 
   return (
     <div className={PAGE_SHELL_SCROLL}>
-      <GrayTasteHeader />
+      <GrayTasteHeader helpContent="Tap a recipe to open it, or + to add a new one." />
       <Navigation />
 
       <motion.div
@@ -449,14 +456,6 @@ export default function MyRecipesPage() {
         >
           Your recipes
         </motion.h1>
-        <motion.p
-          className="tb-intro-blurb share-tech-regular"
-          initial={{ y: 12, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.45, delay: 0.1 }}
-        >
-          Tap a recipe to open it, or + to add a new one.
-        </motion.p>
 
         <motion.section
           className="tb-section-narrow"

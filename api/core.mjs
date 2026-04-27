@@ -132,8 +132,18 @@ function migrateBuddyBackdropIndices(rows) {
 
 async function readProfilesWithBackdropMigration() {
   const rows = await readJsonArray(profilesPath, "profiles.json");
-  const { rows: next, changed } = migrateBuddyBackdropIndices(rows);
-  if (changed) {
+  const { rows: migrated, changed: backdropChanged } = migrateBuddyBackdropIndices(rows);
+  let needsWrite = backdropChanged;
+  const next = migrated.map((p) => {
+    if (typeof p !== "object" || p == null || Array.isArray(p)) return p;
+    let row = p;
+    if (!Object.prototype.hasOwnProperty.call(p, "recipes_given")) {
+      row = { ...row, recipes_given: null };
+      needsWrite = true;
+    }
+    return row;
+  });
+  if (needsWrite) {
     await writeJsonArray(profilesPath, next);
   }
   return next;
@@ -186,6 +196,14 @@ function findProfileRowByUrlId(profiles, idFromUrl) {
   return profiles.find((row) => normalizeProfileId(row.id) === want) ?? null;
 }
 
+function normalizeProfilePayload(row) {
+  if (row == null) return row;
+  return {
+    ...row,
+    recipes_given: row.recipes_given ?? null,
+  };
+}
+
 /**
  * @param {() => Promise<Record<string, unknown>>} getBody lazy; only called for routes that need JSON body
  * @returns {Promise<{ status: number, payload: unknown } | null>}
@@ -193,7 +211,7 @@ function findProfileRowByUrlId(profiles, idFromUrl) {
 async function routeProfiles(method, pathname, getBody) {
   if (method === "GET" && pathname === "/api/profiles") {
     const profiles = sortByDateDesc(await readProfilesWithBackdropMigration(), "updated_at");
-    return { status: 200, payload: profiles };
+    return { status: 200, payload: profiles.map(normalizeProfilePayload) };
   }
 
   if (method === "POST" && pathname === "/api/profiles") {
@@ -225,7 +243,7 @@ async function routeProfiles(method, pathname, getBody) {
     };
     profiles.push(nextProfile);
     await writeJsonArray(profilesPath, profiles);
-    return { status: 201, payload: nextProfile };
+    return { status: 201, payload: normalizeProfilePayload(nextProfile) };
   }
 
   const profileByIdMatch = pathname.match(/^\/api\/profiles\/([^/]+)$/);
@@ -235,7 +253,7 @@ async function routeProfiles(method, pathname, getBody) {
   if (method === "GET") {
     const profiles = await readProfilesWithBackdropMigration();
     const profile = findProfileRowByUrlId(profiles, profileId);
-    return { status: 200, payload: profile };
+    return { status: 200, payload: normalizeProfilePayload(profile) };
   }
 
   if (method === "PUT") {
@@ -275,13 +293,19 @@ async function routeProfiles(method, pathname, getBody) {
       specialty: pick("specialty", existing?.specialty) ?? null,
       allergies: pick("allergies", existing?.allergies) ?? null,
       parties_attended: null,
-      recipes_given: pick("recipes_given", existing?.recipes_given) ?? null,
+      recipes_given: (() => {
+        const raw =
+          "recipes_given" in b ? b.recipes_given : "recipesGiven" in b ? b.recipesGiven : existing?.recipes_given;
+        if (raw == null || raw === "") return null;
+        return String(raw).trim().slice(0, 500) || null;
+      })(),
       updated_at: new Date().toISOString(),
     };
-    const nextProfiles = profiles.filter((row) => row.id !== canonicalId);
+    const wantNorm = normalizeProfileId(canonicalId);
+    const nextProfiles = profiles.filter((row) => normalizeProfileId(row.id) !== wantNorm);
     nextProfiles.push(nextProfile);
     await writeJsonArray(profilesPath, nextProfiles);
-    return { status: 200, payload: nextProfile };
+    return { status: 200, payload: normalizeProfilePayload(nextProfile) };
   }
 
   if (method === "DELETE") {

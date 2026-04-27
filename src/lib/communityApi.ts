@@ -15,6 +15,7 @@ export type TasteProfileRow = {
   personality: string | null;
   specialty: string | null;
   allergies: string | null;
+  /** Public “taste mood” line + longer sharing note (quote + detail). */
   recipes_given: string | null;
   updated_at: string;
 };
@@ -164,12 +165,14 @@ export async function fetchProfileByUserId(
   return { data: row, error: null };
 }
 
-export async function upsertMyProfile(payload: TasteProfileUpsert): Promise<{ error: Error | null }> {
-  const { error } = await requestJson<TasteProfileRow>(`/profiles/${encodeURIComponent(payload.id)}`, {
+export async function upsertMyProfile(
+  payload: TasteProfileUpsert
+): Promise<{ data: TasteProfileRow | null; error: Error | null }> {
+  const { data, error } = await requestJson<TasteProfileRow>(`/profiles/${encodeURIComponent(payload.id)}`, {
     method: "PUT",
     body: JSON.stringify(payload),
   });
-  return { error };
+  return { data: error ? null : data, error };
 }
 
 export async function deleteMyProfile(userId: string): Promise<{ error: Error | null }> {

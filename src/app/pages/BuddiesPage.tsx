@@ -98,7 +98,7 @@ export default function BuddiesPage() {
 
   return (
     <div className={PAGE_SHELL_SCROLL} data-name="Saved buddies">
-      <GrayTasteHeader />
+      <GrayTasteHeader helpContent="Profiles you keep for parties and community recipes on this device. The live Buddy Board with everyone who has an account is the center tab below. Use + to add another buddy to this list." />
       <Navigation />
 
       <motion.div
@@ -115,15 +115,6 @@ export default function BuddiesPage() {
         >
           Saved buddies
         </motion.h1>
-        <motion.p
-          className="tb-buddies-blurb share-tech-regular"
-          initial={{ y: 12, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.45, delay: 0.1 }}
-        >
-          Profiles you keep for parties and community recipes on this device. The live Buddy Board with everyone who has an
-          account is the center tab below. Use + to add another buddy to this list.
-        </motion.p>
 
         <div className="tb-buddies-grid-wrap">
           <motion.div

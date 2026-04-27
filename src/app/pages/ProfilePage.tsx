@@ -35,6 +35,7 @@ import {
   updatePublicRecipePhoto,
   upsertMyProfile,
   type PublicRecipeRow,
+  type TasteProfileRow,
   type TasteProfileUpsert,
 } from "../../lib/communityApi";
 import imgTrashDelete from "@project-assets/Trash.svg";
@@ -128,6 +129,32 @@ export default function ProfilePage() {
     setSharedIds(next);
   }, [userId]);
 
+  /** Only overwrite optional fields when the API row actually includes that key (avoids wiping on `undefined`). */
+  const applyServerProfileToForm = useCallback((data: TasteProfileRow) => {
+    setDisplayName(data.display_name?.trim() || defaultDisplayName());
+    const circleIdx = Math.max(0, Math.min(BUDDY_BACKDROP_COUNT - 1, Math.floor(data.buddy_color_index ?? 0)));
+    const legacyBodyHint = circleIdx >= 0 && circleIdx <= 5 ? circleIdx : 0;
+    setBuddyBodyKey(coerceBuddyBodyKey(data.buddy_body_key, data.buddy_body_key ? 0 : legacyBodyHint));
+    setBuddyCircleIndex(circleIdx);
+    setBuddyEyeKey(coerceBuddyEyeKey(data.buddy_eye_key));
+    setBuddyHatKey(coerceBuddyHatKey(data.buddy_hat_key));
+    setBuddySmileKey(coerceBuddySmileKey(data.buddy_smile_key));
+    if ("favorite_food" in data) setFavoriteFood(data.favorite_food ?? "");
+    if ("personality" in data) setPersonality(data.personality ?? "");
+    if ("specialty" in data) setSpecialty(data.specialty ?? "");
+    if ("recipes_given" in data || "taste_mood" in (data as Record<string, unknown>)) {
+      const row = data as TasteProfileRow & { taste_mood?: string | null };
+      const fromRecipes = row.recipes_given ?? "";
+      const fromLegacyMood = row.taste_mood ?? "";
+      setRecipesGiven(String(fromRecipes.trim() ? fromRecipes : fromLegacyMood));
+    }
+    if ("allergies" in data) {
+      const dec = decodeProfileAllergiesField(data.allergies ?? "");
+      setAllergyTagIds(dec.tagIds);
+      setAllergyExtraNotes(dec.extraNotes);
+    }
+  }, []);
+
   useEffect(() => {
     refreshLocalRecipes();
   }, [refreshLocalRecipes]);
@@ -143,21 +170,7 @@ export default function ProfilePage() {
         return;
       }
       if (data) {
-        setDisplayName(data.display_name?.trim() || defaultDisplayName());
-        const circleIdx = Math.max(0, Math.min(BUDDY_BACKDROP_COUNT - 1, Math.floor(data.buddy_color_index ?? 0)));
-        const legacyBodyHint = circleIdx >= 0 && circleIdx <= 5 ? circleIdx : 0;
-        setBuddyBodyKey(coerceBuddyBodyKey(data.buddy_body_key, data.buddy_body_key ? 0 : legacyBodyHint));
-        setBuddyCircleIndex(circleIdx);
-        setBuddyEyeKey(coerceBuddyEyeKey(data.buddy_eye_key));
-        setBuddyHatKey(coerceBuddyHatKey(data.buddy_hat_key));
-        setBuddySmileKey(coerceBuddySmileKey(data.buddy_smile_key));
-        setFavoriteFood(data.favorite_food ?? "");
-        setPersonality(data.personality ?? "");
-        setSpecialty(data.specialty ?? "");
-        const dec = decodeProfileAllergiesField(data.allergies ?? "");
-        setAllergyTagIds(dec.tagIds);
-        setAllergyExtraNotes(dec.extraNotes);
-        setRecipesGiven(data.recipes_given ?? "");
+        applyServerProfileToForm(data);
       } else {
         setDisplayName(defaultDisplayName());
       }
@@ -167,7 +180,7 @@ export default function ProfilePage() {
     return () => {
       cancelled = true;
     };
-  }, [userId, refreshWallRecipes]);
+  }, [userId, refreshWallRecipes, applyServerProfileToForm]);
 
   useEffect(() => {
     const msg = (location.state as { saveMessage?: string } | null)?.saveMessage;
@@ -196,7 +209,7 @@ export default function ProfilePage() {
       personality: personality.trim() || null,
       specialty: specialty.trim() || null,
       allergies: encodeProfileAllergiesField(allergyTagIds, allergyExtraNotes).trim() || null,
-      recipes_given: recipesGiven.trim() || null,
+      recipes_given: recipesGiven.trim().slice(0, 500) || null,
     };
   }, [
     userId,
@@ -214,17 +227,21 @@ export default function ProfilePage() {
     recipesGiven,
   ]);
 
-  const persistProfile = useCallback(async (): Promise<{ errorMessage: string | null }> => {
+  const persistProfile = useCallback(async (): Promise<string | null> => {
     const { error } = await upsertMyProfile(buildProfileUpsertPayload());
-    return { errorMessage: error ? error.message : null };
+    return error ? error.message : null;
   }, [buildProfileUpsertPayload]);
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaveMessage(null);
-    const { errorMessage } = await persistProfile();
+    const errorMessage = await persistProfile();
     if (!errorMessage) {
       dispatchProfileDisplaySaved(displayName.trim() || defaultDisplayName());
+      const { data: fresh, error: fetchErr } = await fetchProfileByUserId(userId);
+      if (fresh && !fetchErr) {
+        applyServerProfileToForm(fresh);
+      }
     }
     setSaveMessage(errorMessage ?? "Saved — you appear on the Buddy Board.");
   };
@@ -292,9 +309,22 @@ export default function ProfilePage() {
     }
   };
 
+  const profileHelp = (
+    <>
+      Edit how you appear on the Buddy Board: name, taste notes, allergens, and your buddy. Save to update your tile.
+      <br />
+      <br />
+      Recipes you create live under{" "}
+      <Link to="/my-recipes" className="share-tech-bold">
+        Recipes
+      </Link>{" "}
+      first — then use Post recipes below to share one on the wall for other profiles.
+    </>
+  );
+
   return (
     <div className={PAGE_SHELL_SCROLL} data-name="Profile">
-      <GrayTasteHeader />
+      <GrayTasteHeader helpContent={profileHelp} />
       <Navigation />
 
       <div className="tb-main-column">
@@ -391,7 +421,7 @@ export default function ProfilePage() {
                 <div className="tb-bento-card">
                   <InfoBoxFrame variant={3}>
                     <label htmlFor="profile-specialty" className="tb-field-label--tight share-tech-regular">
-                      Kitchen specialty
+                      Specialties
                     </label>
                     <input
                       id="profile-specialty"
@@ -403,17 +433,21 @@ export default function ProfilePage() {
                   </InfoBoxFrame>
                 </div>
 
-                <div className="tb-bento-card">
-                  <InfoBoxFrame variant={0}>
-                    <label htmlFor="profile-recipes-note" className="tb-field-label--tight share-tech-regular">
-                      What you share
+                <div className="tb-bento-card tb-bento-card--wide">
+                  <InfoBoxFrame variant={2}>
+                    <label htmlFor="profile-taste-mood" className="tb-field-label--tight share-tech-regular">
+                      Taste mood
                     </label>
+                    <p className="share-tech-regular tb-muted-hint tb-profile-bento-hint">
+                      A one-liner for your public profile — what you’re into right now.
+                    </p>
                     <input
-                      id="profile-recipes-note"
+                      id="profile-taste-mood"
                       className="tb-input-plain share-tech-regular"
                       value={recipesGiven}
-                      onChange={(e) => setRecipesGiven(e.target.value)}
-                      placeholder="Optional — e.g. “Usually post desserts”"
+                      onChange={(e) => setRecipesGiven(e.target.value.slice(0, 500))}
+                      placeholder='e.g. “Soup season forever” · dessert first · spice level: brave'
+                      maxLength={500}
                     />
                   </InfoBoxFrame>
                 </div>
@@ -459,14 +493,6 @@ export default function ProfilePage() {
         <h2 className="tb-section-heading share-tech-bold" style={{ marginTop: "2rem" }}>
           Post recipes from your kitchen
         </h2>
-        <p className="tb-intro-blurb share-tech-regular">
-          Recipes live in{" "}
-          <Link to="/my-recipes" className="tb-link-wide">
-            Recipes
-          </Link>{" "}
-          first. Tap below to copy one to the Buddy Board so other taste profiles can read it. Optional photos you add there show on
-          the Buddy Board too.
-        </p>
 
         {recipeAction ? (
           <p className="share-tech-regular tb-text-coral" style={{ fontSize: "20pt" }}>
@@ -482,38 +508,76 @@ export default function ProfilePage() {
               </p>
             </InfoBoxFrame>
           ) : (
-            myRecipes.map((r) => (
-              <InfoBoxFrame key={r.id} variant={0}>
-                {r.recipe_photo && r.recipe_photo.startsWith("data:image/") ? (
-                  <img
-                    src={r.recipe_photo}
-                    alt=""
-                    className="tb-wall-recipe-photo tb-wall-recipe-photo--in-card"
-                    draggable={false}
-                  />
-                ) : null}
-                <p className="share-tech-bold tb-text-coral" style={{ fontSize: "20pt" }}>
-                  {r.recipeName || "Untitled"}
-                </p>
-                {sharedIds.has(r.id) ? (
-                  <p className="share-tech-regular" style={{ fontSize: "20pt", marginTop: "0.5rem" }}>
-                    On the Buddy Board
+            myRecipes.map((r) => {
+              const wallRow = wallRecipes.find((w) => w.source_local_id === r.id);
+              const wallPh =
+                wallRow?.photo_data_url?.startsWith("data:image/") ? wallRow.photo_data_url : null;
+              const localPh =
+                r.recipe_photo?.startsWith("data:image/") ? r.recipe_photo : null;
+              const showSyncCoverToWall =
+                sharedIds.has(r.id) && Boolean(wallRow && localPh && localPh !== wallPh);
+              return (
+                <InfoBoxFrame key={r.id} variant={0}>
+                  {r.recipe_photo && r.recipe_photo.startsWith("data:image/") ? (
+                    <img
+                      src={r.recipe_photo}
+                      alt=""
+                      className="tb-wall-recipe-photo tb-wall-recipe-photo--in-card"
+                      draggable={false}
+                    />
+                  ) : null}
+                  <p className="share-tech-bold tb-text-coral" style={{ fontSize: "20pt" }}>
+                    {r.recipeName || "Untitled"}
                   </p>
-                ) : (
-                  <motion.button
-                    type="button"
-                    className="tb-submit-wrap"
-                    style={{ marginTop: "0.6rem" }}
-                    whileTap={{ scale: 0.97 }}
-                    onClick={() => void postRecipe(r)}
-                  >
-                    <ChalkPillFrame variant={3} fillClassName="tb-pill-fill-coral--tight" innerClassName="tb-pill-inner tb-pill-inner--sm">
-                      <span className="tb-pill-text-white share-tech-regular">Post to Buddy Board</span>
-                    </ChalkPillFrame>
-                  </motion.button>
-                )}
-              </InfoBoxFrame>
-            ))
+                  {sharedIds.has(r.id) ? (
+                    <>
+                      <p className="share-tech-regular" style={{ fontSize: "20pt", marginTop: "0.5rem" }}>
+                        On the Buddy Board
+                      </p>
+                      {showSyncCoverToWall && wallRow && localPh ? (
+                        <>
+                          <p
+                            className="share-tech-regular tb-muted-hint"
+                            style={{ fontSize: "17pt", marginTop: "0.35rem" }}
+                          >
+                            {wallPh
+                              ? "Your saved cover is different from the wall. Sync to update the Buddy Board."
+                              : "Cover is saved in Recipes on this device. Sync it so the Buddy Board shows it too."}
+                          </p>
+                          <motion.button
+                            type="button"
+                            className="tb-submit-wrap"
+                            style={{ marginTop: "0.5rem" }}
+                            whileTap={{ scale: 0.97 }}
+                            onClick={() => void syncWallPhoto(wallRow, localPh)}
+                          >
+                            <ChalkPillFrame
+                              variant={2}
+                              fillClassName="tb-pill-fill-coral--tight"
+                              innerClassName="tb-pill-inner tb-pill-inner--sm"
+                            >
+                              <span className="tb-pill-text-white share-tech-regular">Sync cover to Buddy Board</span>
+                            </ChalkPillFrame>
+                          </motion.button>
+                        </>
+                      ) : null}
+                    </>
+                  ) : (
+                    <motion.button
+                      type="button"
+                      className="tb-submit-wrap"
+                      style={{ marginTop: "0.6rem" }}
+                      whileTap={{ scale: 0.97 }}
+                      onClick={() => void postRecipe(r)}
+                    >
+                      <ChalkPillFrame variant={3} fillClassName="tb-pill-fill-coral--tight" innerClassName="tb-pill-inner tb-pill-inner--sm">
+                        <span className="tb-pill-text-white share-tech-regular">Post to Buddy Board</span>
+                      </ChalkPillFrame>
+                    </motion.button>
+                  )}
+                </InfoBoxFrame>
+              );
+            })
           )}
         </div>
 
@@ -532,7 +596,7 @@ export default function ProfilePage() {
                 const wallPhoto =
                   r.photo_data_url && r.photo_data_url.startsWith("data:image/") ? r.photo_data_url : null;
                 const coverSrc = wallPhoto ?? localPhoto;
-                const needsPhotoSync = Boolean(localPhoto && !wallPhoto);
+                const needsPhotoSync = Boolean(localPhoto && localPhoto !== wallPhoto);
                 return (
                   <InfoBoxFrame key={r.id} variant={1}>
                     {coverSrc ? (
@@ -549,7 +613,9 @@ export default function ProfilePage() {
                     {needsPhotoSync ? (
                       <>
                         <p className="share-tech-regular tb-muted-hint" style={{ fontSize: "17pt", marginTop: "0.35rem" }}>
-                          Cover is saved in Recipes on this device. Sync it so the Buddy Board shows it too.
+                          {wallPhoto
+                            ? "Your saved cover is different from the wall. Sync to update the Buddy Board."
+                            : "Cover is saved in Recipes on this device. Sync it so the Buddy Board shows it too."}
                         </p>
                         <motion.button
                           type="button"

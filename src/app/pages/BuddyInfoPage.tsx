@@ -111,9 +111,12 @@ export default function BuddyInfoPage() {
     setEditing(true);
   };
 
+  const buddyInfoHelp =
+    "Public taste profile — what hosts and friends see at a glance. Edit to update their saved details on this device.";
+
   return (
     <div className={PAGE_SHELL_SCROLL}>
-      <GrayTasteHeader />
+      <GrayTasteHeader helpContent={buddyInfoHelp} />
       <Navigation />
 
       <div className="tb-main-column">
@@ -183,14 +186,6 @@ export default function BuddyInfoPage() {
             >
               {buddy.name}
             </motion.h1>
-            <motion.p
-              className="tb-buddy-profile-kicker share-tech-regular"
-              initial={{ y: 12, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ duration: 0.45, delay: 0.28 }}
-            >
-              Public taste profile — what hosts and friends see at a glance
-            </motion.p>
           </>
         )}
 
@@ -247,7 +242,7 @@ export default function BuddyInfoPage() {
 
             <InfoBoxFrame variant={3}>
               <label htmlFor="edit-specialty" className="tb-field-label--tight share-tech-regular">
-                Specialty
+                Specialties
               </label>
               <input
                 id="edit-specialty"
@@ -261,7 +256,7 @@ export default function BuddyInfoPage() {
 
             <InfoBoxFrame variant={0}>
               <label htmlFor="edit-recipes" className="tb-field-label--tight share-tech-regular">
-                Recipes shared
+                Taste mood
               </label>
               <input
                 id="edit-recipes"
@@ -310,14 +305,14 @@ export default function BuddyInfoPage() {
 
             {buddy.specialty && (
               <InfoBoxFrame variant={2}>
-                <h3 className="tb-detail-h3 share-tech-bold">Specialty</h3>
+                <h3 className="tb-detail-h3 share-tech-bold">Specialties</h3>
                 <p className="tb-detail-p share-tech-regular">{buddy.specialty}</p>
               </InfoBoxFrame>
             )}
 
             {buddy.recipesGiven && (
               <InfoBoxFrame variant={0}>
-                <h3 className="tb-detail-h3 share-tech-bold">Recipes shared</h3>
+                <h3 className="tb-detail-h3 share-tech-bold">Taste mood</h3>
                 <p className="tb-detail-p share-tech-regular">{buddy.recipesGiven}</p>
               </InfoBoxFrame>
             )}

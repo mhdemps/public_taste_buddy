@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { useLocation } from "react-router";
 import imgLineLogo from "@project-assets/Line Logo.svg";
 import imgTasteBuddyLogo from "@project-assets/trans-orange.png";
@@ -8,12 +8,20 @@ import {
   PROFILE_DISPLAY_SAVED_EVENT,
   type ProfileDisplaySavedDetail,
 } from "../profileDisplayEvents";
+import { HeaderPageHelp } from "./HeaderPageHelp";
 
 /** sessionStorage: which user id has already had the one-time greeting fade this login */
 const HEADER_GREET_FADE_SESSION_KEY = "tb-header-greet-faded-user";
 
 /** Same size/position everywhere — centered above page content */
-export default function GrayTasteHeader({ showSignOut = true }: { showSignOut?: boolean }) {
+export default function GrayTasteHeader({
+  showSignOut = true,
+  helpContent,
+}: {
+  showSignOut?: boolean;
+  /** Shown in a ? popover (top-left, opposite Sign out). */
+  helpContent?: ReactNode;
+}) {
   const { user, signOut } = useAuth();
   const location = useLocation();
   const [profileName, setProfileName] = useState<string | null>(null);
@@ -95,7 +103,10 @@ export default function GrayTasteHeader({ showSignOut = true }: { showSignOut?: 
   const headerLogoClass = signedIn ? "tb-header-logo tb-header-logo--line" : "tb-header-logo";
 
   return (
-    <header className={`tb-header${signedIn ? " tb-header--signed-in" : ""}`}>
+    <header
+      className={`tb-header${signedIn ? " tb-header--signed-in" : ""}${helpContent != null ? " tb-header--has-help" : ""}`}
+    >
+      {helpContent != null ? <HeaderPageHelp>{helpContent}</HeaderPageHelp> : null}
       {signedIn ? (
         <button
           type="button"

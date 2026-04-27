@@ -258,9 +258,13 @@ export default function AttendPartyPage() {
   };
 
   if (isFormView && buddies.length > 0) {
+    const partyFormHelp = isEditView
+      ? "Update themes, date, or what you’re bringing — then save."
+      : "Fill in the details, then save — it appears on your party list with the host’s public profile.";
+
     return (
       <div className={PAGE_SHELL_SCROLL}>
-        <GrayTasteHeader />
+        <GrayTasteHeader helpContent={partyFormHelp} />
         <Navigation />
 
         <motion.div
@@ -287,16 +291,6 @@ export default function AttendPartyPage() {
           >
             {isEditView ? "Edit party" : "Add a party"}
           </motion.h1>
-          <motion.p
-            className="tb-intro-blurb share-tech-regular"
-            initial={{ y: 12, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.45, delay: 0.12 }}
-          >
-            {isEditView
-              ? "Update themes, date, or what you’re bringing — then save."
-              : "Fill in the details, then save — it appears on your party list with the host’s public profile."}
-          </motion.p>
 
           <motion.section
             className="tb-section-narrow"
@@ -431,7 +425,7 @@ export default function AttendPartyPage() {
 
   return (
     <div className={PAGE_SHELL_SCROLL}>
-      <GrayTasteHeader />
+      <GrayTasteHeader helpContent="Plan get-togethers and see who’s hosting — tied to profiles in Saved buddies." />
       <Navigation />
 
       <motion.div
@@ -458,14 +452,6 @@ export default function AttendPartyPage() {
         >
           Gatherings
         </motion.h1>
-        <motion.p
-          className="tb-intro-blurb share-tech-regular"
-          initial={{ y: 12, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.45, delay: 0.12 }}
-        >
-          Plan get-togethers and see who’s hosting — tied to profiles in Saved buddies.
-        </motion.p>
 
         <motion.section
           className="tb-section-narrow tb-section-narrow--mb"

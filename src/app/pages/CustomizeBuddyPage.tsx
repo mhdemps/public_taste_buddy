@@ -170,7 +170,7 @@ export default function CustomizeBuddyPage() {
       personality: personality.trim() || null,
       specialty: specialty.trim() || null,
       allergies: allergies.trim() || null,
-      recipes_given: recipesGiven.trim() || null,
+      recipes_given: recipesGiven.trim().slice(0, 500) || null,
     };
   }, [
     userId,
@@ -209,7 +209,7 @@ export default function CustomizeBuddyPage() {
 
   return (
     <div className={PAGE_SHELL_SCROLL} data-name="Customize buddy">
-      <GrayTasteHeader />
+      <GrayTasteHeader helpContent="Change your buddy’s backdrop, body, eyes, hat, and expression. Save returns you to Profile with this look on your Buddy Board tile and public profile." />
       <Navigation />
 
       <div className="tb-main-column">

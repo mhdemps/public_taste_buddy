@@ -50,7 +50,7 @@
     "created_at": "2026-04-27T01:49:55.959Z"
   },
   {
-    "id": "65c17644-7c6d-4c44-a93d-22016111b672",
+    "id": "c923e297-fd25-4167-bf26-e70dd607bc93",
     "user_id": "a3d20269-4e4d-433d-a7d0-b3cd5c3f4912",
     "source_local_id": "my-recipe-1777232716462",
     "recipe_name": "Despair",
@@ -60,6 +60,19 @@
     "directions": "1. pick electrical engineering",
     "notes": "be prepared to have no life",
     "photo_data_url": "",
-    "created_at": "2026-04-27T03:18:24.038Z"
+    "created_at": "2026-04-27T06:52:35.549Z"
+  },
+  {
+    "id": "d9425bb4-189e-47bb-b731-79c5904e8cac",
+    "user_id": "a3d20269-4e4d-433d-a7d0-b3cd5c3f4912",
+    "source_local_id": "my-recipe-1777266259156",
+    "recipe_name": "beware celiac",
+    "allergies": "ur mom and gluten, wheat, rice",
+    "accommodates": "",
+    "ingredients": "egg",
+    "directions": "1. gluten",
+    "notes": "",
+    "photo_data_url": "",
+    "created_at": "2026-04-27T06:52:36.507Z"
   }
 ]
