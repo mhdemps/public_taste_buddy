@@ -5,9 +5,11 @@
   "rewrites": [
     { "handle": "filesystem" },
     {
-      "source": "/((?!api/).*)",
-      "destination": "/index.html"
-    }
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
+    },
+    { "source": "/api", "destination": "/api" },
+    { "source": "/(.*)", "destination": "/index.html" }
   ],
   "functions": {
     "api/**/*.js": {

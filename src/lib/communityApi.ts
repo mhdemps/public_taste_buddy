@@ -67,14 +67,14 @@ async function parseJsonResponse<T>(response: Response): Promise<T> {
   }
   const text = await response.text();
   if (!text.trim()) {
-    if (response.status === 405) {
-      throw new Error(
-        "API rejected the request (HTTP 405 Method Not Allowed). If you deploy to Vercel, ensure `vercel.json` " +
-          "uses a `filesystem` rewrite before the SPA fallback so `/api/*` reaches serverless routes, and that " +
-          "the JSON API is running locally when you use `npm run dev` (API on port 3001)."
-      );
-    }
-    throw new Error(`Empty API response (HTTP ${response.status}).`);
+    const status = response.status;
+    const vercelHints =
+      status === 405 || status === 401
+        ? " On Vercel: redeploy with latest `vercel.json` (rewrites must route `/api/*` to serverless, not `index.html`). " +
+          "If previews use Deployment Protection / Vercel Authentication, disable it or allow `/api` — it often breaks POST and shows 401/405 with an empty body. " +
+          "Locally use `npm run dev` so `/api` proxies to port 3001."
+        : "";
+    throw new Error(`Empty API response (HTTP ${status}).${vercelHints}`);
   }
   try {
     return JSON.parse(text) as T;
@@ -111,6 +111,8 @@ async function requestJson<T>(path: string, init?: RequestInit): Promise<{ data:
     }
     const response = await fetch(`${API_BASE}${path}`, {
       ...init,
+      /** Same-origin `/api` on Vercel: send cookies so Deployment Protection can authorize POST (omit when API is another origin). */
+      credentials: API_ORIGIN ? "omit" : "include",
       headers,
     });
     const payload = await parseJsonResponse<T | { error?: string }>(response);
