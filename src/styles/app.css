@@ -80,6 +80,12 @@
   }
 }
 
+@media (max-width: 1023px) {
+  .tb-shell--scroll:has(.tb-sticky-top-chrome .tb-header--signed-in) {
+    overflow-x: visible;
+  }
+}
+
 /* Header + nav stay at top while `.tb-shell--scroll` scrolls — no separate panel; shell gradient shows through */
 .tb-sticky-top-chrome {
   /* Shared with `.tb-header-line-track` + nav so line logo width matches outer icon edges */
@@ -118,6 +124,7 @@
     box-sizing: border-box;
     width: 100vw;
     margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
     padding-top: max(0.65rem, calc(env(safe-area-inset-top, 0px) + 0.35rem));
     padding-inline: max(0.85rem, env(safe-area-inset-left, 0px)) max(0.85rem, env(safe-area-inset-right, 0px));
     padding-bottom: 0.55rem;
@@ -632,8 +639,8 @@
 
 .tb-allergen-chip {
   display: flex;
-  flex: 1 1 0;
-  min-width: 0;
+  flex: 0 0 auto;
+  min-width: 3.25rem;
   flex-direction: column;
   align-items: center;
   gap: 0.22rem;
@@ -738,8 +745,8 @@
 
 .tb-allergen-badge-item {
   display: flex;
-  flex: 1 1 0;
-  min-width: 0;
+  flex: 0 0 auto;
+  min-width: 3.15rem;
   flex-direction: column;
   align-items: center;
   gap: 0.12rem;
@@ -3787,18 +3794,19 @@
 /* Profile: scale inputs/padding down on mobile so fields fit comfortably. */
 @media (max-width: 639px) {
   .tb-form-edit-stack--profile .tb-infobox-inner {
-    padding: 0.85rem 1rem;
+    padding: 1.05rem 1rem;
   }
 
   .tb-form-edit-stack--profile .tb-field-label,
   .tb-form-edit-stack--profile .tb-field-label--tight,
   .tb-form-edit-stack--profile .tb-field-label-bold,
   .tb-form-edit-stack--profile .tb-field-label-bold--tight {
-    font-size: clamp(0.95rem, 4.4vw, 1.15rem);
+    font-size: clamp(0.9rem, 4.1vw, 1.05rem);
   }
 
   .tb-form-edit-stack--profile :is(.tb-input-plain, .tb-textarea-plain, .tb-select-plain) {
-    font-size: clamp(1rem, 4.8vw, 1.25rem);
+    font-size: clamp(0.98rem, 4.4vw, 1.15rem);
+    line-height: 1.3;
   }
 }
 
