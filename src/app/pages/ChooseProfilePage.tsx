@@ -289,14 +289,6 @@ export default function ChooseProfilePage() {
                     transition={{ duration: 0.25 }}
                   >
                     <div className="tb-profile-picker-expand-row">
-                      <BuddyAvatar
-                        selection={selection}
-                        circleBackgroundIndex={circle}
-                        className="tb-buddy-avatar-shell tb-profile-picker-expand-avatar"
-                        innerClassName="tb-buddy-face-inner"
-                        imgClassName="tb-buddy-face-img"
-                        alt={name}
-                      />
                       <div className="tb-profile-picker-expand-cta">
                         <motion.button
                           type="button"
