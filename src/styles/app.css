@@ -122,9 +122,10 @@
     justify-content: space-between;
     gap: 0.75rem;
     box-sizing: border-box;
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%);
     width: 100vw;
-    margin-left: calc(50% - 50vw);
-    margin-right: calc(50% - 50vw);
     padding-top: max(0.65rem, calc(env(safe-area-inset-top, 0px) + 0.35rem));
     padding-inline: max(0.85rem, env(safe-area-inset-left, 0px)) max(0.85rem, env(safe-area-inset-right, 0px));
     padding-bottom: 0.55rem;
@@ -153,6 +154,7 @@
     min-width: 0;
     align-items: center;
     justify-content: flex-start;
+    overflow: visible;
   }
 
   .tb-sticky-top-chrome:has(.tb-header--signed-in) .tb-header-line-track {
@@ -186,6 +188,14 @@
     max-width: none;
     flex: 0 0 auto;
     min-width: 0;
+  }
+}
+
+@media (max-width: 390px) {
+  /* Extra-small phones: avoid clipping the left edge of the line logo. */
+  .tb-sticky-top-chrome:has(.tb-header--signed-in) .tb-header-logo--line {
+    width: min(270px, 56vw);
+    object-position: center center;
   }
 }
 
@@ -3095,6 +3105,18 @@
   font-weight: 400;
   font-size: 0.9rem;
   line-height: 1;
+}
+
+@media (max-width: 420px) {
+  /* When it gets small: hamburger only, no “Menu” text. */
+  .tb-nav-hamburger-btn {
+    gap: 0;
+    padding: 0.45rem 0.4rem;
+  }
+
+  .tb-nav-hamburger-label {
+    display: none;
+  }
 }
 
 .tb-nav-dropdown {
