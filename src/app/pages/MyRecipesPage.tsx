@@ -288,7 +288,7 @@ export default function MyRecipesPage() {
         <StickyTopChrome />
 
         <motion.div
-          className="tb-main-column tb-buddy-board-page tb-whisk-recipes-column"
+          className="tb-main-column tb-buddy-board-page tb-whisk-recipes-column tb-my-recipes-page"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
@@ -474,7 +474,7 @@ export default function MyRecipesPage() {
       <StickyTopChrome />
 
       <motion.div
-        className="tb-main-column tb-buddy-board-page tb-whisk-recipes-column"
+        className="tb-main-column tb-buddy-board-page tb-whisk-recipes-column tb-my-recipes-page"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}

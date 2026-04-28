@@ -17,6 +17,11 @@
     brightness(101%) contrast(104%);
 }
 
+/* Recipes page: force a solid blue mat behind cover illustrations (prevents faint pattern feel on mobile). */
+.tb-my-recipes-page {
+  --tb-recipe-cover-wash: #2f74c0;
+}
+
 @media (max-width: 639px) {
   :root {
     --tb-recipe-picker-cell-max: 2.95rem;
@@ -3623,6 +3628,13 @@
   margin-top: clamp(-2.35rem, -11vw, -1.25rem);
 }
 
+/* Mobile: prevent Taste Buddy logo clipping on the sides. */
+@media (max-width: 639px) {
+  .tb-header-logo {
+    width: min(300px, calc(100vw - 1.25rem));
+  }
+}
+
 /* Same width as `.tb-nav-bar` in `.tb-nav-dock` — inner padding matches `.tb-nav-inner` */
 .tb-header-line-track {
   box-sizing: border-box;
@@ -3762,6 +3774,32 @@
 /* Who’s Cooking: slightly larger title + buddy on sign-in page */
 .tb-sign-in-page .tb-page-title {
   font-size: clamp(32pt, 7.2vw, 3rem);
+}
+
+/* Sign-in: keep “Who’s Cooking” on one line on mobile. */
+@media (max-width: 639px) {
+  .tb-sign-in-page .tb-page-title {
+    white-space: nowrap;
+    font-size: clamp(24pt, 7vw, 2.4rem);
+  }
+}
+
+/* Profile: scale inputs/padding down on mobile so fields fit comfortably. */
+@media (max-width: 639px) {
+  .tb-form-edit-stack--profile .tb-infobox-inner {
+    padding: 0.85rem 1rem;
+  }
+
+  .tb-form-edit-stack--profile .tb-field-label,
+  .tb-form-edit-stack--profile .tb-field-label--tight,
+  .tb-form-edit-stack--profile .tb-field-label-bold,
+  .tb-form-edit-stack--profile .tb-field-label-bold--tight {
+    font-size: clamp(0.95rem, 4.4vw, 1.15rem);
+  }
+
+  .tb-form-edit-stack--profile :is(.tb-input-plain, .tb-textarea-plain, .tb-select-plain) {
+    font-size: clamp(1rem, 4.8vw, 1.25rem);
+  }
 }
 
 /* Buddy icon (intro wink) */
