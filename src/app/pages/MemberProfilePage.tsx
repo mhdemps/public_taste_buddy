@@ -87,7 +87,7 @@ export default function MemberProfilePage() {
 
   return (
     <div className={PAGE_SHELL_SCROLL} data-name="Member profile">
-      <StickyTopChrome helpContent="Public taste profile on the Buddy Board — how this person chose to show up for the community. Use Edit my profile when it’s you." />
+      <StickyTopChrome />
 
       <div className="tb-main-column">
         <div className="tb-buddy-profile-back-row">
@@ -205,10 +205,14 @@ export default function MemberProfilePage() {
                       mode="profile"
                       ids={profileAllergyDecode.tagIds}
                       ariaLabel="Allergens this profile avoids"
+                      className="tb-allergen-badge-row--viewer-profile"
                     />
                   ) : null}
                   {profileAllergyDecode.extraNotes ? (
-                    <p className="tb-pre-wrap share-tech-regular" style={{ marginTop: profileAllergyDecode.tagIds.length ? "0.75rem" : 0 }}>
+                    <p
+                      className="tb-pre-wrap share-tech-regular tb-text-coral"
+                      style={{ marginTop: profileAllergyDecode.tagIds.length ? "0.75rem" : 0 }}
+                    >
                       {profileAllergyDecode.extraNotes}
                     </p>
                   ) : null}

@@ -283,16 +283,12 @@ export default function MyRecipesPage() {
   };
 
   if (isFormView) {
-    const formHelp = isEditView
-      ? "Update lines (one ingredient per row, numbered steps) — then save."
-      : "List ingredients with checkboxes, then numbered steps — Whisk will use them for cook mode.";
-
     return (
       <div className={PAGE_SHELL_SCROLL}>
-        <StickyTopChrome helpContent={formHelp} />
+        <StickyTopChrome />
 
         <motion.div
-          className="tb-main-column"
+          className="tb-main-column tb-buddy-board-page tb-whisk-recipes-column"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
@@ -475,10 +471,10 @@ export default function MyRecipesPage() {
 
   return (
     <div className={PAGE_SHELL_SCROLL}>
-      <StickyTopChrome helpContent="Tap a recipe to open it, or + to add a new one." />
+      <StickyTopChrome />
 
       <motion.div
-        className="tb-main-column"
+        className="tb-main-column tb-buddy-board-page tb-whisk-recipes-column"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}

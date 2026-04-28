@@ -38,7 +38,7 @@ export default function AddBuddyPage() {
 
   return (
     <div className={PAGE_SHELL_SCROLL}>
-      <StickyTopChrome helpContent="This info can show up on their public profile — favorite flavors, what they bring to the table, and dietary notes others should know." />
+      <StickyTopChrome />
 
       <motion.div
         className="tb-main-column"

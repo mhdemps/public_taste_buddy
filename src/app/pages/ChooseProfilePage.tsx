@@ -21,6 +21,7 @@ import {
   type TasteProfileRow,
 } from "../../lib/communityApi";
 import imgTrashDelete from "@project-assets/Trash.svg";
+import { markProfileNeedsAppOnboarding } from "../appOnboardingStorage";
 import { purgeProfileFromThisDevice } from "../userStorage";
 
 function introBuddySelection(eyeKey: BuddyEyeKey): BuddySvgSelection {
@@ -131,6 +132,7 @@ export default function ChooseProfilePage() {
 
       /** POST already persists `display_name`; a follow-up PUT was redundant and could fail routing while the row existed. */
       const merged: TasteProfileRow = trimmed ? { ...data, display_name: trimmed } : data;
+      markProfileNeedsAppOnboarding(merged.id);
       setProfiles((prev) => [merged, ...prev.filter((p) => p.id !== merged.id)]);
       void refresh();
       setExpandedId(merged.id);

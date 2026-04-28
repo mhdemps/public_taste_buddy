@@ -208,7 +208,7 @@ export default function CustomizeBuddyPage() {
 
   return (
     <div className={PAGE_SHELL_SCROLL} data-name="Customize buddy">
-      <StickyTopChrome helpContent="Change your buddy’s backdrop, body, eyes, hat, and expression. Save returns you to Profile with this look on your Buddy Board tile and public profile." />
+      <StickyTopChrome />
 
       <div className="tb-main-column">
         <div className="tb-buddy-profile-back-row">

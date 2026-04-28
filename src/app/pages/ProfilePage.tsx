@@ -330,48 +330,25 @@ export default function ProfilePage() {
     }
   };
 
-  const profileHelp = (
-    <>
-      Edit how you appear on the Buddy Board: name, taste notes, allergens, and your buddy. Save to update your tile.
-      <br />
-      <br />
-      Recipes you create live under{" "}
-      <Link to="/my-recipes" className="share-tech-bold">
-        Recipes
-      </Link>{" "}
-      first — then use Post recipes below to share one on the wall for other profiles.
-    </>
-  );
-
   return (
     <div className={PAGE_SHELL_SCROLL} data-name="Profile">
-      <StickyTopChrome helpContent={profileHelp} />
+      <StickyTopChrome />
 
       <div className="tb-main-column tb-profile-page">
-        <div className="tb-buddy-profile-back-row tb-buddy-profile-back-row--profile">
-          <Link to="/" className="tb-submit-wrap">
-            <motion.span initial={{ y: -6, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.35 }}>
-              <ChalkPillFrame variant={1} fillClassName="tb-pill-fill-back" innerClassName="tb-pill-inner tb-pill-inner--back">
-                <span className="tb-back-chevron share-tech-bold" aria-hidden>
-                  ‹
-                </span>
-                <span className="share-tech-bold tb-text-coral" style={{ fontSize: "20pt" }}>
-                  Buddy Board
-                </span>
-              </ChalkPillFrame>
-            </motion.span>
-          </Link>
-        </div>
-
         {loading ? (
           <p className="share-tech-regular tb-text-coral">Loading profile…</p>
         ) : (
           <form className="tb-form-edit-stack tb-form-edit-stack--profile" onSubmit={handleSaveProfile}>
             <motion.h1
+              key={location.key}
               className="tb-buddies-title tb-profile-page-title share-tech-bold"
-              initial={{ y: 12, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ duration: 0.4, delay: 0.04 }}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{
+                duration: 0.72,
+                ease: [0.22, 1, 0.36, 1],
+                delay: 1.05,
+              }}
             >
               Hey there, {displayName.trim() || defaultDisplayName()}
             </motion.h1>

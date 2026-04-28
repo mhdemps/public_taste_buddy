@@ -90,12 +90,9 @@ export default function CommunityWallPage() {
     setSavedWallTick((t) => t + 1);
   };
 
-  const buddyBoardHelp =
-    "Tap a buddy tile to open their public profile. Under Fresh on the Buddy Board, tap a recipe to read it — use the check to save it to Saved recipes and Make.";
-
   return (
     <div className={PAGE_SHELL_SCROLL} data-name="Buddy board">
-      <StickyTopChrome helpContent={buddyBoardHelp} />
+      <StickyTopChrome />
 
       <motion.div
         className="tb-main-column tb-buddy-board-page"

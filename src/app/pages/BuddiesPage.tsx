@@ -97,7 +97,7 @@ export default function BuddiesPage() {
 
   return (
     <div className={PAGE_SHELL_SCROLL} data-name="Saved buddies">
-      <StickyTopChrome helpContent="Profiles you keep for parties and community recipes on this device. The live Buddy Board with everyone who has an account is the center tab below. Use + to add another buddy to this list." />
+      <StickyTopChrome />
 
       <motion.div
         className="tb-main-column"

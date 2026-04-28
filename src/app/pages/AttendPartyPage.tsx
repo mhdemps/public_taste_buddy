@@ -257,13 +257,9 @@ export default function AttendPartyPage() {
   };
 
   if (isFormView && buddies.length > 0) {
-    const partyFormHelp = isEditView
-      ? "Update themes, date, or what you’re bringing — then save."
-      : "Fill in the details, then save — it appears on your party list with the host’s public profile.";
-
     return (
       <div className={PAGE_SHELL_SCROLL}>
-        <StickyTopChrome helpContent={partyFormHelp} />
+        <StickyTopChrome />
 
         <motion.div
           className="tb-main-column"
@@ -423,7 +419,7 @@ export default function AttendPartyPage() {
 
   return (
     <div className={PAGE_SHELL_SCROLL}>
-      <StickyTopChrome helpContent="Plan get-togethers and see who’s hosting — tied to profiles in Saved buddies." />
+      <StickyTopChrome />
 
       <motion.div
         className="tb-main-column"

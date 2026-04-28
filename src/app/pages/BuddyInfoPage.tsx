@@ -109,12 +109,9 @@ export default function BuddyInfoPage() {
     setEditing(true);
   };
 
-  const buddyInfoHelp =
-    "Public taste profile — what hosts and friends see at a glance. Edit to update their saved details on this device.";
-
   return (
     <div className={PAGE_SHELL_SCROLL}>
-      <StickyTopChrome helpContent={buddyInfoHelp} />
+      <StickyTopChrome />
 
       <div className="tb-main-column">
         <div className="tb-buddy-profile-back-row">

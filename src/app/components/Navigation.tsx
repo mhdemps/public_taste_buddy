@@ -1,9 +1,8 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 import iconChef from "@project-assets/gray chef.png";
 import iconWhisk from "@project-assets/whisk.svg";
 import iconHome from "@project-assets/bud button.svg";
-import iconSave from "@project-assets/checked off.svg";
 import iconProfile from "@project-assets/gray buddy.png";
 import imgSignOut from "@project-assets/sign out icon.svg";
 import { fetchProfileByUserId } from "../../lib/communityApi";
@@ -12,7 +11,6 @@ import {
   PROFILE_DISPLAY_SAVED_EVENT,
   type ProfileDisplaySavedDetail,
 } from "../profileDisplayEvents";
-import { HeaderPageHelp } from "./HeaderPageHelp";
 
 const ICON_TILT_CLASS = [
   "tb-nav-tilt-0",
@@ -58,13 +56,6 @@ const navItems: readonly NavItemDef[] = [
     description: "Buddy board — see buddies and recipes",
   },
   {
-    id: "welcome",
-    icon: iconSave,
-    path: "/friend-recipe",
-    label: "Saved",
-    description: "Recipes you saved from the Buddy Board",
-  },
-  {
     id: "whisk",
     icon: iconWhisk,
     path: "/whisk",
@@ -103,11 +94,13 @@ function NavSlot({
   );
 }
 
-export default function Navigation({ helpContent }: { helpContent?: ReactNode }) {
+export default function Navigation() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const { user, signOut } = useAuth();
   const [signOutLabel, setSignOutLabel] = useState<string | null>(null);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const mobileRootRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (!user?.id) {
@@ -140,29 +133,88 @@ export default function Navigation({ helpContent }: { helpContent?: ReactNode })
     return () => window.removeEventListener(PROFILE_DISPLAY_SAVED_EVENT, onSaved);
   }, []);
 
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const onPointerDown = (e: PointerEvent) => {
+      const root = mobileRootRef.current;
+      if (!root) return;
+      if (e.target instanceof Node && root.contains(e.target)) return;
+      setMobileOpen(false);
+    };
+    window.addEventListener("pointerdown", onPointerDown);
+    return () => window.removeEventListener("pointerdown", onPointerDown);
+  }, [mobileOpen]);
+
   const signOutTitle = signOutLabel
     ? `Sign out — you’re signed in as ${signOutLabel}. Return to Who’s Cooking`
     : "Sign out — return to Who’s Cooking";
 
-  const hasHelp = helpContent != null;
-  const innerClass = `tb-nav-inner${hasHelp ? " tb-nav-inner--with-help" : " tb-nav-inner--no-help"}`;
-
   return (
     <div className="tb-nav-dock">
       <nav aria-label="Main" className="tb-nav-bar">
-        <div className={innerClass}>
-          {hasHelp ? (
-            <div className="tb-nav-slot tb-nav-slot--chrome">
-              <div className="tb-nav-item">
-                <HeaderPageHelp
-                  iconFrameClassName={`tb-nav-icon-frame ${ICON_TILT_CLASS[0]!}`}
-                  afterButton={<span className="tb-nav-label share-tech-regular">Help</span>}
+        <div className="tb-nav-mobile" ref={mobileRootRef}>
+          <button
+            type="button"
+            className="tb-nav-hamburger-btn"
+            aria-label={mobileOpen ? "Close menu" : "Open menu"}
+            aria-haspopup="menu"
+            aria-expanded={mobileOpen ? "true" : "false"}
+            onClick={() => setMobileOpen((o) => !o)}
+          >
+            <span className="tb-nav-hamburger-icon" aria-hidden="true">
+              <span />
+              <span />
+              <span />
+            </span>
+            <span className="tb-nav-hamburger-label share-tech-regular">Menu</span>
+          </button>
+
+          {mobileOpen ? (
+            <div className="tb-nav-dropdown" role="menu" aria-label="Main menu">
+              {navItems.map((item) => {
+                const active = routeMatches(item.path, pathname);
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    role="menuitem"
+                    className={`tb-nav-dropdown-item share-tech-regular${active ? " tb-nav-dropdown-item--active" : ""}`}
+                    onClick={() => {
+                      setMobileOpen(false);
+                      navigate(item.path);
+                    }}
+                  >
+                    <img alt="" src={item.icon} draggable={false} className="tb-nav-dropdown-icon" />
+                    <span className="tb-nav-dropdown-text">{item.label}</span>
+                  </button>
+                );
+              })}
+
+              {user ? (
+                <button
+                  type="button"
+                  role="menuitem"
+                  className="tb-nav-dropdown-item share-tech-regular"
+                  title={signOutTitle}
+                  aria-label={signOutTitle}
+                  onClick={() => {
+                    setMobileOpen(false);
+                    void signOut();
+                  }}
                 >
-                  {helpContent}
-                </HeaderPageHelp>
-              </div>
+                  <img alt="" src={imgSignOut} draggable={false} className="tb-nav-dropdown-icon" />
+                  <span className="tb-nav-dropdown-text">Sign out</span>
+                </button>
+              ) : null}
             </div>
           ) : null}
+        </div>
+
+        <div className="tb-nav-inner tb-nav-inner--no-help">
           {navItems.map((item, index) => (
             <NavSlot key={item.id} {...item} index={index} pathname={pathname} navigate={navigate} />
           ))}

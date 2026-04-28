@@ -21,6 +21,7 @@ import {
 import { loadWhiskMakeLater, toggleWhiskMakeLater } from "../whiskMakeLater";
 import { loadMyRecipeEntries, sortMyRecipesNewestFirst, type MyRecipeEntry } from "./MyRecipesPage";
 import StickyTopChrome from "../components/StickyTopChrome";
+import SavedFromBoardRecipeCards from "../components/SavedFromBoardRecipeCards";
 import { InfoBoxFrame } from "../components/InfoBoxFrame";
 import { ChalkPillFrame } from "../components/ChalkPillFrame";
 import { PAGE_INTRO_BLURB_TEXT, PAGE_SHELL_SCROLL } from "../brand";
@@ -70,6 +71,7 @@ export default function MakeRecipesPage() {
     loadRecipeMakeProgress(progressKeyFull)
   );
   const [makeLaterSet, setMakeLaterSet] = useState(() => loadWhiskMakeLater(userId));
+  const [boardRefreshTick, setBoardRefreshTick] = useState(0);
 
   const refreshProgress = useCallback(() => {
     setProgressMap(loadRecipeMakeProgress(progressKeyFull));
@@ -82,7 +84,20 @@ export default function MakeRecipesPage() {
   const myRecipes = useMemo(() => sortMyRecipesNewestFirst(loadMyRecipeEntries(myKey)), [myKey]);
   const friendRecipes = useMemo(
     () => sortSavedCommunityRecipesNewestFirst(loadSavedCommunityRecipes(friendKey)),
-    [friendKey, location.pathname]
+    [friendKey, location.pathname, boardRefreshTick]
+  );
+
+  const myCookItems: CookListItem[] = useMemo(
+    () =>
+      myRecipes.map((r) => ({
+        source: "my" as const,
+        id: r.id,
+        recipeName: r.recipeName,
+        ingredients: r.ingredients,
+        directions: r.directions,
+        notes: r.notes,
+      })),
+    [myRecipes]
   );
 
   const listItems: CookListItem[] = useMemo(() => {
@@ -106,8 +121,8 @@ export default function MakeRecipesPage() {
     return [...mine, ...wall];
   }, [myRecipes, friendRecipes]);
 
-  const listItemsForHub = useMemo(() => {
-    return [...listItems]
+  const myListItemsForHub = useMemo(() => {
+    return [...myCookItems]
       .map((r, idx) => ({ r, idx, pk: recipeCookProgressKey(r.source, r.id) }))
       .sort((a, b) => {
         const aLater = makeLaterSet.has(a.pk);
@@ -116,7 +131,7 @@ export default function MakeRecipesPage() {
         return a.idx - b.idx;
       })
       .map((x) => x.r);
-  }, [listItems, makeLaterSet]);
+  }, [myCookItems, makeLaterSet]);
 
   const cookSource = isCookSource(sourceParam) ? sourceParam : null;
   const isCookView = Boolean(cookSource && recipeId);
@@ -213,7 +228,7 @@ export default function MakeRecipesPage() {
       <div className={PAGE_SHELL_SCROLL}>
         <StickyTopChrome />
         <motion.div
-          className="tb-main-column"
+          className="tb-main-column tb-buddy-board-page tb-whisk-recipes-column"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.45 }}
@@ -390,21 +405,6 @@ export default function MakeRecipesPage() {
           </section>
 
           <div className="tb-make-cook-actions">
-            {ingredientItems.length > 0 || steps.length > 0 ? (
-              <motion.button
-                type="button"
-                className="tb-submit-wrap"
-                onClick={handleClearChecks}
-                whileTap={{ scale: 0.97 }}
-                disabled={!anyChecks}
-              >
-                <ChalkPillFrame variant={2} fillClassName="tb-pill-fill-light--soft" innerClassName="tb-pill-inner tb-pill-inner--md">
-                  <span className="share-tech-regular" style={{ color: "#5c4030" }}>
-                    Clear checkboxes
-                  </span>
-                </ChalkPillFrame>
-              </motion.button>
-            ) : null}
             <motion.button type="button" className="tb-submit-wrap" onClick={handleMadeIt} whileTap={{ scale: 0.97 }}>
               <ChalkPillFrame variant={0} fillClassName="tb-pill-fill-coral" innerClassName="tb-pill-inner tb-pill-inner--lg">
                 <span className="tb-pill-text-white--sm share-tech-regular">I made this! +1</span>
@@ -418,9 +418,9 @@ export default function MakeRecipesPage() {
 
   return (
     <div className={PAGE_SHELL_SCROLL}>
-      <StickyTopChrome helpContent='Check ingredients, then each step. “I made this!” counts the cook and clears the list. Tap a card’s ribbon to save it for later — those stay at the top.' />
+      <StickyTopChrome />
       <motion.div
-        className="tb-main-column"
+        className="tb-main-column tb-buddy-board-page tb-whisk-recipes-column"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
@@ -447,88 +447,135 @@ export default function MakeRecipesPage() {
           </motion.h1>
         </div>
 
-        <motion.section
-          className="tb-section-narrow tb-make-hub-section"
-          aria-labelledby="whisk-recipe-list-heading"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.12 }}
-        >
-          <h2 id="whisk-recipe-list-heading" className="tb-section-heading share-tech-bold tb-text-coral">
-            Your kitchen list
-          </h2>
-          {listItems.length === 0 ? (
+        {listItems.length === 0 ? (
+          <motion.section
+            className="tb-section-narrow tb-make-hub-section"
+            aria-labelledby="make-empty-heading"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.12 }}
+          >
+            <h2 id="make-empty-heading" className="tb-section-heading share-tech-bold tb-text-coral">
+              Start cooking
+            </h2>
             <InfoBoxFrame variant={1}>
               <p className="share-tech-regular" style={{ fontSize: "20pt", lineHeight: 1.375 }}>
-                No recipes yet — add your own under the Recipes tab, or save a recipe for a buddy under Saved. Then come back here to
-                cook along!
+                No recipes yet — add your own under the Recipes tab, or save a Buddy Board recipe with the checkmark on a card.
+                Everything lands here so you can cook along step-by-step.
               </p>
             </InfoBoxFrame>
-          ) : (
-            <ul className="tb-saved-list">
-              {listItemsForHub.map((r, i) => {
-                const pk = recipeCookProgressKey(r.source, r.id);
-                const pr = progressMap[pk] ?? emptyProgress();
-                const subtitle = r.source === "my" ? "Yours" : `From ${r.friendName}`;
-                const isLater = makeLaterSet.has(pk);
-                return (
-                  <li key={`${r.source}-${r.id}`} className="tb-li-relative">
-                    <div className="tb-card-relative">
-                      <InfoBoxFrame variant={i % 4}>
-                        <div className="tb-make-card-shell">
-                          <div className="tb-make-card-header-row">
-                            <button
-                              type="button"
-                              className="tb-expand-hit tb-make-card-hit"
-                              onClick={() => navigate(`/whisk/cook/${r.source}/${r.id}`)}
-                            >
-                              <div className="tb-make-card-top">
-                                <h3 className="tb-recipe-h3 share-tech-bold">{r.recipeName}</h3>
-                                <span className="tb-make-badge share-tech-bold">{pr.timesMade}× made</span>
+          </motion.section>
+        ) : (
+          <>
+            <motion.section
+              className="tb-section-narrow tb-make-hub-section"
+              aria-labelledby="whisk-my-recipes-heading"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.12 }}
+            >
+              <h2 id="whisk-my-recipes-heading" className="tb-section-heading share-tech-bold tb-text-coral">
+                Your recipes
+              </h2>
+              {myCookItems.length === 0 ? (
+                <InfoBoxFrame variant={1}>
+                  <p className="share-tech-regular" style={{ fontSize: "20pt", lineHeight: 1.375 }}>
+                    No recipes written yet — open the Recipes tab to create one. Saved Buddy Board recipes appear below.
+                  </p>
+                </InfoBoxFrame>
+              ) : (
+                <ul className="tb-saved-list">
+                  {myListItemsForHub.map((r, i) => {
+                    const pk = recipeCookProgressKey(r.source, r.id);
+                    const pr = progressMap[pk] ?? emptyProgress();
+                    const subtitle = "Yours";
+                    const isLater = makeLaterSet.has(pk);
+                    return (
+                      <li key={`${r.source}-${r.id}`} className="tb-li-relative">
+                        <div className="tb-card-relative">
+                          <InfoBoxFrame variant={i % 4}>
+                            <div className="tb-make-card-shell">
+                              <div className="tb-make-card-header-row">
+                                <button
+                                  type="button"
+                                  className="tb-expand-hit tb-make-card-hit"
+                                  onClick={() => navigate(`/whisk/cook/${r.source}/${r.id}`)}
+                                >
+                                  <div className="tb-make-card-top">
+                                    <h3 className="tb-recipe-h3 share-tech-bold">{r.recipeName}</h3>
+                                    <span className="tb-make-badge share-tech-bold">{pr.timesMade}× made</span>
+                                  </div>
+                                  <p className="share-tech-regular tb-make-card-sub">{subtitle}</p>
+                                  <p className="share-tech-regular tb-recipe-card-hint">Tap to cook along →</p>
+                                </button>
+                                <motion.button
+                                  type="button"
+                                  className="tb-make-later-toggle"
+                                  aria-pressed={isLater}
+                                  aria-label={
+                                    isLater
+                                      ? "Remove make-later tag from this recipe"
+                                      : "Mark as a recipe you want to make later"
+                                  }
+                                  title={
+                                    isLater
+                                      ? "Remove from make later"
+                                      : "A recipe you want to make later — tap to tag"
+                                  }
+                                  whileTap={{ scale: 0.94 }}
+                                  onClick={() => {
+                                    setMakeLaterSet(toggleWhiskMakeLater(userId, pk));
+                                  }}
+                                >
+                                  <img src={iconSaveHover} alt="" className="tb-make-later-icon" draggable={false} />
+                                </motion.button>
                               </div>
-                              <p className="share-tech-regular tb-make-card-sub">{subtitle}</p>
-                              <p className="share-tech-regular tb-recipe-card-hint">Tap to cook along →</p>
-                            </button>
-                            <motion.button
-                              type="button"
-                              className="tb-make-later-toggle"
-                              aria-pressed={isLater}
-                              aria-label={
-                                isLater
-                                  ? "Remove make-later tag from this recipe"
-                                  : "Mark as a recipe you want to make later"
-                              }
-                              title={
-                                isLater
-                                  ? "Remove from make later"
-                                  : "A recipe you want to make later — tap to tag"
-                              }
-                              whileTap={{ scale: 0.94 }}
-                              onClick={() => {
-                                setMakeLaterSet(toggleWhiskMakeLater(userId, pk));
-                              }}
-                            >
-                              <img src={iconSaveHover} alt="" className="tb-make-later-icon" draggable={false} />
-                            </motion.button>
-                          </div>
-                          {isLater ? (
-                            <div
-                              className="tb-make-later-tag"
-                              title="A recipe you want to make later"
-                            >
-                              <img src={iconSaveHover} alt="" className="tb-make-later-tag-icon" draggable={false} />
-                              <span className="share-tech-bold">Make later</span>
+                              {isLater ? (
+                                <div className="tb-make-later-tag" title="A recipe you want to make later">
+                                  <img src={iconSaveHover} alt="" className="tb-make-later-tag-icon" draggable={false} />
+                                  <span className="share-tech-bold">Make later</span>
+                                </div>
+                              ) : null}
                             </div>
-                          ) : null}
+                          </InfoBoxFrame>
                         </div>
-                      </InfoBoxFrame>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </motion.section>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </motion.section>
+
+            <motion.section
+              className="tb-section-narrow tb-make-hub-section"
+              aria-labelledby="whisk-board-saved-heading"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.18 }}
+            >
+              <h2 id="whisk-board-saved-heading" className="tb-section-heading share-tech-bold tb-text-coral">
+                From the Buddy Board
+              </h2>
+              {friendRecipes.length === 0 ? (
+                <InfoBoxFrame variant={2}>
+                  <p className="share-tech-regular" style={{ fontSize: "20pt", lineHeight: 1.375 }}>
+                    Nothing saved from the board yet — open Buddies, choose a recipe card, and tap the check to add it here for
+                    cooking and details.
+                  </p>
+                </InfoBoxFrame>
+              ) : (
+                <SavedFromBoardRecipeCards
+                  storageKey={friendKey}
+                  entries={friendRecipes}
+                  userId={userId}
+                  makeLaterSet={makeLaterSet}
+                  setMakeLaterSet={setMakeLaterSet}
+                  onMutate={() => setBoardRefreshTick((t) => t + 1)}
+                />
+              )}
+            </motion.section>
+          </>
+        )}
       </motion.div>
     </div>
   );

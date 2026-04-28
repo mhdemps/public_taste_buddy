@@ -41,9 +41,7 @@ export function AllergenIconPicker({ mode, selected, onChange, groupLabel }: Pro
               aria-pressed={isOn}
               aria-label={pressedLabel}
             >
-              <span className="tb-allergen-chip-circle">
-                <img alt="" src={src} className="tb-allergen-chip-img" draggable={false} />
-              </span>
+              <img alt="" src={src} className="tb-allergen-chip-img" draggable={false} />
               <span className="tb-allergen-label">{item.label}</span>
             </button>
           );
