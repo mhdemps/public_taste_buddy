@@ -2865,6 +2865,89 @@
   }
 }
 
+/* ? + Sign out in the nav row (with or without page help copy) */
+.tb-nav-inner--with-help {
+  grid-template-columns: minmax(0, auto) repeat(5, minmax(0, 1fr)) minmax(0, auto);
+}
+
+.tb-nav-inner--no-help {
+  grid-template-columns: repeat(5, minmax(0, 1fr)) minmax(0, auto);
+}
+
+.tb-nav-slot--chrome {
+  display: flex;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+/* Help: same structure as a tab (icon frame + label); hover tilt on `.tb-nav-item` */
+.tb-nav-slot--chrome > .tb-nav-item {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  flex-direction: column;
+  align-items: center;
+}
+
+.tb-nav-item .tb-header-help-wrap {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.tb-nav-item .tb-header-help-btn--nav-icon {
+  display: flex;
+  min-width: 0;
+  max-width: 100%;
+  width: max-content;
+  box-sizing: border-box;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.07rem;
+  padding: 0.06rem 0.04rem 0;
+  margin-left: auto;
+  margin-right: auto;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  outline: none;
+  transition: transform 200ms ease;
+}
+
+.tb-nav-item .tb-header-help-btn--nav-icon:active {
+  transform: scale(0.96);
+}
+
+.tb-nav-item .tb-header-help-btn--nav-icon:focus-visible {
+  border-radius: 0.45rem;
+  box-shadow: 0 0 0 2px rgba(255, 58, 0, 0.5);
+}
+
+.tb-nav-item .tb-header-help-btn--nav-icon .tb-header-help-icon,
+.tb-nav-item .tb-header-help-btn--nav-icon .tb-nav-icon-img {
+  /* Match `.tb-nav-icon-img` in tabs */
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+}
+
+.tb-nav-item .tb-header-help-panel {
+  left: 0;
+  z-index: 30;
+  margin-top: 0.15rem;
+}
+
 .tb-nav-slot {
   display: flex;
   width: 100%;
@@ -3006,7 +3089,7 @@
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
   column-gap: 0.25rem;
-  padding-top: max(1.25rem, env(safe-area-inset-top, 0px));
+  padding-top: max(1.65rem, calc(env(safe-area-inset-top, 0px) + 0.45rem));
   padding-bottom: 0;
   /* Desktop / tablet: small gutter; mobile overrides below (almost flush) */
   padding-inline: max(0.35rem, env(safe-area-inset-left, 0px)) max(0.35rem, env(safe-area-inset-right, 0px));
@@ -3040,18 +3123,21 @@
   }
 }
 
-/* Signed-in: ? only as wide as the icon, Sign out uses remaining row — avoids 50/50 squeeze/overlap */
+/* Signed-in: line logo only — help & sign out are in the nav bar */
 .tb-header--signed-in {
-  grid-template-columns: minmax(0, max-content) minmax(0, 1fr);
-  grid-template-rows: auto auto;
-  align-items: start;
-  column-gap: min(0.45rem, 1.5vw);
-  row-gap: 0;
+  display: block;
+  width: 100%;
+}
+
+.tb-header--signed-in .tb-header-line-bleed {
+  display: flex;
+  width: 100%;
+  box-sizing: border-box;
+  flex-direction: column;
+  align-items: center;
 }
 
 .tb-header-line-bleed {
-  grid-column: 1 / -1;
-  grid-row: 2;
   display: flex;
   width: 100%;
   min-width: 0;
@@ -3264,6 +3350,7 @@
   max-width: none;
   height: auto;
   max-height: min(11.25rem, 58vw);
+  margin-top: 0; /* .tb-header-logo pulls the wordmark up; keep air above the line mark */
   margin-inline: auto;
   object-fit: contain;
   object-position: center center;

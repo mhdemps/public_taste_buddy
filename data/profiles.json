@@ -202,5 +202,22 @@
     "parties_attended": null,
     "recipes_given": null,
     "updated_at": "2026-04-27T11:03:30.624Z"
+  },
+  {
+    "id": "80ee59b1-711f-4cf9-83ca-7a4bfeef01f2",
+    "display_name": "New profile",
+    "buddy_color_index": 12,
+    "backdrop_migrated_v2": true,
+    "buddy_body_key": "yellow",
+    "buddy_eye_key": "wink",
+    "buddy_hat_key": "chef",
+    "buddy_smile_key": "happy",
+    "favorite_food": null,
+    "personality": null,
+    "specialty": null,
+    "allergies": null,
+    "parties_attended": null,
+    "recipes_given": null,
+    "updated_at": "2026-04-27T16:05:18.733Z"
   }
 ]

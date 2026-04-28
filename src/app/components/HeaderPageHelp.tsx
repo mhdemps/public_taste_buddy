@@ -1,7 +1,17 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import imgQuestion from "@project-assets/question.svg";
 
-export function HeaderPageHelp({ children }: { children: ReactNode }) {
+export function HeaderPageHelp({
+  children,
+  /** When set, the ? sits in this frame (e.g. `tb-nav-icon-frame tb-nav-tilt-0`) for nav bar tilt. */
+  iconFrameClassName,
+  /** Rendered below the button, still inside the hover/focus group (e.g. nav label). */
+  afterButton,
+}: {
+  children: ReactNode;
+  iconFrameClassName?: string;
+  afterButton?: ReactNode;
+}) {
   const [open, setOpen] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
   const panelId = useId();
@@ -33,14 +43,22 @@ export function HeaderPageHelp({ children }: { children: ReactNode }) {
       <button
         type="button"
         id={triggerId}
-        className="tb-header-help-btn"
+        className={`tb-header-help-btn${iconFrameClassName ? " tb-header-help-btn--nav-icon" : ""}`}
         aria-expanded={open}
         aria-controls={panelId}
         onClick={() => setOpen((v) => !v)}
         title="About this page"
+        aria-label={afterButton ? undefined : "About this page"}
       >
-        <img src={imgQuestion} alt="" className="tb-header-help-icon" draggable={false} />
-        <span className="tb-visually-hidden">About this page</span>
+        {iconFrameClassName ? (
+          <span className={iconFrameClassName}>
+            <img src={imgQuestion} alt="" className="tb-header-help-icon tb-nav-icon-img" draggable={false} />
+          </span>
+        ) : (
+          <img src={imgQuestion} alt="" className="tb-header-help-icon" draggable={false} />
+        )}
+        {afterButton}
+        {!afterButton ? <span className="tb-visually-hidden">About this page</span> : null}
       </button>
       {open ? (
         <div id={panelId} role="region" aria-labelledby={triggerId} className="tb-header-help-panel share-tech-regular">

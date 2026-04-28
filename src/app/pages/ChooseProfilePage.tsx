@@ -156,12 +156,9 @@ export default function ChooseProfilePage() {
 
   const showIntro = introPhase === "intro";
 
-  const whosCookingHelp =
-    "Pick a taste profile and expand the row to sign in as them, or create a new profile for a tile on the Buddy Board.";
-
   return (
     <div className={`${PAGE_SHELL_SCROLL} tb-sign-in-page`} data-name="Choose profile">
-      <GrayTasteHeader showSignOut={false} helpContent={showIntro ? undefined : whosCookingHelp} />
+      <GrayTasteHeader showSignOut={false} />
 
       <div className="tb-sign-in-page-body">
         <AnimatePresence>
