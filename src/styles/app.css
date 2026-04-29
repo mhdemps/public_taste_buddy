@@ -159,7 +159,7 @@
     min-width: 0;
     align-items: center;
     justify-content: flex-start;
-    overflow: hidden;
+    overflow: visible;
   }
 
   .tb-sticky-top-chrome:has(.tb-header--signed-in) .tb-header-line-track {
@@ -170,9 +170,9 @@
   }
 
   .tb-sticky-top-chrome:has(.tb-header--signed-in) .tb-header-logo--line {
-    width: min(320px, 52vw);
+    width: min(320px, 64vw);
     margin-inline: 0;
-    max-height: min(5rem, 16vw);
+    max-height: min(5.25rem, 18vw);
     object-position: left center;
   }
 
@@ -199,7 +199,7 @@
 @media (max-width: 390px) {
   /* Extra-small phones: avoid clipping the left edge of the line logo. */
   .tb-sticky-top-chrome:has(.tb-header--signed-in) .tb-header-logo--line {
-    width: min(270px, 56vw);
+    width: min(290px, 68vw);
     object-position: center center;
   }
 }
@@ -2063,18 +2063,18 @@
 .tb-profile-page-buddy-hero--main .tb-profile-page-edit-buddy-btn {
   position: relative;
   z-index: 4;
-  margin-top: -3.6rem;
+  margin-top: -2.6rem;
 }
 
 @media (min-width: 640px) {
   .tb-profile-page-buddy-hero--main .tb-profile-page-edit-buddy-btn {
-    margin-top: -4.05rem;
+    margin-top: -3.2rem;
   }
 }
 
 @media (min-width: 1024px) {
   .tb-profile-page-buddy-hero--main .tb-profile-page-edit-buddy-btn {
-    margin-top: -4.35rem;
+    margin-top: -3.45rem;
   }
 }
 
