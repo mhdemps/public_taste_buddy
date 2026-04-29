@@ -2244,6 +2244,12 @@
   color: var(--tb-coral, #ff3a00);
 }
 
+@media (max-width: 519px) {
+  .tb-profile-picker-delete-btn {
+    margin-top: 0.25rem;
+  }
+}
+
 @media (min-width: 520px) {
   .tb-profile-picker-expand-cta {
     flex-direction: row;
