@@ -2,7 +2,7 @@
 import { createRoot } from "react-dom/client";
 import App from "./app/App.tsx";
 import "./styles/index.css";
-const CHEF_ICON_URL = "/assets/apple-touch-icon.png";
+const CHEF_ICON_URL = "/apple-touch-icon.png";
 
 function ensureHeadBranding() {
   document.title = "TasteBuddy";
@@ -31,7 +31,7 @@ function ensureHeadBranding() {
   setMeta("theme-color", "#ff3a00");
   setMeta("apple-mobile-web-app-title", "TasteBuddy");
   setMeta("apple-mobile-web-app-capable", "yes");
-  setLink("icon", CHEF_ICON_URL, "image/png");
+  setLink("icon", "/icon-192.png", "image/png");
   setLink("apple-touch-icon", CHEF_ICON_URL);
 }
 
