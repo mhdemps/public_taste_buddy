@@ -2271,7 +2271,7 @@
   }
 
   .tb-profile-picker-row {
-    padding: 0.14rem 0.58rem 0.12rem;
+    padding: 0.22rem 0.58rem 0.22rem;
   }
 
   .tb-profile-picker-header {
@@ -2289,10 +2289,12 @@
     font-size: clamp(1.02rem, 5.6vw, 1.28rem);
     line-height: 1.12;
     margin-top: 0.14rem;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    padding-right: 0.2rem;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    padding-right: 0.35rem;
   }
 
   .tb-profile-picker-chevron {
