@@ -2274,6 +2274,10 @@
     padding: 0.14rem 0.58rem 0.12rem;
   }
 
+  .tb-profile-picker-header {
+    gap: 0.2rem;
+  }
+
   .tb-profile-picker-avatar--sm {
     width: 4.75rem;
     min-width: 4.75rem;
@@ -2282,16 +2286,20 @@
 
   .tb-profile-picker-name {
     min-width: 0;
-    font-size: clamp(1.35rem, 7.2vw, 1.75rem);
-    line-height: 1.05;
+    font-size: clamp(1.02rem, 5.6vw, 1.28rem);
+    line-height: 1.12;
+    margin-top: 0.14rem;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding-right: 0.2rem;
   }
 
   .tb-profile-picker-chevron {
-    flex: 0 0 2.2rem;
-    width: 2.2rem;
-    height: 2.2rem;
-    transform: translateX(0.02rem);
+    flex: 0 0 1.55rem;
+    width: 1.55rem;
+    height: 1.55rem;
+    transform: none;
   }
 
   .tb-profile-picker-expand {
