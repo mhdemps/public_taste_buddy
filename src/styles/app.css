@@ -1397,7 +1397,7 @@
   position: relative;
   aspect-ratio: 1 / 1;
   width: 100%;
-  overflow: hidden;
+  overflow: visible;
   border-radius: 50%;
   border: 0;
   padding: 0;
@@ -1733,7 +1733,7 @@
   margin-right: auto;
   aspect-ratio: 1 / 1;
   width: 100%;
-  overflow: hidden;
+  overflow: visible;
   border-radius: 50%;
   max-width: 17.5rem;
 }
@@ -2438,6 +2438,29 @@
 .tb-customize-pickers-block {
   width: 100%;
   padding: 0 0.15rem 0.15rem;
+}
+
+@media (max-width: 639px) {
+  .tb-customize-preview-block {
+    padding-bottom: 0.35rem;
+    margin-bottom: 0.85rem;
+  }
+
+  .tb-customize-pickers-block {
+    margin-top: 0.35rem;
+    padding-top: 0.2rem;
+  }
+
+  .tb-buddy-customize-controls--svg-only {
+    gap: 0.38rem;
+  }
+
+  .tb-customize-buddy-page .tb-svg-picker-strip--grid .tb-svg-picker-chip,
+  .tb-customize-buddy-page .tb-svg-picker-pad,
+  .tb-customize-buddy-page .tb-svg-picker-chip--backdrop {
+    width: 2.35rem;
+    height: 2.35rem;
+  }
 }
 
 .tb-buddy-customize-controls--svg-only {

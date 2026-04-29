@@ -57,6 +57,7 @@ export default function ChooseProfilePage() {
   const [newProfileName, setNewProfileName] = useState("");
   const [createProfileError, setCreateProfileError] = useState<string | null>(null);
   const [pickerDeletingId, setPickerDeletingId] = useState<string | null>(null);
+  const pageScrollRef = useRef<HTMLDivElement | null>(null);
 
   /** Ignore stale responses when refresh() runs twice (e.g. React Strict Mode) or location.key flaps. */
   const profilesLoadGen = useRef(0);
@@ -138,6 +139,17 @@ export default function ChooseProfilePage() {
       void refresh();
       setExpandedId(merged.id);
       setNewProfileName("");
+      const forceScrollToTop = () => {
+        const reduced =
+          typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        const behavior: ScrollBehavior = reduced ? "auto" : "smooth";
+        pageScrollRef.current?.scrollTo({ top: 0, behavior });
+        if (typeof window !== "undefined") {
+          window.scrollTo({ top: 0, behavior });
+        }
+      };
+      requestAnimationFrame(forceScrollToTop);
+      window.setTimeout(forceScrollToTop, 120);
     } finally {
       setCreating(false);
     }
@@ -160,7 +172,7 @@ export default function ChooseProfilePage() {
   const showIntro = introPhase === "intro";
 
   return (
-    <div className={`${PAGE_SHELL_SCROLL} tb-sign-in-page`} data-name="Choose profile">
+    <div ref={pageScrollRef} className={`${PAGE_SHELL_SCROLL} tb-sign-in-page`} data-name="Choose profile">
       <GrayTasteHeader showSignOut={false} />
 
       <div className="tb-sign-in-page-body">
