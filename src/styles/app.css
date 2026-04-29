@@ -17,9 +17,9 @@
     brightness(101%) contrast(104%);
 }
 
-/* Recipes page: force a solid blue mat behind cover illustrations (prevents faint pattern feel on mobile). */
+/* Recipes page: keep the same light-blue mat behind cover illustrations. */
 .tb-my-recipes-page {
-  --tb-recipe-cover-wash: #2f74c0;
+  --tb-recipe-cover-wash: #d5eaf7;
 }
 
 @media (max-width: 639px) {
