@@ -13,6 +13,8 @@ export const MY_RECIPES_STORAGE_BASE = "tasteBuddyMyRecipes";
 export const RECIPE_MAKE_PROGRESS_STORAGE_BASE = "tasteBuddyRecipeMakeProgress";
 /** Whisk hub: recipes flagged to cook later (bookmark). */
 export const WHISK_MAKE_LATER_STORAGE_BASE = "tasteBuddyWhiskMakeLater";
+/** Whisk cook mode: recipes flagged as favorites (heart). */
+export const WHISK_FAVORITES_STORAGE_BASE = "tasteBuddyWhiskFavorites";
 
 /** Unscoped keys from before profiles; first read per area copies into `base:userId`. */
 const LEGACY_MIGRATION_KEYS = [

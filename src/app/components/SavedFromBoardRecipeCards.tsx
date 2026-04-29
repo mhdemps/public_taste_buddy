@@ -12,9 +12,12 @@ import { parseAllergenCsv } from "../allergyTagConfig";
 import { AllergenBadgeRow } from "./AllergenBadgeRow";
 import { recipeCookProgressKey } from "../recipeMakeProgress";
 import { toggleWhiskMakeLater } from "../whiskMakeLater";
+import { toggleWhiskFavorite } from "../whiskFavorites";
 import imgRecipeClose from "@project-assets/X.svg";
 import imgTrashDelete from "@project-assets/Trash.svg";
 import iconSaveHover from "@project-assets/save hover.svg";
+import iconHeart from "@project-assets/heart.svg";
+import iconHeartClicked from "@project-assets/clicked heart.svg";
 
 function parseAllergyTags(raw: string | undefined): string[] {
   if (!raw?.trim()) return [];
@@ -31,6 +34,8 @@ type Props = {
   userId: string;
   makeLaterSet: Set<string>;
   setMakeLaterSet: Dispatch<SetStateAction<Set<string>>>;
+  favoritesSet: Set<string>;
+  setFavoritesSet: Dispatch<SetStateAction<Set<string>>>;
 };
 
 export default function SavedFromBoardRecipeCards({
@@ -40,6 +45,8 @@ export default function SavedFromBoardRecipeCards({
   userId,
   makeLaterSet,
   setMakeLaterSet,
+  favoritesSet,
+  setFavoritesSet,
 }: Props) {
   const navigate = useNavigate();
   const [expandedRecipeId, setExpandedRecipeId] = useState<string | null>(null);
@@ -62,6 +69,7 @@ export default function SavedFromBoardRecipeCards({
         const accIds = parseAllergenCsv(r.accommodates ?? "");
         const pk = recipeCookProgressKey("friend", r.id);
         const isLater = makeLaterSet.has(pk);
+        const isFavorite = favoritesSet.has(pk);
         return (
           <li key={r.id} className="tb-li-relative">
             <div className="tb-card-relative">
@@ -118,6 +126,22 @@ export default function SavedFromBoardRecipeCards({
                       </div>
                     ) : null}
                     <div className="tb-recipe-actions">
+                      <motion.button
+                        type="button"
+                        className="tb-make-fav-toggle"
+                        aria-pressed={isFavorite}
+                        aria-label={isFavorite ? "Remove favorite from this recipe" : "Favorite this recipe"}
+                        title={isFavorite ? "Unfavorite" : "Favorite"}
+                        whileTap={{ scale: 0.94 }}
+                        onClick={() => setFavoritesSet(toggleWhiskFavorite(userId, pk))}
+                      >
+                        <img
+                          src={isFavorite ? iconHeartClicked : iconHeart}
+                          alt=""
+                          className="tb-make-fav-icon"
+                          draggable={false}
+                        />
+                      </motion.button>
                       <motion.button
                         type="button"
                         className="tb-make-later-toggle"
@@ -207,6 +231,26 @@ export default function SavedFromBoardRecipeCards({
                         </p>
                         <p className="share-tech-regular tb-recipe-card-hint">Tap to open recipe</p>
                       </button>
+                      <motion.button
+                        type="button"
+                        className="tb-make-fav-toggle"
+                        aria-pressed={isFavorite}
+                        aria-label={isFavorite ? "Remove favorite from this recipe" : "Favorite this recipe"}
+                        title={isFavorite ? "Unfavorite" : "Favorite"}
+                        whileTap={{ scale: 0.94 }}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setFavoritesSet(toggleWhiskFavorite(userId, pk));
+                        }}
+                      >
+                        <img
+                          src={isFavorite ? iconHeartClicked : iconHeart}
+                          alt=""
+                          className="tb-make-fav-icon"
+                          draggable={false}
+                        />
+                      </motion.button>
                       <motion.button
                         type="button"
                         className="tb-make-later-toggle"

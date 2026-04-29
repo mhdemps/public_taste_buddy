@@ -19,6 +19,7 @@ import {
   sortSavedCommunityRecipesNewestFirst,
 } from "../savedCommunityRecipes";
 import { loadWhiskMakeLater, toggleWhiskMakeLater } from "../whiskMakeLater";
+import { loadWhiskFavorites, toggleWhiskFavorite } from "../whiskFavorites";
 import { loadMyRecipeEntries, sortMyRecipesNewestFirst, type MyRecipeEntry } from "./MyRecipesPage";
 import StickyTopChrome from "../components/StickyTopChrome";
 import SavedFromBoardRecipeCards from "../components/SavedFromBoardRecipeCards";
@@ -27,6 +28,8 @@ import { ChalkPillFrame } from "../components/ChalkPillFrame";
 import { PAGE_INTRO_BLURB_TEXT, PAGE_SHELL_SCROLL } from "../brand";
 import iconWhisk from "@project-assets/whisk.svg";
 import iconSaveHover from "@project-assets/save hover.svg";
+import iconHeart from "@project-assets/heart.svg";
+import iconHeartClicked from "@project-assets/clicked heart.svg";
 
 type CookListItem =
   | (Pick<MyRecipeEntry, "id" | "recipeName" | "ingredients" | "directions" | "notes"> & {
@@ -71,6 +74,7 @@ export default function MakeRecipesPage() {
     loadRecipeMakeProgress(progressKeyFull)
   );
   const [makeLaterSet, setMakeLaterSet] = useState(() => loadWhiskMakeLater(userId));
+  const [favoritesSet, setFavoritesSet] = useState(() => loadWhiskFavorites(userId));
   const [boardRefreshTick, setBoardRefreshTick] = useState(0);
 
   const refreshProgress = useCallback(() => {
@@ -79,6 +83,10 @@ export default function MakeRecipesPage() {
 
   const refreshMakeLater = useCallback(() => {
     setMakeLaterSet(loadWhiskMakeLater(userId));
+  }, [userId]);
+
+  const refreshFavorites = useCallback(() => {
+    setFavoritesSet(loadWhiskFavorites(userId));
   }, [userId]);
 
   const myRecipes = useMemo(() => sortMyRecipesNewestFirst(loadMyRecipeEntries(myKey)), [myKey]);
@@ -156,6 +164,10 @@ export default function MakeRecipesPage() {
     refreshMakeLater();
   }, [location.pathname, refreshMakeLater]);
 
+  useEffect(() => {
+    refreshFavorites();
+  }, [location.pathname, refreshFavorites]);
+
   const pKey = cookSource && recipeId ? recipeCookProgressKey(cookSource, recipeId) : "";
   const row = pKey ? (progressMap[pKey] ?? emptyProgress()) : emptyProgress();
   const ingredientItems = activeRecipe ? parseIngredientLines(activeRecipe.ingredients) : [];
@@ -223,6 +235,15 @@ export default function MakeRecipesPage() {
     });
   };
 
+  const handleClearTimesMade = () => {
+    if (!pKey) return;
+    updateRecipeMakeProgress(progressKeyFull, pKey, (prev) => ({
+      ...prev,
+      timesMade: 0,
+    }));
+    refreshProgress();
+  };
+
   if (isCookView && activeRecipe && cookSource && recipeId) {
     return (
       <div className={PAGE_SHELL_SCROLL}>
@@ -234,42 +255,65 @@ export default function MakeRecipesPage() {
           transition={{ duration: 0.45 }}
         >
           <div className="tb-make-cook-header">
+            {pKey ? (
+              <div className="tb-make-cook-header-heart" aria-label="Favorite recipe">
+                <motion.button
+                  type="button"
+                  className="tb-make-fav-toggle tb-make-fav-toggle--header"
+                  aria-pressed={favoritesSet.has(pKey)}
+                  aria-label={favoritesSet.has(pKey) ? "Remove favorite from this recipe" : "Favorite this recipe"}
+                  title={favoritesSet.has(pKey) ? "Unfavorite" : "Favorite"}
+                  whileTap={{ scale: 0.94 }}
+                  onClick={() => setFavoritesSet(toggleWhiskFavorite(userId, pKey))}
+                >
+                  <img
+                    src={favoritesSet.has(pKey) ? iconHeartClicked : iconHeart}
+                    alt=""
+                    className="tb-make-fav-icon"
+                    draggable={false}
+                  />
+                </motion.button>
+              </div>
+            ) : (
+              <div />
+            )}
+
             <motion.button
               type="button"
-              className="tb-link-cancel share-tech-bold tb-text-coral tb-make-back-btn"
               onClick={() => navigate("/whisk")}
-              whileTap={{ scale: 0.97 }}
+              className="tb-submit-wrap tb-make-back-btn"
+              aria-label="Back to Make"
+              whileTap={{ scale: 0.98 }}
             >
-              ← Back
+              <ChalkPillFrame variant={1} fillClassName="tb-pill-fill-back" innerClassName="tb-pill-inner tb-pill-inner--back">
+                <span className="tb-back-chevron share-tech-bold" aria-hidden>
+                  ‹
+                </span>
+                <span className="share-tech-bold tb-text-coral" style={{ fontSize: "20pt" }}>
+                  Make
+                </span>
+              </ChalkPillFrame>
             </motion.button>
-            <motion.img
-              alt=""
-              src={iconWhisk}
-              draggable={false}
-              className="tb-hero-decor-whisk tb-make-cook-header-whisk"
-              initial={{ rotate: -8, opacity: 0 }}
-              animate={{ rotate: 0, opacity: 1 }}
-              transition={{ type: "spring", stiffness: 220, damping: 18 }}
-            />
-            {pKey ? (
-              <motion.button
-                type="button"
-                className="tb-make-later-toggle tb-make-later-toggle--header"
-                aria-pressed={makeLaterSet.has(pKey)}
-                aria-label={
-                  makeLaterSet.has(pKey)
-                    ? "Remove make-later tag from this recipe"
-                    : "Mark as a recipe you want to make later"
-                }
-                title={
-                  makeLaterSet.has(pKey) ? "Remove from make later" : "A recipe you want to make later — tap to tag"
-                }
-                whileTap={{ scale: 0.94 }}
-                onClick={() => setMakeLaterSet(toggleWhiskMakeLater(userId, pKey))}
-              >
-                <img src={iconSaveHover} alt="" className="tb-make-later-icon" draggable={false} />
-              </motion.button>
-            ) : null}
+
+            <div className="tb-make-cook-header-actions" aria-label="Recipe actions">
+              {pKey ? (
+                <motion.button
+                  type="button"
+                  className="tb-make-later-toggle tb-make-later-toggle--header"
+                  aria-pressed={makeLaterSet.has(pKey)}
+                  aria-label={
+                    makeLaterSet.has(pKey)
+                      ? "Remove make-later tag from this recipe"
+                      : "Mark as a recipe you want to make later"
+                  }
+                  title={makeLaterSet.has(pKey) ? "Remove from make later" : "A recipe you want to make later — tap to tag"}
+                  whileTap={{ scale: 0.94 }}
+                  onClick={() => setMakeLaterSet(toggleWhiskMakeLater(userId, pKey))}
+                >
+                  <img src={iconSaveHover} alt="" className="tb-make-later-icon" draggable={false} />
+                </motion.button>
+              ) : null}
+            </div>
           </div>
 
           <h1 className="tb-page-title share-tech-bold tb-text-coral tb-make-cook-title">{activeRecipe.recipeName}</h1>
@@ -410,6 +454,16 @@ export default function MakeRecipesPage() {
                 <span className="tb-pill-text-white--sm share-tech-regular">I made this! +1</span>
               </ChalkPillFrame>
             </motion.button>
+            <motion.button
+              type="button"
+              className="tb-link-text share-tech-regular tb-make-clear-times-btn"
+              onClick={handleClearTimesMade}
+              whileTap={{ scale: 0.98 }}
+              disabled={!row.timesMade}
+              aria-label="Clear times made"
+            >
+              Clear times made
+            </motion.button>
           </div>
         </motion.div>
       </div>
@@ -490,6 +544,7 @@ export default function MakeRecipesPage() {
                     const pr = progressMap[pk] ?? emptyProgress();
                     const subtitle = "Yours";
                     const isLater = makeLaterSet.has(pk);
+                    const isFavorite = favoritesSet.has(pk);
                     return (
                       <li key={`${r.source}-${r.id}`} className="tb-li-relative">
                         <div className="tb-card-relative">
@@ -508,6 +563,26 @@ export default function MakeRecipesPage() {
                                   <p className="share-tech-regular tb-make-card-sub">{subtitle}</p>
                                   <p className="share-tech-regular tb-recipe-card-hint">Tap to cook along →</p>
                                 </button>
+                                <motion.button
+                                  type="button"
+                                  className="tb-make-fav-toggle"
+                                  aria-pressed={isFavorite}
+                                  aria-label={isFavorite ? "Remove favorite from this recipe" : "Favorite this recipe"}
+                                  title={isFavorite ? "Unfavorite" : "Favorite"}
+                                  whileTap={{ scale: 0.94 }}
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    setFavoritesSet(toggleWhiskFavorite(userId, pk));
+                                  }}
+                                >
+                                  <img
+                                    src={isFavorite ? iconHeartClicked : iconHeart}
+                                    alt=""
+                                    className="tb-make-fav-icon"
+                                    draggable={false}
+                                  />
+                                </motion.button>
                                 <motion.button
                                   type="button"
                                   className="tb-make-later-toggle"
@@ -570,6 +645,8 @@ export default function MakeRecipesPage() {
                   userId={userId}
                   makeLaterSet={makeLaterSet}
                   setMakeLaterSet={setMakeLaterSet}
+                  favoritesSet={favoritesSet}
+                  setFavoritesSet={setFavoritesSet}
                   onMutate={() => setBoardRefreshTick((t) => t + 1)}
                 />
               )}

@@ -4046,7 +4046,8 @@
 }
 
 .tb-make-back-btn {
-  justify-self: start;
+  justify-self: center;
+  max-width: 100%;
 }
 
 .tb-make-cook-header-whisk {
@@ -4055,6 +4056,57 @@
 
 .tb-make-later-toggle--header {
   justify-self: end;
+}
+
+.tb-make-cook-header-heart {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+}
+
+.tb-make-cook-header-actions {
+  justify-self: end;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.tb-make-fav-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: transparent;
+  padding: 0.1rem;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.15s ease, transform 0.12s ease;
+}
+
+.tb-make-fav-toggle:active {
+  transform: scale(0.96);
+}
+
+.tb-make-fav-toggle[aria-pressed="true"] {
+  opacity: 1;
+}
+
+.tb-make-fav-icon {
+  width: 2rem;
+  height: 2rem;
+  object-fit: contain;
+  object-position: center;
+  display: block;
+}
+
+.tb-make-clear-times-btn {
+  margin-top: 0.35rem;
+  opacity: 0.75;
+}
+
+.tb-make-clear-times-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
 }
 
 .tb-make-later-toggle--header.tb-make-later-toggle {
