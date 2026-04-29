@@ -27,6 +27,19 @@
     --tb-recipe-picker-cell-max: 2.95rem;
     --tb-recipe-picker-gap-col: 0.38rem;
   }
+
+  /* Mobile: keep recipe cover areas light (no dark blue panel wash). */
+  .tb-my-recipes-page {
+    --tb-recipe-cover-wash: #d5eaf7;
+  }
+
+  /* Mobile: hide left-edge "YUM" strip on display illustration SVGs. */
+  .tb-recipe-display-option-img[src*="display"],
+  .tb-wall-recipe-photo[src*="display"],
+  .tb-recipe-thumb-collapsed[src*="display"] {
+    object-fit: cover;
+    object-position: 62% center;
+  }
 }
 
 @media (min-width: 640px) {
