@@ -12,6 +12,7 @@ import imgLickDisplay from "@project-assets/lick display.svg";
 import imgPastaDisplay from "@project-assets/pasta display.svg";
 import imgPizzaDisplay from "@project-assets/pizza display.svg";
 import imgPlateDisplay from "@project-assets/plate display.svg";
+import imgRamenDisplay from "@project-assets/ramen display.svg";
 import imgSaladDisplay from "@project-assets/salad display.svg";
 import imgSoupDisplay from "@project-assets/soup display.svg";
 import imgSteakDisplay from "@project-assets/steak display.svg";
@@ -31,6 +32,7 @@ export const RECIPE_DISPLAY_OPTIONS = [
   { id: "burger", label: "Burger", src: imgBurgerDisplay },
   { id: "pizza", label: "Pizza", src: imgPizzaDisplay },
   { id: "pasta", label: "Pasta", src: imgPastaDisplay },
+  { id: "ramen", label: "Ramen", src: imgRamenDisplay },
   { id: "bread", label: "Bread", src: imgBreadDisplay },
   { id: "fun_drink", label: "Fun drink", src: imgFunDrinkDisplay },
   { id: "lick", label: "Lick", src: imgLickDisplay },

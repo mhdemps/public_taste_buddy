@@ -4552,8 +4552,8 @@
   margin: -0.15rem -0.25rem 0;
   padding: 0.45rem 0.45rem 0.42rem;
   border-radius: 12px;
-  background: var(--tb-recipe-cover-wash);
-  box-shadow: var(--tb-recipe-cover-inset), var(--tb-recipe-cover-ring);
+  background: transparent;
+  box-shadow: none;
 }
 
 /* Horizontal flow, wraps to a second (and further) row — no sideways scroll */
@@ -4572,6 +4572,7 @@
 
 @media (max-width: 639px) {
   .tb-recipe-display-grid {
+    justify-content: center;
     gap: 0.36rem var(--tb-recipe-picker-gap-col);
   }
 }
@@ -4588,7 +4589,7 @@
   box-sizing: border-box;
   border: 1.5px solid rgba(255, 58, 0, 0.22);
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.72);
+  background: #d5eaf7;
   cursor: pointer;
   transition:
     border-color 0.15s ease,
@@ -4598,12 +4599,12 @@
 
 .tb-recipe-display-option:hover {
   border-color: rgba(255, 58, 0, 0.45);
-  background: #fff;
+  background: #dff0fb;
 }
 
 .tb-recipe-display-option--selected {
   border-color: #ff3a00;
-  background: #fff;
+  background: #dff0fb;
   box-shadow: 0 0 0 1px rgba(255, 58, 0, 0.28);
 }
 
