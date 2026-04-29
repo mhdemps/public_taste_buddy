@@ -2111,24 +2111,30 @@
   width: 100%;
   max-width: var(--tb-copy-max);
   flex-direction: column;
-  gap: 0.45rem;
-  margin-top: 0.35rem;
+  gap: 0.06rem;
+  margin-top: 0;
 }
 
 .tb-profile-picker-card .tb-infobox-inner {
-  padding: 0.5rem 1rem;
+  padding: 0.38rem 0.72rem 0.5rem;
+}
+
+.tb-profile-picker-card .tb-infobox-chalk-surface {
+  inset: 0.32rem 0.62rem;
 }
 
 .tb-profile-picker-row {
   width: 100%;
+  box-sizing: border-box;
+  padding: 0.24rem 1.1rem 0.18rem;
 }
 
 .tb-profile-picker-header {
   display: flex;
   width: 100%;
   align-items: center;
-  gap: 0.65rem;
-  padding: 0.05rem 0.15rem;
+  gap: 0.1rem;
+  padding: 0;
   border: none;
   background: transparent;
   cursor: pointer;
@@ -2138,9 +2144,9 @@
 }
 
 .tb-profile-picker-avatar--sm {
-  width: 3.65rem;
-  min-width: 3.65rem;
-  max-width: 3.65rem;
+  width: 6.85rem;
+  min-width: 6.85rem;
+  max-width: 6.85rem;
   flex-shrink: 0;
 }
 
@@ -2154,21 +2160,40 @@
 
 .tb-profile-picker-name {
   flex: 1;
-  font-size: 1.05rem;
-  line-height: 1.2;
+  font-size: 2.24rem;
+  line-height: 1.02;
   color: #ff3a00;
 }
 
 .tb-profile-picker-chevron {
-  flex-shrink: 0;
-  font-size: 0.9rem;
-  line-height: 1;
+  margin-left: auto;
+  flex: 0 0 3.2rem;
+  width: 3.2rem;
+  height: 3.2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   opacity: 0.75;
+  transform: translateX(0.08rem);
+}
+
+.tb-profile-picker-chevron-icon {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  display: block;
+  transform: rotate(-90deg);
+  transition: transform 0.18s ease;
+}
+
+.tb-profile-picker-chevron--open .tb-profile-picker-chevron-icon {
+  transform: rotate(0deg);
 }
 
 .tb-profile-picker-expand {
-  margin-top: 0.3rem;
-  padding: 0.4rem 0.15rem 0.25rem;
+  margin-top: 0.02rem;
+  padding: 0.24rem 1.42rem 0.22rem;
   border-top: 1px solid rgba(255, 58, 0, 0.12);
   overflow: hidden;
 }
@@ -2177,17 +2202,19 @@
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 0.65rem;
+  gap: 0.1rem;
   width: 100%;
+  box-sizing: border-box;
+  padding: 0;
 }
 
 /* Medium preview — not full page-hero height */
 .tb-profile-picker-expand-avatar.tb-buddy-avatar-shell {
   position: relative;
   inset: auto;
-  width: 5.5rem;
-  min-width: 5.5rem;
-  max-width: 5.5rem;
+  width: 10.2rem;
+  min-width: 10.2rem;
+  max-width: 10.2rem;
   aspect-ratio: 1;
   flex-shrink: 0;
   overflow: hidden;
@@ -2230,7 +2257,7 @@
   }
 
   .tb-profile-picker-delete-btn {
-    margin-left: auto;
+    margin-left: 0.5rem;
   }
 }
 
@@ -3817,21 +3844,21 @@
   margin: 0;
   margin-top: -1.1rem;
   padding-top: 0;
-  font-size: clamp(1.55rem, 4.8vw, 2.05rem);
+  font-size: clamp(1.75rem, 5.2vw, 2.3rem);
   text-align: center;
   letter-spacing: 0.02em;
 }
 
 /* Who’s Cooking: slightly larger title + buddy on sign-in page */
 .tb-sign-in-page .tb-page-title {
-  font-size: clamp(32pt, 7.2vw, 3rem);
+  font-size: clamp(35pt, 8vw, 3.35rem);
 }
 
 /* Sign-in: keep “Who’s Cooking” on one line on mobile. */
 @media (max-width: 639px) {
   .tb-sign-in-page .tb-page-title {
     white-space: nowrap;
-    font-size: clamp(24pt, 7vw, 2.4rem);
+    font-size: clamp(26pt, 7.5vw, 2.65rem);
   }
 }
 
@@ -3856,8 +3883,8 @@
 
 /* Buddy icon (intro wink) */
 .tb-sign-in-intro-buddy {
-  max-width: min(20.25rem, 92vw);
-  min-height: 14.25rem;
+  max-width: min(22rem, 93vw);
+  min-height: 15.5rem;
 }
 
 .tb-choose-profile-add-block {

@@ -21,6 +21,7 @@ import {
   type TasteProfileRow,
 } from "../../lib/communityApi";
 import imgTrashDelete from "@project-assets/Trash.svg";
+import imgArrowDown from "@project-assets/arrow down.svg";
 import { markProfileNeedsAppOnboarding } from "../appOnboardingStorage";
 import { purgeProfileFromThisDevice } from "../userStorage";
 
@@ -276,8 +277,11 @@ export default function ChooseProfilePage() {
                       imgClassName="tb-buddy-face-img"
                     />
                     <span className="tb-profile-picker-name share-tech-bold">{name}</span>
-                    <span className="tb-profile-picker-chevron share-tech-regular" aria-hidden>
-                      {open ? "▾" : "▸"}
+                    <span
+                      className={`tb-profile-picker-chevron share-tech-regular ${open ? "tb-profile-picker-chevron--open" : ""}`}
+                      aria-hidden
+                    >
+                      <img src={imgArrowDown} alt="" className="tb-profile-picker-chevron-icon" draggable={false} />
                     </span>
                   </button>
                 </div>
