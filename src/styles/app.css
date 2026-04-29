@@ -3770,7 +3770,14 @@
 /* Mobile: prevent Taste Buddy logo clipping on the sides. */
 @media (max-width: 639px) {
   .tb-header-logo {
-    width: min(300px, calc(100vw - 1.25rem));
+    width: min(320px, calc(100vw - 0.4rem));
+    margin-top: clamp(-1.55rem, -8vw, -0.85rem);
+  }
+
+  .tb-header:not(.tb-header--signed-in),
+  .tb-header:not(.tb-header--signed-in) .tb-header-line-bleed,
+  .tb-header:not(.tb-header--signed-in) .tb-header-slot--center {
+    overflow: visible;
   }
 }
 
