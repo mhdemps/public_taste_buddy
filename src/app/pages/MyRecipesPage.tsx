@@ -394,7 +394,7 @@ export default function MyRecipesPage() {
                   </div>
                 ) : null}
                 <div className="tb-recipe-display-grid">
-                  {RECIPE_DISPLAY_OPTIONS.map((opt) => {
+                  {RECIPE_DISPLAY_OPTIONS.filter((opt) => opt.id !== "yum" && opt.id !== "tasty").map((opt) => {
                     const selected = recipeDisplayId === opt.id;
                     return (
                       <button
