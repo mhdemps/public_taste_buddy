@@ -2237,8 +2237,8 @@
 }
 
 .tb-profile-picker-delete-btn {
-  margin-top: 0;
-  align-self: flex-start;
+  margin-top: 1.6rem;
+  align-self: center;
   font-size: 16pt;
   line-height: 1.25;
   color: var(--tb-coral, #ff3a00);
@@ -2257,7 +2257,49 @@
   }
 
   .tb-profile-picker-delete-btn {
-    margin-left: 0.5rem;
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 639px) {
+  .tb-profile-picker-card .tb-infobox-inner {
+    padding: 0.22rem 0.42rem 0.3rem;
+  }
+
+  .tb-profile-picker-card .tb-infobox-chalk-surface {
+    inset: 0.26rem 0.42rem;
+  }
+
+  .tb-profile-picker-row {
+    padding: 0.14rem 0.58rem 0.12rem;
+  }
+
+  .tb-profile-picker-avatar--sm {
+    width: 4.75rem;
+    min-width: 4.75rem;
+    max-width: 4.75rem;
+  }
+
+  .tb-profile-picker-name {
+    min-width: 0;
+    font-size: clamp(1.35rem, 7.2vw, 1.75rem);
+    line-height: 1.05;
+    white-space: nowrap;
+  }
+
+  .tb-profile-picker-chevron {
+    flex: 0 0 2.2rem;
+    width: 2.2rem;
+    height: 2.2rem;
+    transform: translateX(0.02rem);
+  }
+
+  .tb-profile-picker-expand {
+    padding: 0.16rem 0.88rem 0.16rem;
+  }
+
+  .tb-profile-picker-delete-btn {
+    font-size: 13pt;
   }
 }
 
