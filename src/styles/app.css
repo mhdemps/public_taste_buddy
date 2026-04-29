@@ -2442,24 +2442,30 @@
 
 @media (max-width: 639px) {
   .tb-customize-preview-block {
-    padding-bottom: 0.35rem;
-    margin-bottom: 0.85rem;
+    position: static;
+    top: auto;
+    padding-bottom: 0.5rem;
+    margin-bottom: 1.35rem;
   }
 
   .tb-customize-pickers-block {
-    margin-top: 0.35rem;
-    padding-top: 0.2rem;
+    margin-top: 0.95rem;
+    padding-top: 0.45rem;
+  }
+
+  .tb-customize-preview-block .tb-buddy-profile-circle--page-hero {
+    max-width: 15rem;
   }
 
   .tb-buddy-customize-controls--svg-only {
-    gap: 0.38rem;
+    gap: 0.32rem;
   }
 
   .tb-customize-buddy-page .tb-svg-picker-strip--grid .tb-svg-picker-chip,
   .tb-customize-buddy-page .tb-svg-picker-pad,
   .tb-customize-buddy-page .tb-svg-picker-chip--backdrop {
-    width: 2.35rem;
-    height: 2.35rem;
+    width: 2.05rem;
+    height: 2.05rem;
   }
 }
 
@@ -2520,38 +2526,38 @@
 
 @media (max-width: 639px) {
   .tb-svg-picker-strip--grid {
-    gap: 0.48rem;
+    gap: 0.24rem;
   }
 
   .tb-svg-picker-strip {
-    gap: 0.42rem;
+    gap: 0.2rem;
   }
 
   .tb-svg-picker-strip--c7 {
-    grid-template-columns: repeat(7, minmax(0, 2.6rem));
+    grid-template-columns: repeat(7, minmax(0, 2.2rem));
   }
 
   .tb-svg-picker-strip--c8 {
-    grid-template-columns: repeat(8, minmax(0, 2.6rem));
+    grid-template-columns: repeat(8, minmax(0, 2.2rem));
   }
 
   .tb-svg-picker-strip--c5 {
-    grid-template-columns: repeat(5, minmax(0, 2.6rem));
+    grid-template-columns: repeat(5, minmax(0, 2.2rem));
   }
 
   .tb-svg-picker-strip--grid .tb-svg-picker-chip {
-    width: 2.6rem;
-    height: 2.6rem;
+    width: 2.2rem;
+    height: 2.2rem;
   }
 
   .tb-svg-picker-pad {
-    width: 2.6rem;
-    height: 2.6rem;
+    width: 2.2rem;
+    height: 2.2rem;
   }
 
   .tb-svg-picker-chip--backdrop {
-    width: 2.6rem;
-    height: 2.6rem;
+    width: 2.2rem;
+    height: 2.2rem;
   }
 }
 
